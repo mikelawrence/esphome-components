@@ -34,7 +34,6 @@ DEPENDENCIES = ["uart"]
 CONF_DIR_SAMPLE_NUM = "dir_sample_num"
 CONF_CONFIG_PIN = "config_pin"
 CONF_LOW_POWER = "low_power"
-CONF_MULTI_PIN = "multi_pin"
 
 
 tfmini_ns = cg.esphome_ns.namespace("tfmini")
@@ -64,7 +63,6 @@ CONFIG_SCHEMA = cv.Schema(
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         cv.Optional(CONF_SAMPLE_RATE, default=100): cv.int_range(min=1, max=1000),
-        cv.Optional(CONF_MULTI_PIN): cv.All(pins.internal_gpio_input_pin_schema),
         cv.Optional(CONF_CONFIG_PIN): cv.All(pins.internal_gpio_output_pin_schema),
         cv.Optional(CONF_SIGNAL_STRENGTH): sensor.sensor_schema(
             icon=ICON_SIGNAL,
@@ -93,13 +91,9 @@ def final_validate(config):
         if config[CONF_SAMPLE_RATE] > 500:
             raise cv.Invalid("Model" + MODEL_TF_LUNA + " Sample Rate must be at most 500.")
     if config[CONF_MODEL] == MODEL_TFMINI_PLUS:
-        if config[CONF_MULTI_PIN]:
-            raise cv.Invalid("Model" + MODEL_TFMINI_PLUS + " does not have a MULTI pin.")
         if config[CONF_CONFIG_PIN]:
             raise cv.Invalid("Model" + MODEL_TFMINI_PLUS + " does not have a CONFIG pin.")
     if config[CONF_MODEL] == MODEL_TFMINI_S:
-        if config[CONF_MULTI_PIN]:
-            raise cv.Invalid("Model" + MODEL_TFMINI_S + " does not have an MULTI pin.")
         if config[CONF_CONFIG_PIN]:
             raise cv.Invalid("Model" + MODEL_TFMINI_S + " does not have a CONFIG pin.")
     if config[CONF_LOW_POWER]:
