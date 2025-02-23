@@ -2,13 +2,21 @@
 
 The preferred method to add your own components to ESPHome is to use [External Components](https://esphome.io/components/external_components.html#external-components-git).
 
+
+If you want to make all components available use this config.
 ```yaml
 external_components:
   - source:
       type: git
-      url: https://github.com/esphome/esphome
-      ref: dev
-    components: [ rtttl, dfplayer ]
+      url: https://github.com/mikelawrence/esphome-components
+```
+If you want to make specific components available use this config.
+```yaml
+external_components:
+  - source:
+      type: git
+      url: https://github.com/mikelawrence/esphome-components
+    components: [ tfmini ]
 ```
 
 ## TFMini Range Finding Sensor
@@ -54,10 +62,10 @@ sensor:
 + **low_power** (*Optional*, boolean): Turns on low power mode. This also requires sample_rate to be 10 or less. (*TF_LUNA, TFMini-S only*) 
 
 ## Sensors
-+ **distance** (*Optional*): Distance in cm. For the TFMINI_PLUS and TFMINI_S the range is 10-1200cm. For the TFLuna the range is 20-800cm. A distance of 10000cm means the sensor is not receiving enough signal, most likely open air. A distance of 0cm means the sensor is saturated and there is no measurement possible. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor)
-+ **signal_strength** (*Optional*): Represents the signal strength with a range of 0-65535. The longer the measurement distance, the lower signal strength will be. The lower the reflectivity is, the lower the signal strength will be. When signal strength is less than 100 detection is unreliable and distance is set to 10000cm. When signal strength is 65535 detection is unreliable and distance is set to 0cm. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor)
++ **distance** (*Optional*): Distance in cm. For the TFMINI_PLUS and TFMINI_S the range is 10-1200cm. For the TFLuna the range is 20-800cm. A distance of 10000cm means the sensor is not receiving enough signal, most likely open air. A distance of 0cm means the sensor is saturated and there is no measurement possible. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
++ **signal_strength** (*Optional*): Represents the signal strength with a range of 0-65535. The longer the measurement distance, the lower signal strength will be. The lower the reflectivity is, the lower the signal strength will be. When signal strength is less than 100 detection is unreliable and distance is set to 10000cm. When signal strength is 65535 detection is unreliable and distance is set to 0cm. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 + **temperature** (*Optional*): Internal temperature in °C. It's not clear how useful this sensor because it certainly does not measure room temperature. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
-+ **version** (*Optional*): Firmware version of Range Finder Sensor. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor)
++ **version** (*Optional*): Firmware version of Range Finder Sensor. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
 ## STUSB4500 USB-C PD controller
 
@@ -111,12 +119,12 @@ sensor:
 + **usb_comms_capable** (*Optional*, boolean): When set to ```true``` the STUSB4500 will tell the connected device that USB communications are possible. Default is ```false```.
 + **snk_uncons_power** (*Optional*, boolean): When set to ```true``` the STUSB4500 will tell the connected device external power is available. Default is ```false```.
 + **req_src_current** (*Optional*, boolean): When set to ```true``` the STUSB4500 will report the source current from source instead of the sink. Default is ```false```.
-+ **power_ok_cfg** (*Optional*, boolean): Selects the POWER_OK pins configuration. Options are ``CONFIGURATION_1```, ```CONFIGURATION_2``` or ```CONFIGURATION_3```. Default is ```CONFIGURATION_2```.
-+ **power_only_above_5v** (*Optional*, boolean): When set to ```true``` the STUSB4500 will disable PDO0 negotiation. I other words %V is no longer and option. Default is ```false```.
++ **power_ok_cfg** (*Optional*, boolean): Selects the POWER_OK pins configuration. Options are ```CONFIGURATION_1```, ```CONFIGURATION_2``` or ```CONFIGURATION_3```. Default is ```CONFIGURATION_2```.
++ **power_only_above_5v** (*Optional*, boolean): When set to ```true``` the STUSB4500 will disable PDO0 negotiation. I other words 5V is no longer an option. Default is ```false```.
 
 ## Sensors
-+ **pd_state** (*Optional*): Current PD State as an integer. Range 0 to 3 where 0 is no PD negotiated. A value of 1, 2 or 3 indicates which PDO was negotiated. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor)
-+ **pd_status** (*Optional*): Easy to read PD State (e.g. "12V @ 3A" ). All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor)
++ **pd_state** (*Optional*): Current PD State as an integer. Range 0 to 3 where 0 is no PD negotiated. A value of 1, 2 or 3 indicates which PDO was negotiated. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
++ **pd_status** (*Optional*): Easy to read PD State (e.g. "12V @ 3A" ). All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
 ## NVM Configuration
 
@@ -125,30 +133,22 @@ When configuring the STUSB4500 for the first time you should realize the default
 Using the STUSB4500 ESPHome component requires the following steps:
 
 1. Set the configuration variables to match your requirements. The sample configuration above sets PDO3 to 12V @ 3A, PDO2 to 9V @3A and PDO1 is disabled because ```power_only_above_5v: true```. This means it will first try to negotiate 12V @ 3A. If unavailable then it will try 9V @ 3A. If is unavailable no PD will be negotiated. Either the ```pd_state``` or ```pd_status``` sensor will let you know if there is a problem.
-
-2. Add ```flash_nvm: true``` to the configuration. You should see the following messages in your log.
-
-```log
-[00:10:03][C][stusb4500:112]: STUSB4500:
-[00:10:03][E][stusb4500:119]:   NVM has been flashed, power cycle the device to reload NVM
-```
-
-If you forgot to add ```flash_nvm: true``` to the configuration you will see an error in the log.
-
-```log
-[00:06:27][C][stusb4500:112]: STUSB4500:
-[00:06:27][E][stusb4500:114]:   NVM does not match current settings, you should set flash_nvm: true for one boot
-[00:06:27][C][stusb4500:130]:   PDO3 negotiated 9.00V @ 3.00A, 27.00W
-```
-
-3. Power cycle your board. Make sure ```NVM matches settings``` is present in the log and that one of your PDOs was negotiated.
-```log
-[00:00:19][C][stusb4500:112]: STUSB4500:
-[00:00:19][C][stusb4500:116]:   NVM matches settings
-[00:00:19][C][stusb4500:130]:   PDO3 negotiated 12.00V @ 3.00A, 36.00W
-```
-
-Getting the settings right can be a bit finicky, but keep at it.
-
-4. The STUSB4500 comonent does check to see that the NVM is indeed different than the requested config before flashing the NVM. It is prudent to remove the ```NVM matches settings``` after it is clear the STUSB4500 is worked as configured.
-
+2. Add ```flash_nvm: true``` to the configuration.
+   You should see the following messages in your log.
+     ```log
+     [00:10:03][C][stusb4500:112]: STUSB4500:
+     [00:10:03][E][stusb4500:119]:   NVM has been flashed, power cycle the device to reload NVM
+     ```
+   If you forgot to add ```flash_nvm: true``` to the configuration you will see an error in the log.
+     ```log
+     [00:06:27][C][stusb4500:112]: STUSB4500:
+     [00:06:27][E][stusb4500:114]:   NVM does not match current settings, you should set flash_nvm: true for one boot
+     [00:06:27][C][stusb4500:130]:   PDO3 negotiated 9.00V @ 3.00A, 27.00W
+     ```
+3. Power cycle your board. Make sure ```NVM matches settings``` is present in the log and that one of your PDOs was negotiated. Configuring the STUSB4500 can be a bit finicky, but keep at it.
+   ```log
+   [00:00:19][C][stusb4500:112]: STUSB4500:
+   [00:00:19][C][stusb4500:116]:   NVM matches settings
+   [00:00:19][C][stusb4500:130]:   PDO3 negotiated 12.00V @ 3.00A, 36.00W
+   ```
+4. The STUSB4500 comonent does check to see that the NVM is indeed different before flashing the NVM but it is prudent to remove the ```NVM matches settings``` after it is clear the STUSB4500 is worked as configured.
