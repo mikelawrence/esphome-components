@@ -55,15 +55,15 @@ CONFIG_SCHEMA = cv.Schema(
     {
         cv.GenerateID(): cv.declare_id(TFminiComponent),
         cv.Required(CONF_MODEL): cv.enum(TFMINI_MODELS, upper=True),
-        cv.Required(CONF_DISTANCE): sensor.sensor_schema(
+        cv.Optional(CONF_SAMPLE_RATE, default=100): cv.int_range(min=1, max=1000),
+        cv.Optional(CONF_CONFIG_PIN): cv.All(pins.internal_gpio_output_pin_schema),
+        cv.Optional(CONF_DISTANCE): sensor.sensor_schema(
             unit_of_measurement=UNIT_CENTIMETER,
             icon=ICON_ARROW_EXPAND_VERTICAL,
             accuracy_decimals=0,
             device_class=DEVICE_CLASS_DISTANCE,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-        cv.Optional(CONF_SAMPLE_RATE, default=100): cv.int_range(min=1, max=1000),
-        cv.Optional(CONF_CONFIG_PIN): cv.All(pins.internal_gpio_output_pin_schema),
         cv.Optional(CONF_SIGNAL_STRENGTH): sensor.sensor_schema(
             icon=ICON_SIGNAL,
             accuracy_decimals=0,
@@ -87,20 +87,29 @@ CONFIG_SCHEMA = cv.Schema(
 
 
 def final_validate(config):
-    if config[CONF_MODEL] == MODEL_TF_LUNA:
-        if config[CONF_SAMPLE_RATE] > 500:
-            raise cv.Invalid("Model" + MODEL_TF_LUNA + " Sample Rate must be at most 500.")
-    if config[CONF_MODEL] == MODEL_TFMINI_PLUS:
-        if config[CONF_CONFIG_PIN]:
-            raise cv.Invalid("Model" + MODEL_TFMINI_PLUS + " does not have a CONFIG pin.")
-    if config[CONF_MODEL] == MODEL_TFMINI_S:
-        if config[CONF_CONFIG_PIN]:
-            raise cv.Invalid("Model" + MODEL_TFMINI_S + " does not have a CONFIG pin.")
-    if config[CONF_LOW_POWER]:
+    if config[CONF_LOW_POWER] == True:
         if config[CONF_MODEL] == MODEL_TFMINI_PLUS:
-            raise cv.Invalid("Model" + MODEL_TFMINI_PLUS + " does not support Low Power Mode.")
-        if config[CONF_SAMPLE_RATE] > 10:
-            raise cv.Invalid("Low Power Mode restricts Sample Rate to at most 10.")
+            raise cv.Invalid(
+                "Model " + MODEL_TFMINI_PLUS + " does not support Low Power Mode."
+            )
+        else:
+            if config[CONF_SAMPLE_RATE] > 10:
+                raise cv.Invalid(
+                    "Model "
+                    + config[CONF_MODEL]
+                    + " in Low Power Mode Sample Rate must be at most 10."
+                )
+    else:
+        if config[CONF_MODEL] == MODEL_TF_LUNA:
+            if config[CONF_SAMPLE_RATE] > 500:
+                raise cv.Invalid(
+                    "Model " + MODEL_TF_LUNA + " Sample Rate must be at most 500."
+                )
+    if CONF_CONFIG_PIN in config:
+        if config[CONF_MODEL] != MODEL_TF_LUNA:
+            raise cv.Invalid(
+                "Model " + config[CONF_MODEL] + " does not have a CONFIG pin."
+            )
 
     schema = uart.final_validate_device_schema(
         "tfmini",
@@ -129,12 +138,26 @@ async def to_code(config):
     if CONF_SAMPLE_RATE in config:
         cg.add(var.set_sample_rate(config[CONF_SAMPLE_RATE]))
     if CONF_CONFIG_PIN in config:
-        cg.add(var.set_config_pin(await cg.gpio_pin_expression(config[CONF_CONFIG_PIN])))
+        cg.add(
+            var.set_config_pin(await cg.gpio_pin_expression(config[CONF_CONFIG_PIN]))
+        )
     if CONF_SIGNAL_STRENGTH in config:
-        cg.add(var.set_signal_strength_sensor(await sensor.new_sensor(config[CONF_SIGNAL_STRENGTH])))
+        cg.add(
+            var.set_signal_strength_sensor(
+                await sensor.new_sensor(config[CONF_SIGNAL_STRENGTH])
+            )
+        )
     if CONF_TEMPERATURE in config:
-        cg.add(var.set_temperature_sensor(await sensor.new_sensor(config[CONF_TEMPERATURE])))
+        cg.add(
+            var.set_temperature_sensor(
+                await sensor.new_sensor(config[CONF_TEMPERATURE])
+            )
+        )
     if CONF_VERSION in config:
-        cg.add(var.set_version_sensor(await text_sensor.new_text_sensor(config[CONF_VERSION])))
+        cg.add(
+            var.set_version_sensor(
+                await text_sensor.new_text_sensor(config[CONF_VERSION])
+            )
+        )
     if CONF_LOW_POWER in config:
         cg.add(var.set_low_power_mode(config[CONF_LOW_POWER]))

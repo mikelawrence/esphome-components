@@ -44,7 +44,8 @@ namespace esphome
           this->nvm_load_default_();
           this->nvm_update_();
           ESP_LOGCONFIG(TAG, "Flashing NVM...");
-          if (!this->nvm_write_()) {
+          if (!this->nvm_write_())
+          {
             ESP_LOGE(TAG, "No response from STUSB4500");
           }
           this->nvm_flashed_ = true;
@@ -58,7 +59,8 @@ namespace esphome
       }
       else
       {
-        if (!this->nvm_compare_()) {
+        if (!this->nvm_compare_())
+        {
           ESP_LOGE(TAG, "NVM doesn't match settings");
         }
       }
@@ -110,24 +112,31 @@ namespace esphome
       uint8_t match;
 
       ESP_LOGCONFIG(TAG, "STUSB4500:");
-      if (!this->nvm_compare_()) {
-        ESP_LOGE(TAG, "  NVM does not match current settings, you should set flash_nvm: true for one boot");
-      } else {
-        ESP_LOGCONFIG(TAG, "  NVM matches settings");
-      }
-      if (this->nvm_flashed_) {
+      if (this->nvm_flashed_)
+      {
         ESP_LOGE(TAG, "  NVM has been flashed, power cycle the device to reload NVM");
+      }
+      else
+      {
+        if (!this->nvm_compare_())
+        {
+          ESP_LOGE(TAG, "  NVM does not match current settings, you should set flash_nvm: true for one boot");
+        }
+        else
+        {
+          ESP_LOGCONFIG(TAG, "  NVM matches settings");
+        }
       }
       switch (this->rdo_.b.Object_Pos)
       {
       case 1:
-        ESP_LOGCONFIG(TAG, "  PDO1 negotiated 5.00V @ %0.2fA, %fW", this->rdo_.b.Operating_Current / 100.0, 5.0 * this->rdo_.b.Operating_Current / 100.0);
+        ESP_LOGCONFIG(TAG, "  PDO1 negotiated 5.00V @ %0.2fA, %0.2fW", this->rdo_.b.Operating_Current / 100.0, 5.0 * this->rdo_.b.Operating_Current / 100.0);
         break;
       case 2:
-        ESP_LOGCONFIG(TAG, "  PDO2 negotiated %0.2fV @ %0.2fA, %fW", this->v_snk_pdo2_, this->rdo_.b.Operating_Current / 100.0, this->v_snk_pdo2_ * this->rdo_.b.Operating_Current / 100.0);
+        ESP_LOGCONFIG(TAG, "  PDO2 negotiated %0.2fV @ %0.2fA, %0.2fW", this->v_snk_pdo2_, this->rdo_.b.Operating_Current / 100.0, this->v_snk_pdo2_ * this->rdo_.b.Operating_Current / 100.0);
         break;
       case 3:
-        ESP_LOGCONFIG(TAG, "  PDO3 negotiated %0.2fV @ %0.2fA, %fW", this->v_snk_pdo3_, this->rdo_.b.Operating_Current / 100.0, this->v_snk_pdo3_ * this->rdo_.b.Operating_Current / 100.0);
+        ESP_LOGCONFIG(TAG, "  PDO3 negotiated %0.2fV @ %0.2fA, %0.2fW", this->v_snk_pdo3_, this->rdo_.b.Operating_Current / 100.0, this->v_snk_pdo3_ * this->rdo_.b.Operating_Current / 100.0);
         break;
       default:
         ESP_LOGE(TAG, "  No PD negotiated");
