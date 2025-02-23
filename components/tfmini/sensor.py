@@ -134,14 +134,8 @@ async def to_code(config):
 
     if CONF_SAMPLE_RATE in config:
         cg.add(var.set_sample_rate(config[CONF_SAMPLE_RATE]))
-    if CONF_MULTI_PIN in config:
-        cg.add(var.set_multi_pin(await cg.gpio_pin_expression(config[CONF_MULTI_PIN])))
     if CONF_CONFIG_PIN in config:
         cg.add(var.set_config_pin(await cg.gpio_pin_expression(config[CONF_CONFIG_PIN])))
-    # if CONF_DIR_SAMPLE_NUM in config:
-    #     cg.add(var.set_dir_sample_num(config[CONF_DIR_SAMPLE_NUM]))
-    # if CONF_DIRECTION in config:
-    #     cg.add(var.set_direction_sensor(await sensor.new_sensor(config[CONF_DIRECTION])))
     if CONF_SIGNAL_STRENGTH in config:
         cg.add(var.set_signal_strength_sensor(await sensor.new_sensor(config[CONF_SIGNAL_STRENGTH])))
     if CONF_TEMPERATURE in config:
