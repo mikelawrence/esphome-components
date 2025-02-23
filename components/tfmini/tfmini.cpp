@@ -127,7 +127,6 @@ namespace esphome
       ESP_LOGCONFIG(TAG, "TFmini:");
       ESP_LOGCONFIG(TAG, "  Model: %s", LOG_STR_ARG(model_to_str(this->model_)));
       LOG_PIN("  CONFIG Pin: ", this->config_pin_);
-      LOG_PIN("  MULTI Pin: ", this->multi_pin_);
       ESP_LOGCONFIG(TAG, "  Sample Rate: %u", this->sample_rate_);
       if (this->model_ != TFMINI_MODEL_TFMINI_PLUS)
         ESP_LOGCONFIG(TAG, "  Low Power Mode: %s", this->low_power_ ? "True" : "False");

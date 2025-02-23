@@ -38,10 +38,7 @@ namespace esphome
       void set_model(TFminiModel model) { this->model_ = model; };
       void set_distance_sensor(sensor::Sensor *distance_sensor) { this->distance_sensor_ = distance_sensor; };
       void set_sample_rate(uint32_t rate) { this->sample_rate_ = rate; };
-      void set_multi_pin(GPIOPin *pin) { this->multi_pin_ = pin; }
       void set_config_pin(GPIOPin *pin) { this->config_pin_ = pin; }
-      // void set_dir_sample_num(uint16_t sample_num) { this->dir_sample_num_ = sample_num; };
-      // void set_direction_sensor(sensor::Sensor *direction_sensor) { this->direction_sensor_ = direction_sensor; };
       void set_signal_strength_sensor(sensor::Sensor *signal_strength_sensor) { this->signal_strength_sensor_ = signal_strength_sensor; };
       void set_temperature_sensor(sensor::Sensor *temperature_sensor) { this->temperature_sensor_ = temperature_sensor; };
       void set_version_sensor(text_sensor::TextSensor *version_sensor) { this->version_sensor_ = version_sensor; };
@@ -83,12 +80,10 @@ namespace esphome
       void comp_cs_send_command_();
 
       // Pins
-      GPIOPin *multi_pin_{nullptr};
       GPIOPin *config_pin_{nullptr};
       // Sensors
       text_sensor::TextSensor *version_sensor_{nullptr};
       sensor::Sensor *distance_sensor_{nullptr};
-      // sensor::Sensor *direction_sensor_{nullptr};
       sensor::Sensor *signal_strength_sensor_{nullptr};
       sensor::Sensor *temperature_sensor_{nullptr};
     };

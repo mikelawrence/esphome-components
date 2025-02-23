@@ -90,12 +90,12 @@ def final_validate(config):
     if config[CONF_LOW_POWER] == True:
         if config[CONF_MODEL] == MODEL_TFMINI_PLUS:
             raise cv.Invalid(
-                "Model " + MODEL_TFMINI_PLUS + " does not support Low Power Mode."
+                "Model" + MODEL_TFMINI_PLUS + " does not support Low Power Mode."
             )
         else:
             if config[CONF_SAMPLE_RATE] > 10:
                 raise cv.Invalid(
-                    "Model "
+                    "Model"
                     + config[CONF_MODEL]
                     + " in Low Power Mode Sample Rate must be at most 10."
                 )
@@ -103,12 +103,12 @@ def final_validate(config):
         if config[CONF_MODEL] == MODEL_TF_LUNA:
             if config[CONF_SAMPLE_RATE] > 500:
                 raise cv.Invalid(
-                    "Model " + MODEL_TF_LUNA + " Sample Rate must be at most 500."
+                    "Model" + MODEL_TF_LUNA + " Sample Rate must be at most 500."
                 )
     if CONF_CONFIG_PIN in config:
         if config[CONF_MODEL] != MODEL_TF_LUNA:
             raise cv.Invalid(
-                "Model " + config[CONF_MODEL] + " does not have a CONFIG pin."
+                "Model" + config[CONF_MODEL] + " does not have a CONFIG pin."
             )
 
     schema = uart.final_validate_device_schema(
