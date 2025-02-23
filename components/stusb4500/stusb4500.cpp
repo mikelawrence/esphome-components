@@ -93,7 +93,7 @@ namespace esphome
         if (this->pd_status_sensor_ != nullptr)
         {
           std::ostringstream pd;
-          pd << current << "A @ " << voltage << "V";
+          pd << voltage << "V @ " << current << "A";
           this->pd_status_sensor_->publish_state(pd.str());
         }
       }

@@ -65,7 +65,7 @@ typedef union
 
 } SRC_PDO_TypeDef;
 
-// SRC RDO 
+// SRC RDO
 typedef union
 {
   uint32_t d32;
@@ -250,13 +250,13 @@ namespace esphome
       const uint8_t SECTOR_2 = 0x04;
       const uint8_t SECTOR_3 = 0x08;
       const uint8_t SECTOR_4 = 0x10;
-      
+
       const uint8_t REG_DPM_PDO_NUMB = 0x70;
       const uint8_t REG_DPM_PDO = 0x85;
       const uint8_t REG_RDO_REG_STATUS = 0x91;
       const uint8_t REG_RW_BUFFER = 0x53;
       const uint8_t REG_TX_HEADER_LOW = 0x51;
-      
+
       const uint8_t REG_ALERT_STATUS_1 = 0x0B;
       const uint8_t REG_ALERT_STATUS_MASK = 0x0C;
       const uint8_t REG_PORT_STATUS_TRANS = 0x0D;
