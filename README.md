@@ -19,7 +19,7 @@ external_components:
     components: [ tfmini ]
 ```
 
-## TFMini Range Finding Sensor
+## ESPHome TFMini External Component
 
 These ToF (time of flight) range finder sensors are compact, self-contained range finders. They support both UART and I<sub>2</sub>C communication but this component only supports UART communication.
 
@@ -67,7 +67,7 @@ sensor:
 + **temperature** (*Optional*): Internal temperature in °C. It's not clear how useful this sensor because it certainly does not measure room temperature. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 + **version** (*Optional*): Firmware version of Range Finder Sensor. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
-## STUSB4500 USB-C PD controller
+## ESPHome STUSB4500 External Component
 
 The STUSB4500 is a USB power delivery controller that supports sink up to 100 W (20V, 5A). It has Non-Volatile Memory that can be programmed with your PDO profile so when you connect to a USB-C Power Source it will immediately negotiate your power delivery contract.
 
@@ -78,7 +78,7 @@ The STUSB4500 is a USB power delivery controller that supports sink up to 100 W 
 
 There are 3 PDOs that you can configure with PD1 fixed at 5V. You can vary PD1's current. If you have all three PDOs configured the STUSB4500 will try to negotiate a contract with the PDOs in the following order: PD3, PD2 and PD1. If you don't want PDO1 negotiated then set ```power_only_above_5v: true```.
 
-With the configuration below the STUSB4500 will try to negotiate 12V @ 3A then 9V @ 3A. If neither are available then it won't negotiate at all.
+The configuration below the STUSB4500 will try to negotiate 12V @ 3A then 9V @ 3A. If neither are available then it won't negotiate at all.
 
 ```yaml
 # Sample configuration entry example
@@ -99,14 +99,14 @@ sensor:
 ```
 
 ## Configuration Variables
-+ **flash_nvm** (*Optional*, boolean): When set to ```true``` the STUSB4500 NVM will be flashed with the current settings but only if different. To be on the safe side you should not leave this set to ```true```. Default is ```false```.
-+ **default_nvm** (*Optional*, boolean): When set to ```true``` the STUSB4500 NVM will be flashed with default settings but only if different. To be on the safe side you should not leave this set to ```true```. Default is ```false```.
++ **flash_nvm** (*Optional*, boolean): When set to ```true``` the STUSB4500 NVM will be flashed with the current settings but only if different. To be on the safe side you should not leave this set to ```true```. A power cycle is required to renegotiate. Default is ```false```.
++ **default_nvm** (*Optional*, boolean): When set to ```true``` the STUSB4500 NVM will be flashed with default settings but only if different. To be on the safe side you should not leave this set to ```true```. A power cycle is required to renegotiate. Default is ```false```.
 + **snk_pdo_numb** (*Optional*, integer): Set the number of PDOs that should be negotiated. Range is 1 - 3. A value of 3 means PDO3, PDO2 and PDO1 will be negotiated. A value of 2 means PDO2 and PDO1 will be negotiated. A value of 1 means only PDO1 will be negotiated. Default is 3.
 + **v_snk_pdo2** (*Optional*, float): This is the desired PDO2 voltage. Range is 5.0 to 20.0. Default is 20.0.
 + **v_snk_pdo3** (*Optional*, float): This is the desired PDO3 voltage. Range is 5.0 to 20.0. Default is 15.0.
-+ **i_snk_pdo1** (*Optional*, float): This is the desired PDO1 current. Range is 0.0 to 5.0. Default is 1.5.
-+ **i_snk_pdo2** (*Optional*, float): This is the desired PDO2 current. Range is 0.0 to 5.0. Default is 1.5.
-+ **i_snk_pdo3** (*Optional*, float): This is the desired PDO3 current. Range is 0.0 to 5.0. Default is 1.0.
++ **i_snk_pdo1** (*Optional*, float): This is the desired PDO1 current. Range is 0.0 to 5.0. 5.0A is only available with 20V. For all other voltages the maximum current is 3.0A. Default is 1.5.
++ **i_snk_pdo2** (*Optional*, float): This is the desired PDO2 current. Range is 0.0 to 5.0. 5.0A is only available with 20V. For all other voltages the maximum current is 3.0A. Default is 1.5.
++ **i_snk_pdo3** (*Optional*, float): This is the desired PDO3 current. Range is 0.0 to 5.0. 5.0A is only available with 20V. For all other voltages the maximum current is 3.0A. Default is 1.0.
 + **shift_vbus_hl1** (*Optional*, percentage): This is the percentage above PDO1 voltage when the Over Voltage Lock Out occurs. Range is 1% to 15%. Default is 10%.
 + **shift_vbus_ll1** (*Optional*, percentage): This is the percentage below PDO1 voltage when the Under Voltage Lock Out occurs. Range is 1% to 15%. Default is 15%.
 + **shift_vbus_hl2** (*Optional*, percentage): This is the percentage above PDO2 voltage when the Over Voltage Lock Out occurs. Range is 1% to 15%. Default is 5%.
@@ -128,7 +128,8 @@ sensor:
 
 ## NVM Configuration
 
-When configuring the STUSB4500 for the first time you should realize the default configuration will allow up to 20V on V<sub>BUS</sub>. Make sure your circuit can either support 20V or configure the NVM using a Power Source that will NOT produce 20V like USB 2.0 or a non-PD USB-C charger.
+> [!CAUTION]
+> When configuring the STUSB4500 for the first time you should realize the default configuration will allow up to 20V on V<sub>BUS</sub>. Make sure your circuit can either support 20V or configure the NVM using a Power Source that will NOT produce 20V like USB 2.0 or a non-PD USB-C charger.
 
 Using the STUSB4500 ESPHome component requires the following steps:
 
