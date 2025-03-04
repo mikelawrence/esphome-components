@@ -178,17 +178,24 @@ typedef union
   } __attribute__((packed)) bank4;
 } NVM_TypeDef;
 
-enum PowerOkConfig
-{
-  CONFIGURATION_1,
-  CONFIGURATION_2,
-  CONFIGURATION_3,
-};
-
 namespace esphome
 {
   namespace stusb4500
   {
+    enum PowerOkConfig
+    {
+      CONFIGURATION_1,
+      CONFIGURATION_2,
+      CONFIGURATION_3,
+    };
+    enum GPIOConfig
+    {
+      SW_CTRL_GPIO,
+      ERROR_RECOVERY,
+      DEBUG,
+      SINK_POWER,
+    };
+
     class STUSB4500Component : public i2c::I2CDevice, public Component
     {
     public:
@@ -215,10 +222,14 @@ namespace esphome
       void set_vbus_disch_time_to_pdo(uint32_t milliseconds) { this->vbus_disch_time_to_pdo_ = milliseconds; };
       void set_vbus_disch_disable(bool disable) { this->vbus_disch_disable_ = disable; };
       void set_power_ok_cfg(PowerOkConfig value) { this->power_ok_cfg_ = value; };
+      void set_gpio_cfg(GPIOConfig value) { this->gpio_cfg_ = value; };
       void set_usb_comm_capable(bool capable) { this->usb_comm_capable_ = capable; };
       void set_snk_uncons_power(bool unconstrained) { this->snk_uncons_power_ = unconstrained; };
       void set_req_src_current(bool require) { this->req_src_current_ = require; };
       void set_power_only_above_5v(bool above) { this->power_only_above_5v_ = above; };
+
+      bool turn_gpio_on();
+      bool turn_gpio_off();
 
       // ========== INTERNAL METHODS ==========
       void setup() override;
@@ -277,6 +288,14 @@ namespace esphome
       const uint8_t SEND_MESSAGE = 0x26;
       const uint8_t REG_DEV_CTRL = 0x1D;
 
+      const uint8_t REG_RESET_CTRL = 0x23;
+      const uint8_t REG_PE_FSM = 0x29;
+      const uint8_t REG_GPIO3_SW_GPIO = 0x2D;
+      const uint8_t REG_WHO_AM_I = 0x2F;
+      const uint8_t REG_RX_BYTE_CNT = 0x30;
+      const uint8_t REG_RX_HEADER = 0x31;
+      const uint8_t REG_RX_DATA_OBJ = 0x33;
+
       NVM_TypeDef sector[5];
       uint8_t pd_status_{255};
 
@@ -300,6 +319,7 @@ namespace esphome
       uint16_t vbus_disch_time_to_pdo_{288};
       bool vbus_disch_disable_{false};
       PowerOkConfig power_ok_cfg_{CONFIGURATION_2};
+      GPIOConfig gpio_cfg_{ERROR_RECOVERY};
       bool usb_comm_capable_{false};
       bool snk_uncons_power_{false};
       bool req_src_current_{false};
@@ -355,8 +375,7 @@ namespace esphome
       PowerOkConfig nvm_get_power_ok_cfg_();
       uint8_t nvm_get_external_power_(void);
       uint8_t nvm_get_usb_comm_capable_(void);
-      uint8_t nvm_get_config_ok_gpio_(void);
-      uint8_t nvm_get_gpio_ctrl_(void);
+      GPIOConfig nvm_get_gpio_cfg_(void);
       uint8_t nvm_get_power_above_5v_only_(void);
       uint8_t nvm_get_req_src_current_(void);
       void nvm_set_pdo_number_(uint8_t pdo_numb);
@@ -371,8 +390,7 @@ namespace esphome
       void nvm_set_power_ok_cfg_(PowerOkConfig value);
       void nvm_set_external_power_(uint8_t value);
       void nvm_set_usb_comm_capable_(uint8_t value);
-      void nvm_set_config_ok_gpio_(uint8_t value);
-      void nvm_set_gpio_ctrl_(uint8_t value);
+      void nvm_set_gpio_cfg_(GPIOConfig value);
       void nvm_set_power_above_5v_only_(uint8_t value);
       void nvm_set_req_src_current_(uint8_t value);
     };

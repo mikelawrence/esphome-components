@@ -3,6 +3,8 @@ import esphome.config_validation as cv
 from esphome.components import sensor, i2c, text_sensor
 from esphome import core, pins
 from esphome.core import TimePeriod, TimePeriodSeconds
+from esphome import automation
+from esphome.automation import maybe_simple_id
 
 from esphome.const import (
     CONF_ID,
@@ -48,6 +50,7 @@ ICON_USBC = "mdi:usb-c-port"
 CODEOWNERS = ["@mikelawrence"]
 DEPENDENCIES = ["i2c"]
 
+
 stusb4500_ns = cg.esphome_ns.namespace("stusb4500")
 STUSB4500Component = stusb4500_ns.class_(
     "STUSB4500Component", i2c.I2CDevice, cg.PollingComponent
@@ -59,6 +62,18 @@ POWER_OK_CONFIG = {
     "CONFIGURATION_2": PowerOkConfig.CONFIGURATION_2,
     "CONFIGURATION_3": PowerOkConfig.CONFIGURATION_3,
 }
+
+GPIOConfig = stusb4500_ns.enum("GPIOConfig")
+GPIO_CONFIG = {
+    "SW_CTRL_GPIO": GPIOConfig.SW_CTRL_GPIO,
+    "ERROR_RECOVERY": GPIOConfig.ERROR_RECOVERY,
+    "DEBUG": GPIOConfig.DEBUG,
+    "SINK_POWER": GPIOConfig.SINK_POWER,
+}
+
+# Actions
+TurnGpioOn = stusb4500_ns.class_("TurnGpioOn", automation.Action)
+TurnGpioOff = stusb4500_ns.class_("TurnGpioOff", automation.Action)
 
 
 def validate_pdo_voltage(value):
@@ -183,6 +198,7 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_POWER_OK_CFG): cv.enum(
                 POWER_OK_CONFIG, upper=True, space="_"
             ),
+            cv.Optional(CONF_GPIO_CFG): cv.enum(GPIO_CONFIG, upper=True, space="_"),
             cv.Optional(CONF_USB_COMM_CAPABLE): cv.boolean,
             cv.Optional(CONF_SNK_UNCONS_POWER): cv.boolean,
             cv.Optional(CONF_REQ_SRC_CURRENT): cv.boolean,
@@ -199,8 +215,7 @@ CONFIG_SCHEMA = (
         }
     )
     # .extend(cv.polling_component_schema("60s"))
-    .extend(cv.COMPONENT_SCHEMA)
-    .extend(i2c.i2c_device_schema(0x28))
+    .extend(cv.COMPONENT_SCHEMA).extend(i2c.i2c_device_schema(0x28))
 )
 
 
@@ -257,6 +272,8 @@ async def to_code(config):
         cg.add(var.set_vbus_disch_disable(config[CONF_VBUS_DISCH_DISABLE]))
     if CONF_POWER_OK_CFG in config:
         cg.add(var.set_power_ok_cfg(config[CONF_POWER_OK_CFG]))
+    if CONF_GPIO_CFG in config:
+        cg.add(var.set_gpio_cfg(config[CONF_GPIO_CFG]))
     if CONF_USB_COMM_CAPABLE in config:
         cg.add(var.set_usb_comm_capable(config[CONF_USB_COMM_CAPABLE]))
     if CONF_SNK_UNCONS_POWER in config:
@@ -268,4 +285,26 @@ async def to_code(config):
     if CONF_PD_STATE in config:
         cg.add(var.set_pd_state_sensor(await sensor.new_sensor(config[CONF_PD_STATE])))
     if CONF_PD_STATUS in config:
-        cg.add(var.set_pd_status_sensor(await text_sensor.new_text_sensor(config[CONF_PD_STATUS])))
+        cg.add(
+            var.set_pd_status_sensor(
+                await text_sensor.new_text_sensor(config[CONF_PD_STATUS])
+            )
+        )
+
+
+STUSB4500_ACTION_SCHEMA = maybe_simple_id(
+    {
+        cv.Required(CONF_ID): cv.use_id(STUSB4500Component),
+    }
+)
+
+
+@automation.register_action(
+    "stusb4500.turn_gpio_on", TurnGpioOn, STUSB4500_ACTION_SCHEMA
+)
+@automation.register_action(
+    "stusb4500.turn_gpio_off", TurnGpioOff, STUSB4500_ACTION_SCHEMA
+)
+async def stusb4500_fan_to_code(config, action_id, template_arg, args):
+    paren = await cg.get_variable(config[CONF_ID])
+    return cg.new_Pvariable(action_id, template_arg, paren)

@@ -339,6 +339,7 @@ namespace esphome
       all_match &= (this->vbus_disch_time_to_0v_ == this->nvm_get_vbus_disch_time_to_0v_());
       all_match &= (this->vbus_disch_time_to_pdo_ == this->nvm_get_vbus_disch_time_to_pdo_());
       all_match &= (this->power_ok_cfg_ == this->nvm_get_power_ok_cfg_());
+      all_match &= (this->gpio_cfg_ == this->nvm_get_gpio_cfg_());
       all_match &= (this->usb_comm_capable_ == this->nvm_get_usb_comm_capable_());
       all_match &= (this->snk_uncons_power_ == this->nvm_get_external_power_());
       all_match &= (this->req_src_current_ == this->nvm_get_req_src_current_());
@@ -366,6 +367,7 @@ namespace esphome
       this->nvm_set_vbus_disch_time_to_pdo_(this->vbus_disch_time_to_pdo_);
       this->nvm_set_vbus_disch_disable_(this->vbus_disch_disable_);
       this->nvm_set_power_ok_cfg_(this->power_ok_cfg_);
+      this->nvm_set_gpio_cfg_(this->gpio_cfg_);
       this->nvm_set_usb_comm_capable_(this->usb_comm_capable_);
       this->nvm_set_external_power_(this->snk_uncons_power_);
       this->nvm_set_req_src_current_(this->req_src_current_);
@@ -667,9 +669,18 @@ namespace esphome
         return CONFIGURATION_1;
     }
 
-    uint8_t STUSB4500Component::nvm_get_gpio_ctrl_(void)
+    GPIOConfig STUSB4500Component::nvm_get_gpio_cfg_(void)
     {
-      return this->sector[1].bank1.GPIO_Cfg;
+      uint8_t value = this->sector[1].bank1.GPIO_Cfg;
+
+      if (value == 0)
+        return SW_CTRL_GPIO;
+      else if (value == 2)
+        return DEBUG;
+      else if (value == 3)
+        return SINK_POWER;
+      else
+        return ERROR_RECOVERY;
     }
 
     uint8_t STUSB4500Component::nvm_get_power_above_5v_only_(void)
@@ -872,12 +883,19 @@ namespace esphome
       this->sector[4].bank4.Power_OK_Cfg = new_value;
     }
 
-    void STUSB4500Component::nvm_set_gpio_ctrl_(uint8_t value)
+    void STUSB4500Component::nvm_set_gpio_cfg_(GPIOConfig value)
     {
-      if (value > 3)
-        value = 3;
+      uint8_t new_value;
+      if (value == SW_CTRL_GPIO)
+        new_value = 0;
+      else if (value == DEBUG)
+        new_value = 2;
+      else if (value == SINK_POWER)
+        new_value = 3;
+      else
+        new_value = 1; // ERROR_RECOVERY is default
 
-      this->sector[1].bank1.GPIO_Cfg = value;
+      this->sector[1].bank1.GPIO_Cfg = new_value;
     }
 
     void STUSB4500Component::nvm_set_power_above_5v_only_(uint8_t value)
@@ -894,6 +912,22 @@ namespace esphome
         value = 1;
 
       this->sector[4].bank4.Req_Src_Current = value;
+    }
+
+    bool STUSB4500Component::turn_gpio_on()
+    {
+      uint8_t buffer[1];
+
+      buffer[0] = 1;  // GPIO Low
+      return (this->write_register(REG_GPIO3_SW_GPIO, buffer, 1));
+    }
+
+    bool STUSB4500Component::turn_gpio_off()
+    {
+      uint8_t buffer[1];
+
+      buffer[0] = 0;  // GPIO High-Z
+      return (this->write_register(REG_GPIO3_SW_GPIO, buffer, 1));
     }
 
   } // namespace stusb4500

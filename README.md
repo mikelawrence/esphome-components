@@ -120,11 +120,31 @@ sensor:
 + **snk_uncons_power** (*Optional*, boolean): When set to ```true``` the STUSB4500 will tell the connected device external power is available. Default is ```false```.
 + **req_src_current** (*Optional*, boolean): When set to ```true``` the STUSB4500 will report the source current from source instead of the sink. Default is ```false```.
 + **power_ok_cfg** (*Optional*, boolean): Selects the POWER_OK pins configuration. Options are ```CONFIGURATION_1```, ```CONFIGURATION_2``` or ```CONFIGURATION_3```. Default is ```CONFIGURATION_2```.
++ **gpio_cfg** (*Optional*, boolean): Selects the GPIO configuration. Options are ```SW_CTRL_GPIO```, ```ERROR_RECOVERY```, ```DEBUG``` or ```SINK_POWER```. Default is ```ERROR_RECOVERY```.
 + **power_only_above_5v** (*Optional*, boolean): When set to ```true``` the STUSB4500 will disable PDO0 negotiation. I other words 5V is no longer an option. Default is ```false```.
 
 ## Sensors
 + **pd_state** (*Optional*): Current PD State as an integer. Range 0 to 3 where 0 is no PD negotiated. A value of 1, 2 or 3 indicates which PDO was negotiated. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 + **pd_status** (*Optional*): Easy to read PD State (e.g. "12V @ 3A" ). All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
+
+## Actions
+When the GPIO is configured for software control ```gpio_cfg: SW_CTRL_GPIO ``` these actions control the state of the output. 
+
++ **stusb4500.turn_gpio_on** Will pull the GPIO low.
++ **stusb4500.turn_gpio_off** Will set the output to High-Z.
+
+Example using automations...
+```
+on_value_range:
+  - below: 5.0
+    then:
+      - stusb4500.turn_gpio_on: pd_controller
+```
+Example in lambdas...
+```
+- lambda: |-
+  id(pd_controller).turn_gpio_on();
+```
 
 ## NVM Configuration
 
