@@ -39,25 +39,25 @@ namespace esphome
         delay(10);
       }
 
-      this->send_command_(TFMINI_CMD_SOFT_RESET); // send first Soft Reset Command
-      ESP_LOGV(TAG, "Send first Soft Reset Command");
+      // this->send_command_(TFMINI_CMD_SOFT_RESET); // send first Soft Reset Command
+      // ESP_LOGV(TAG, "Send first Soft Reset Command");
 
-      while (!this->soft_reset_received_)
-      {
-        process_rx_data();
-        if ((millis() - this->cmd_time_) > 50)
-        {
-          this->send_command_(TFMINI_CMD_SOFT_RESET); // send next Soft Reset Command
-          ESP_LOGV(TAG, "Send repeat Soft Reset Command");
-          attempts++;
-        }
-        if (attempts > 20)
-        {
-          ESP_LOGE(TAG, "No response from %s", LOG_STR_ARG(model_to_str(this->model_)));
-          this->mark_failed();
-          return;
-        }
-      }
+      // while (!this->soft_reset_received_)
+      // {
+      //   process_rx_data();
+      //   if ((millis() - this->cmd_time_) > 50)
+      //   {
+      //     this->send_command_(TFMINI_CMD_SOFT_RESET); // send next Soft Reset Command
+      //     ESP_LOGV(TAG, "Send repeat Soft Reset Command");
+      //     attempts++;
+      //   }
+      //   if (attempts > 20)
+      //   {
+      //     ESP_LOGE(TAG, "No response from %s", LOG_STR_ARG(model_to_str(this->model_)));
+      //     this->mark_failed();
+      //     return;
+      //   }
+      // }
       if (this->low_power_)
       {
         this->sample_rate_received_ = true;        // bypass sending Sample Rate Command
@@ -102,7 +102,7 @@ namespace esphome
           {
             // ESP_LOGE(TAG, "Low Power=%s, Sample Rate=%s, Version=%s", this->low_power_received_ ? "True" : "False", this->sample_rate_received_ ? "True" : "False", this->version_received_ ? "True" : "False");
             ESP_LOGE(TAG, "No response from %s", LOG_STR_ARG(model_to_str(this->model_)));
-            // this->mark_failed();
+            this->mark_failed();
             break;
           }
         }
@@ -126,6 +126,7 @@ namespace esphome
     {
       ESP_LOGCONFIG(TAG, "TFmini:");
       ESP_LOGCONFIG(TAG, "  Model: %s", LOG_STR_ARG(model_to_str(this->model_)));
+      ESP_LOGCONFIG(TAG, "  Firmware Version: %s", this->firmware_version_.c_str());
       LOG_PIN("  CONFIG Pin: ", this->config_pin_);
       ESP_LOGCONFIG(TAG, "  Sample Rate: %u", this->sample_rate_);
       if (this->model_ != TFMINI_MODEL_TFMINI_PLUS)
@@ -133,7 +134,6 @@ namespace esphome
       LOG_SENSOR("  ", "Distance:", this->distance_sensor_);
       LOG_SENSOR("  ", "Signal Strength:", this->signal_strength_sensor_);
       LOG_SENSOR("  ", "Temperature:", this->temperature_sensor_);
-      LOG_TEXT_SENSOR("  ", "Version:", this->version_sensor_);
       ESP_LOGCONFIG(TAG, "  Config time: %0.3f sec", this->config_elapse_);
     }
 
@@ -279,16 +279,11 @@ namespace esphome
       {
         if (this->verify_rx_packet_checksum_())
         {
-          std::string version = 'v' + std::to_string(this->rx_buffer_[5]) + '.' +
-                                std::to_string(this->rx_buffer_[4]) + '.' +
-                                std::to_string(this->rx_buffer_[3]);
-          // checksums match
-          if (this->version_sensor_ != nullptr)
-          {
-            this->version_sensor_->publish_state(version);
-          }
+          this->firmware_version_ = 'v' + std::to_string(this->rx_buffer_[5]) + '.' +
+                                    std::to_string(this->rx_buffer_[4]) + '.' +
+                                    std::to_string(this->rx_buffer_[3]);
           this->version_received_ = true;
-          ESP_LOGV(TAG, "Received Firmware Version Response Frame, Version = %s", version.c_str());
+          ESP_LOGE(TAG, "Received Firmware Version Response Frame, Version = %s", this->firmware_version_.c_str());
         }
       }
       else if (this->rx_buffer_[2] == TFMINI_CMD_SOFT_RESET)

@@ -36,9 +36,6 @@ sensor:
     model: TFMINI_PLUS
     sample_rate: 10
     low_power: true
-    version:
-      id: tfmini_version
-      name: "TFMini Firmware Version"
     signal_strength:
       id: tfmini_signal_strength
       name: "Signal"
@@ -65,7 +62,6 @@ sensor:
 + **distance** (*Optional*): Distance in cm. For the TFMINI_PLUS and TFMINI_S the range is 10-1200cm. For the TFLuna the range is 20-800cm. A distance of 10000cm means the sensor is not receiving enough signal, most likely open air. A distance of 0cm means the sensor is saturated and there is no measurement possible. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 + **signal_strength** (*Optional*): Represents the signal strength with a range of 0-65535. The longer the measurement distance, the lower signal strength will be. The lower the reflectivity is, the lower the signal strength will be. When signal strength is less than 100 detection is unreliable and distance is set to 10000cm. When signal strength is 65535 detection is unreliable and distance is set to 0cm. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 + **temperature** (*Optional*): Internal temperature in °C. It's not clear how useful this sensor because it certainly does not measure room temperature. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
-+ **version** (*Optional*): Firmware version of Range Finder Sensor. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
 ## ESPHome STUSB4500 External Component
 

@@ -41,7 +41,6 @@ namespace esphome
       void set_config_pin(GPIOPin *pin) { this->config_pin_ = pin; }
       void set_signal_strength_sensor(sensor::Sensor *signal_strength_sensor) { this->signal_strength_sensor_ = signal_strength_sensor; };
       void set_temperature_sensor(sensor::Sensor *temperature_sensor) { this->temperature_sensor_ = temperature_sensor; };
-      void set_version_sensor(text_sensor::TextSensor *version_sensor) { this->version_sensor_ = version_sensor; };
       void set_low_power_mode(uint32_t mode) { this->low_power_ = mode; };
 
       // ========== INTERNAL METHODS ==========
@@ -66,6 +65,8 @@ namespace esphome
       bool sample_rate_received_ = false;
       bool low_power_received_ = false;
       bool version_received_ = false;
+      std::string firmware_version_{"v0.0.0"};
+      
       std::vector<uint8_t> rx_buffer_;
       std::vector<uint8_t> tx_buffer_;
 
@@ -82,7 +83,6 @@ namespace esphome
       // Pins
       GPIOPin *config_pin_{nullptr};
       // Sensors
-      text_sensor::TextSensor *version_sensor_{nullptr};
       sensor::Sensor *distance_sensor_{nullptr};
       sensor::Sensor *signal_strength_sensor_{nullptr};
       sensor::Sensor *temperature_sensor_{nullptr};

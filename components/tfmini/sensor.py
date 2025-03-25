@@ -77,10 +77,6 @@ CONFIG_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_TEMPERATURE,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-        cv.Optional(CONF_VERSION): text_sensor.text_sensor_schema(
-            icon=ICON_CHIP,
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
         cv.Optional(CONF_LOW_POWER, default=False): cv.boolean,
     }
 ).extend(uart.UART_DEVICE_SCHEMA)
@@ -151,12 +147,6 @@ async def to_code(config):
         cg.add(
             var.set_temperature_sensor(
                 await sensor.new_sensor(config[CONF_TEMPERATURE])
-            )
-        )
-    if CONF_VERSION in config:
-        cg.add(
-            var.set_version_sensor(
-                await text_sensor.new_text_sensor(config[CONF_VERSION])
             )
         )
     if CONF_LOW_POWER in config:
