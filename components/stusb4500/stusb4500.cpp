@@ -4,8 +4,6 @@
 #include <sstream>
 #include <string>
 
-#include "esphome/core/helpers.h"
-#include "esphome/core/hal.h"
 #include "esphome/core/log.h"
 
 namespace esphome
@@ -65,10 +63,12 @@ namespace esphome
         }
       }
       this->pd_status_ = this->rdo_.b.Object_Pos;
+#ifdef USE_SENSOR
       if (this->pd_state_sensor_ != nullptr)
       {
         this->pd_state_sensor_->publish_state(this->pd_status_);
       }
+#endif
       current = this->rdo_.b.Operating_Current / 100.0;
       if (this->pd_status_ > 0)
       {
@@ -90,21 +90,37 @@ namespace esphome
           current = 0.0;
           break;
         }
-        if (this->pd_status_sensor_ != nullptr)
+
+#ifdef USE_TEXT_SENSOR
+        if (this->pd_status_text_sensor_ != nullptr)
         {
           std::ostringstream pd;
           pd << voltage << "V @ " << current << "A";
-          this->pd_status_sensor_->publish_state(pd.str());
+          this->pd_status_text_sensor_->publish_state(pd.str());
         }
+#endif
       }
       else
       {
         // No PD negotiated
-        if (this->pd_status_sensor_ != nullptr)
+        // this->mark_failed();
+#ifdef USE_TEXT_SENSOR
+        if (this->pd_status_text_sensor_ != nullptr)
         {
-          this->pd_status_sensor_->publish_state("Unknown");
+          this->pd_status_text_sensor_->publish_state("Unknown");
         }
+#endif
       }
+#ifdef USE_TEXT_SENSOR
+      if (this->pd_status_text_sensor_ == nullptr)
+      {
+        ESP_LOGE(TAG, "PD Status Text Sensor is null");
+      }
+      else
+      {
+        ESP_LOGE(TAG, "PD Status Text Sensor is not null");
+      }
+#endif
     }
 
     void STUSB4500Component::dump_config()
@@ -144,8 +160,12 @@ namespace esphome
       }
       LOG_I2C_DEVICE(this);
       LOG_PIN("  ALERT Pin: ", this->alert_pin_);
+#ifdef USE_SENSOR
       LOG_SENSOR("  ", "PD State:", this->pd_state_sensor_);
-      LOG_TEXT_SENSOR("  ", "PD Status:", this->pd_status_sensor_);
+#endif
+#ifdef USE_TEXT_SENSOR
+      LOG_TEXT_SENSOR("  ", "PD Status:", this->pd_status_text_sensor_);
+#endif
     }
 
     void STUSB4500Component::soft_reset_()
@@ -225,8 +245,6 @@ namespace esphome
 
     void STUSB4500Component::set_pdo_voltage_(uint8_t pdo_numb, float voltage)
     {
-      // this->nvm_set_pdo_voltage_(pdo_numb, voltage);
-
       if (pdo_numb == 1)
         return;
 
@@ -325,6 +343,7 @@ namespace esphome
     uint8_t STUSB4500Component::nvm_compare_()
     {
       uint8_t all_match = true;
+      uint8_t match;
 
       // compare NVM with ESPHome settings
       all_match &= (this->snk_pdo_numb_ == this->nvm_get_pdo_number_());
@@ -918,7 +937,7 @@ namespace esphome
     {
       uint8_t buffer[1];
 
-      buffer[0] = 1;  // GPIO Low
+      buffer[0] = 1; // GPIO Low
       return (this->write_register(REG_GPIO3_SW_GPIO, buffer, 1));
     }
 
@@ -926,7 +945,7 @@ namespace esphome
     {
       uint8_t buffer[1];
 
-      buffer[0] = 0;  // GPIO High-Z
+      buffer[0] = 0; // GPIO High-Z
       return (this->write_register(REG_GPIO3_SW_GPIO, buffer, 1));
     }
 

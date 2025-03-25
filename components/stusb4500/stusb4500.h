@@ -1,12 +1,17 @@
 #pragma once
 
 // #include <vector>
-#include "esphome/core/hal.h"
 #include "esphome/core/component.h"
+#include "esphome/core/defines.h"
+#include "esphome/core/hal.h"
 #include "esphome/core/helpers.h"
-#include "esphome/components/sensor/sensor.h"
-#include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/i2c/i2c.h"
+#ifdef USE_SENSOR
+#include "esphome/components/sensor/sensor.h"
+#endif
+#ifdef USE_TEXT_SENSOR
+#include "esphome/components/text_sensor/text_sensor.h"
+#endif
 
 // SNK_PDO
 typedef union
@@ -196,12 +201,15 @@ namespace esphome
       SINK_POWER,
     };
 
-    class STUSB4500Component : public i2c::I2CDevice, public Component
+    class STUSB4500Component : public Component, public i2c::I2CDevice
     {
+#ifdef USE_SENSOR
+      SUB_SENSOR(pd_state)
+#endif
+#ifdef USE_TEXT_SENSOR
+      SUB_TEXT_SENSOR(pd_status)
+#endif
     public:
-      void set_pd_state_sensor(sensor::Sensor *pd_state_sensor) { this->pd_state_sensor_ = pd_state_sensor; };
-      void set_pd_status_sensor(text_sensor::TextSensor *pd_status_sensor) { this->pd_status_sensor_ = pd_status_sensor; };
-
       void set_alert_pin(InternalGPIOPin *pin) { this->alert_pin_ = pin; };
       void set_flash_nvm(bool nvm) { this->flash_nvm_ = nvm; };
       void set_default_nvm(bool nvm) { this->default_nvm_ = nvm; };
@@ -233,10 +241,7 @@ namespace esphome
 
       // ========== INTERNAL METHODS ==========
       void setup() override;
-      // void update() override;
-      // void loop() override;
       void dump_config() override;
-      // float get_setup_priority() const override { return setup_priority::BUS; }
 
     protected:
       const uint8_t REG_DEFAULT = 0xFF;
@@ -328,10 +333,6 @@ namespace esphome
       // Pins
       InternalGPIOPin *alert_pin_{nullptr};
 
-      // Sensors
-      sensor::Sensor *pd_state_sensor_{nullptr};
-      text_sensor::TextSensor *pd_status_sensor_{nullptr};
-
       // local variables
       SNK_PDO_TypeDef pdos_[3];
       RDO_REG_STATUS_TypeDef rdo_;
@@ -354,7 +355,6 @@ namespace esphome
       void dump_snk_pdo(uint8_t pdo_numb);
 
       // NVM functions
-      // void dump_nvm_();
       // void nvm_get_default_(NVM_TypeDef *default);
       uint8_t nvm_compare_();
       // uint8_t nvm_compare_default_();

@@ -74,22 +74,29 @@ The STUSB4500 is a USB power delivery controller that supports sink up to 100 W 
 
 There are 3 PDOs that you can configure with PD1 fixed at 5V. You can vary PD1's current. If you have all three PDOs configured the STUSB4500 will try to negotiate a contract with the PDOs in the following order: PD3, PD2 and PD1. If you don't want PDO1 negotiated then set ```power_only_above_5v: true```.
 
-The configuration below the STUSB4500 will try to negotiate 12V @ 3A then 9V @ 3A. If neither are available then it won't negotiate at all.
+The configuration below the STUSB4500 will try to negotiate 12V @ 3A then 9V @ 3A. If neither are available then it won't negotiate at all. 
+
+It also creates a ```PD State``` and ```PD Status``` Text Sensor.
 
 ```yaml
 # Sample configuration entry example
+stusb4500:
+  alert_pin: GPIO8
+  snk_pdo_numb: 3
+  v_snk_pdo2: 9.00V
+  i_snk_pdo2: 3.00A
+  v_snk_pdo3: 12.00V
+  i_snk_pdo3: 3.00A
+  power_only_above_5v: true
+  usb_comms_capable: true
+
 sensor:
   - platform: stusb4500
-    alert_pin: GPIO8
-    snk_pdo_numb: 3
-    v_snk_pdo2: 9.00V
-    i_snk_pdo2: 3.00A
-    v_snk_pdo3: 12.00V
-    i_snk_pdo3: 3.00A
-    power_only_above_5v: true
-    usb_comms_capable: true
     pd_state:
       name: "PD State"
+
+text_sensor:
+  - platform: stusb4500
     pd_status:
       name: "PD Status"
 ```
@@ -121,6 +128,8 @@ sensor:
 
 ## Sensors
 + **pd_state** (*Optional*): Current PD State as an integer. Range 0 to 3 where 0 is no PD negotiated. A value of 1, 2 or 3 indicates which PDO was negotiated. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
+
+## Text Sensors
 + **pd_status** (*Optional*): Easy to read PD State (e.g. "12V @ 3A" ). All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
 ## Actions
