@@ -122,8 +122,8 @@ text_sensor:
 + **usb_comms_capable** (*Optional*, boolean): When set to ```true``` the STUSB4500 will tell the connected device that USB communications are possible. Default is ```false```.
 + **snk_uncons_power** (*Optional*, boolean): When set to ```true``` the STUSB4500 will tell the connected device external power is available. Default is ```false```.
 + **req_src_current** (*Optional*, boolean): When set to ```true``` the STUSB4500 will report the source current from source instead of the sink. Default is ```false```.
-+ **power_ok_cfg** (*Optional*, boolean): Selects the POWER_OK pins configuration. Options are ```CONFIGURATION_1```, ```CONFIGURATION_2``` or ```CONFIGURATION_3```. Default is ```CONFIGURATION_2```.
-+ **gpio_cfg** (*Optional*, boolean): Selects the GPIO configuration. Options are ```SW_CTRL_GPIO```, ```ERROR_RECOVERY```, ```DEBUG``` or ```SINK_POWER```. Default is ```ERROR_RECOVERY```.
++ **power_ok_cfg** (*Optional*, enumeration): Selects the POWER_OK pins configuration. Options are ```CONFIGURATION_1```, ```CONFIGURATION_2``` or ```CONFIGURATION_3```. Default is ```CONFIGURATION_2```.
++ **gpio_cfg** (*Optional*, enumeration): Selects the GPIO configuration. Options are ```SW_CTRL_GPIO```, ```ERROR_RECOVERY```, ```DEBUG``` or ```SINK_POWER```. Default is ```ERROR_RECOVERY```.
 + **power_only_above_5v** (*Optional*, boolean): When set to ```true``` the STUSB4500 will enable V<sub>BUS</sub> only if PDO2 or PDO3 was negotiated. When ```false``` V<sub>BUS</sub> is enabled at 5V when connected to a non-PD charger. The available current is unknown. Default is ```false```.
 
 ## Sensors
@@ -168,7 +168,7 @@ Using the STUSB4500 ESPHome component requires the following steps:
    If you forgot to add ```flash_nvm: true``` to the configuration you will see an error in the log.
      ```log
      [00:06:27][C][stusb4500:112]: STUSB4500:
-     [00:06:27][E][stusb4500:114]:   NVM does not match current settings, you should set flash_nvm: true for one boot
+     [00:06:27][E][stusb4500:114]:   NVM does not match current settings, you must set flash_nvm: true
      [00:06:27][C][stusb4500:130]:   PDO3 negotiated 9.00V @ 3.00A, 27.00W
      ```
 3. Power cycle your board. Make sure ```NVM matches settings``` is present in the log and that one of your PDOs was negotiated. Configuring the STUSB4500 can be a bit finicky, but keep at it.
@@ -177,4 +177,122 @@ Using the STUSB4500 ESPHome component requires the following steps:
    [00:00:19][C][stusb4500:116]:   NVM matches settings
    [00:00:19][C][stusb4500:130]:   PDO3 negotiated 12.00V @ 3.00A, 36.00W
    ```
-4. The STUSB4500 comonent does check to see that the NVM is indeed different before flashing the NVM but it is prudent to remove the ```NVM matches settings``` after it is clear the STUSB4500 is worked as configured.
+4. The STUSB4500 comonent does check that the NVM is indeed different before flashing it but it is prudent to remove the ```flash_nvm: true``` after it is clear the STUSB4500 is working as configured.
+
+
+## ESPHome C4001 External Component
+
+The DFRobot C4001 (DFROBOT_C4001 or SEN0610) is a millimeter-wave presence detector. The C4001 millimeter-wave presence sensor has the advantage of being able to detect both static and moving objects. It also has a relatively strong anti-interference ability, making it less susceptible to factors such as temperature changes, variations in ambient light, and environmental noise. Whether a person is sitting, sleeping, or in motion, the sensor can quickly detect their presence.
+
+There are two variants:
+
++ DFROBOT_C4001 has a 100° horizontal and 40° vertical field of view, 16 meter presence detection range and 25 meter motion detection range.
++ SEN0610 has a 100° horizontal and 80° vertical field of view, 8 meter presence detection range and 12 meter motion detection range.
+
+<p align="center">
+    <img src="https://www.dfrobot.com/product-2793.html" width="30%"><br />
+    C4001 25m mmWave Presence Sensor
+</p>
+
+The sensor can operate in one of two modes, ```Presence``` and ```Speed and Distance```. In ```Presence``` mode the sensor provides a singular occupancy output. The presence output once presence is detection with stay on for longer period which can be configured. In ```Speed and Distance``` is quick to output the presence of a target and almost as quickly to indicate a clear status. Each time the sensor indicates presence it also outputs distance, speed and energy. All of these parameter update frequently.
+
+More information on the C4001(SEN0609) sensor is available [here](https://www.dfrobot.com/product-2793.html). Information on the C4001(SEN0610) sensor is available [here](https://www.dfrobot.com/product-2795.html).
+
+```yaml
+# Sample configuration entry example
+
+dfrobot_c4001:
+  id: mmwave_sensor
+  uart_id: mmwave_uart
+  mode: PRESENCE
+
+binary_sensor:
+  - platform: dfrobot_c4001
+    config_changed:
+      name: Config Changed
+    occupancy:
+      id: occupancy_uart
+      name: Occupancy via UART
+      
+button:
+  - platform: dfrobot_c4001
+    config_save:
+      name: Config Save
+      entity_category: CONFIG
+
+number:
+  - platform: dfrobot_c4001
+    dfrobot_c4001_id: mmwave_sensor
+    max_range:
+      name: Range Max
+    min_range:
+      name: Range Min
+    trigger_range:
+      name: Range Trigger
+    hold_sensitivity:
+      name: Sensitivity Hold
+    trigger_sensitivity:
+      name: Sensitivity Trigger
+    on_latency:
+      name: Latency On
+    off_latency:
+      name: Latency Off
+    inhibit_time:
+      name: Inhibit Time
+
+switch:
+  - platform: dfrobot_c4001
+    dfrobot_c4001_id: mmwave_sensor
+    led_enable:
+      name: Enable LED
+
+```
+
+## Configuration Variables
++ **mode** (*Required*, enumeration): This sets the operation mode of the sensor. Options are ```PRESENCE``` and ```SPEED_AND_DISTANCE```.
+
+## Buttons
++ **config_save** (*Optional*): When you click this button the current configuration will be saved. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. All Options from [Button Component](https://esphome.io/components/button/index.html#base-button-configuration).
+
+## Binary Sensors
++ **config_changed** (*Optional*): When ```true`` the current sensor configuration has been changed but not saved to the sensor. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
++ **occupancy** (*Optional*): In ```PRESENCE``` mode this indicates presence. In ```SPEED_AND_DISTANCE``` mode this indicates a target is being tracked. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
+
+## Numbers
++ **min_range** (*Optional*): This is the minimum detection range. Default is 0.6 meters (m) with a range of 0.6 to 25.0 m. The manual recommends not changing this value. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```PRESENCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **max_range** (*Optional*): This is the maximum detection range. Default is 6 meters (m) with a range of 0.6 to 25.0 m. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```PRESENCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **trigger_range** (*Optional*): Sets the maximum range at which occupancy can switch to present. The range between max detection range and trigger detection range can NOT cause occupancy to switch to present. Default is 0.6 meters (m) with a range of 0.6 to 25.0 m. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```PRESENCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **hold_sensitivity** (*Optional*): The number represents the ease in which the sensor switches to the present state when someone entered the sensing range of the sensor. Default is 7 (no units) with a range of 0 to 9, higher is more sensitive. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```PRESENCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **trigger_sensitivity** (*Optional*): This number represents ease of continued presence detection after the sensor switched to the present state. Default is 5 (no units) with a range of 0 to 9, higher is more sensitive. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```PRESENCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **on_latency** (*Optional*): This time value is how long presence is detected before switching to the present state. Default is 0.050 (seconds) with a range of 0.0 to 100.0. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```PRESENCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **off_latency** (*Optional*): This time value is how long presence after is no longer detected before switching to the not present state. Default is 15 (seconds) with a range of 0 to 1500. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```PRESENCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **inhibit_time** (*Optional*): The dead-time after switching to the not present state before presence can be detected again. Default is 1 (seconds) with a range of 0.1 to 255.0. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```PRESENCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **threshold_factor** (*Optional*): The larger the number the larger the object and more motion is required to trigger the sensor to Target tracked state. Default is 5 with a range of 0 to 65535. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+
+## Sensors
++ **target_distance** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates distance to target in meters (m). When **occupancy** binary sensor is ```false``` this sensor is not valid. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
++ **target_speed** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates target speed in meters per second (m/s). When **occupancy** binary sensor is ```false``` this sensor is not valid. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
++ **target_energy** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates target energy in no units. When **occupancy** binary sensor is ```false``` this sensor is not valid. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
+
+## Switches
++ **led_enable** (*Optional*): When turned on the green LED will flash when the sensor has been started. The blue LED cannot be disabled with this command. All Options from [Switch Component](https://esphome.io/components/switch/index.html#base-switch-configuration).
++ **micro_motion_enable** (*Optional*): Turns on micro motion mode. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Switch Component](https://esphome.io/components/switch/index.html#base-switch-configuration).
+
+## Actions
++ **dfrobot_c4001.factor_reset** Will perform a factory reset of the module and all configuration values will go back to default. The module will restart with these defaults. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. This is much easier to do with a lambda that accidentally performs a factory reset every second.
+
+Example using automations...
+```
+button:
+  - platform: template
+    name: Factory Reset
+    on_press:
+      - dfrobot_c4001.factory_reset: mmwave_sensor
+    entity_category: CONFIG
+
+```
+Example in lambdas...
+```
+- lambda: |-
+  id(mmwave_sensor).factory_reset();
+```
