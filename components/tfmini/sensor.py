@@ -57,7 +57,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Required(CONF_MODEL): cv.enum(TFMINI_MODELS, upper=True),
         cv.Optional(CONF_SAMPLE_RATE, default=100): cv.int_range(min=1, max=1000),
         cv.Optional(CONF_CONFIG_PIN): cv.All(pins.internal_gpio_output_pin_schema),
-        cv.Optional(CONF_DISTANCE): sensor.sensor_schema(
+        cv.Required(CONF_DISTANCE): sensor.sensor_schema(
             unit_of_measurement=UNIT_CENTIMETER,
             icon=ICON_ARROW_EXPAND_VERTICAL,
             accuracy_decimals=0,

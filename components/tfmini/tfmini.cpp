@@ -38,26 +38,6 @@ namespace esphome
         this->config_pin_->digital_write(true);
         delay(10);
       }
-
-      // this->send_command_(TFMINI_CMD_SOFT_RESET); // send first Soft Reset Command
-      // ESP_LOGV(TAG, "Send first Soft Reset Command");
-
-      // while (!this->soft_reset_received_)
-      // {
-      //   process_rx_data();
-      //   if ((millis() - this->cmd_time_) > 50)
-      //   {
-      //     this->send_command_(TFMINI_CMD_SOFT_RESET); // send next Soft Reset Command
-      //     ESP_LOGV(TAG, "Send repeat Soft Reset Command");
-      //     attempts++;
-      //   }
-      //   if (attempts > 20)
-      //   {
-      //     ESP_LOGE(TAG, "No response from %s", LOG_STR_ARG(model_to_str(this->model_)));
-      //     this->mark_failed();
-      //     return;
-      //   }
-      // }
       if (this->low_power_)
       {
         this->sample_rate_received_ = true;        // bypass sending Sample Rate Command
