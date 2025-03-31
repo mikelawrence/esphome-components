@@ -41,11 +41,11 @@ DEPENDENCIES = ["i2c"]
 MULTI_CONF = True
 
 stusb4500_ns = cg.esphome_ns.namespace("stusb4500")
-STUSB4500Component = stusb4500_ns.class_(
-    "STUSB4500Component", cg.Component, i2c.I2CDevice
+STUSB4500Hub = stusb4500_ns.class_(
+    "STUSB4500Hub", cg.Component, i2c.I2CDevice
 )
 
-CONF_STUSB4500_ID = "stusb4500_id"
+CONF_STUSB4500_HUB_ID = "stusb4500_hub_id"
 
 PowerOkConfig = stusb4500_ns.enum("PowerOkConfig")
 POWER_OK_CONFIG = {
@@ -108,11 +108,16 @@ def validate_disch_time_pdo(value):
         raise cv.Invalid("VBUS Discharge time to PDO must be a multiple of 24 ms")
     return value
 
+HUB_CHILD_SCHEMA = cv.Schema(
+    {
+        cv.GenerateID(CONF_STUSB4500_HUB_ID): cv.use_id(STUSB4500Hub),
+    }
+)
 
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
-            cv.GenerateID(): cv.declare_id(STUSB4500Component),
+            cv.GenerateID(): cv.declare_id(STUSB4500Hub),
             cv.Optional(CONF_ALERT_PIN): pins.internal_gpio_input_pin_schema,
             cv.Optional(CONF_FLASH_NVM): cv.boolean,
             cv.Optional(CONF_DEFAULT_NVM): cv.boolean,
@@ -265,7 +270,7 @@ async def to_code(config):
 
 # STUSB4500_ACTION_SCHEMA = maybe_simple_id(
 #     {
-#         cv.Required(CONF_ID): cv.use_id(STUSB4500Component),
+#         cv.Required(CONF_ID): cv.use_id(STUSB4500Hub),
 #     }
 # )
 

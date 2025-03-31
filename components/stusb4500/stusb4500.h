@@ -201,7 +201,7 @@ namespace esphome
       SINK_POWER,
     };
 
-    class STUSB4500Component : public Component, public i2c::I2CDevice
+    class STUSB4500Hub : public Component, public i2c::I2CDevice
     {
 #ifdef USE_SENSOR
       SUB_SENSOR(pd_state)

@@ -12,7 +12,7 @@ namespace esphome
   {
     static const char *const TAG = "stusb4500";
 
-    void STUSB4500Component::setup()
+    void STUSB4500Hub::setup()
     {
       float voltage, current;
 
@@ -103,7 +103,6 @@ namespace esphome
       else
       {
         // No PD negotiated
-        // this->mark_failed();
 #ifdef USE_TEXT_SENSOR
         if (this->pd_status_text_sensor_ != nullptr)
         {
@@ -123,7 +122,7 @@ namespace esphome
 #endif
     }
 
-    void STUSB4500Component::dump_config()
+    void STUSB4500Hub::dump_config()
     {
       uint8_t match;
 
@@ -136,7 +135,7 @@ namespace esphome
       {
         if (!this->nvm_compare_())
         {
-          ESP_LOGE(TAG, "  NVM does not match current settings, you should set flash_nvm: true for one boot");
+          ESP_LOGE(TAG, "  NVM does not match current settings, you must set flash_nvm: true");
         }
         else
         {
@@ -168,7 +167,7 @@ namespace esphome
 #endif
     }
 
-    void STUSB4500Component::soft_reset_()
+    void STUSB4500Hub::soft_reset_()
     {
       uint8_t buffer[1];
 
@@ -179,7 +178,7 @@ namespace esphome
       this->write_register(REG_PD_COMMAND_CTRL, buffer, 1); // Send Message
     }
 
-    void STUSB4500Component::read_pdos_()
+    void STUSB4500Hub::read_pdos_()
     {
       uint8_t buffer[3 * 4];
 
@@ -192,7 +191,7 @@ namespace esphome
       this->pdo_numb_ = buffer[0];
     }
 
-    SNK_PDO_TypeDef STUSB4500Component::read_pdo_(uint8_t pdo_numb)
+    SNK_PDO_TypeDef STUSB4500Hub::read_pdo_(uint8_t pdo_numb)
     {
       uint8_t buffer[4];
 
@@ -208,7 +207,7 @@ namespace esphome
       return convert_little_endian(*reinterpret_cast<SNK_PDO_TypeDef *>(buffer));
     }
 
-    RDO_REG_STATUS_TypeDef STUSB4500Component::read_rdo_status_()
+    RDO_REG_STATUS_TypeDef STUSB4500Hub::read_rdo_status_()
     {
       uint8_t buffer[4];
 
@@ -217,7 +216,7 @@ namespace esphome
       return convert_little_endian(*reinterpret_cast<RDO_REG_STATUS_TypeDef *>(buffer));
     }
 
-    void STUSB4500Component::write_pdos_()
+    void STUSB4500Hub::write_pdos_()
     {
       uint8_t buffer[3 * 4];
 
@@ -227,7 +226,7 @@ namespace esphome
       this->write_register(REG_DPM_PDO, buffer, 3 * 4);
     }
 
-    void STUSB4500Component::write_pdo_(uint8_t pdo_numb, SNK_PDO_TypeDef pdo_data)
+    void STUSB4500Hub::write_pdo_(uint8_t pdo_numb, SNK_PDO_TypeDef pdo_data)
     {
       uint8_t buffer[4];
 
@@ -243,7 +242,7 @@ namespace esphome
       this->write_register(REG_DPM_PDO + (pdo_numb * 4), buffer, 4); // write all 4-bytes in 32-bit word
     }
 
-    void STUSB4500Component::set_pdo_voltage_(uint8_t pdo_numb, float voltage)
+    void STUSB4500Hub::set_pdo_voltage_(uint8_t pdo_numb, float voltage)
     {
       if (pdo_numb == 1)
         return;
@@ -267,7 +266,7 @@ namespace esphome
       this->pdos_[pdo_numb].fix.Voltage = voltageValue;
     }
 
-    float STUSB4500Component::get_pdo_voltage_(uint8_t pdo_numb)
+    float STUSB4500Hub::get_pdo_voltage_(uint8_t pdo_numb)
     {
       if (pdo_numb < 1)
         pdo_numb = 0;
@@ -286,7 +285,7 @@ namespace esphome
       return voltage;
     }
 
-    void STUSB4500Component::set_pdo_current_(uint8_t pdo_numb, float current)
+    void STUSB4500Hub::set_pdo_current_(uint8_t pdo_numb, float current)
     {
       // this->nvm_set_pdo_current_(pdo_numb, current);
 
@@ -305,7 +304,7 @@ namespace esphome
       this->pdos_[pdo_numb].fix.Operational_Current = currentValue;
     }
 
-    float STUSB4500Component::get_pdo_current_(uint8_t pdo_numb)
+    float STUSB4500Hub::get_pdo_current_(uint8_t pdo_numb)
     {
       if (pdo_numb < 1)
         pdo_numb = 0;
@@ -322,7 +321,7 @@ namespace esphome
       return current;
     }
 
-    void STUSB4500Component::set_pdo_number_(uint8_t pdo_numb)
+    void STUSB4500Hub::set_pdo_number_(uint8_t pdo_numb)
     {
       uint8_t buffer[1];
 
@@ -335,12 +334,12 @@ namespace esphome
       this->write_register(REG_DPM_PDO_NUMB, buffer, 1);
     }
 
-    uint8_t STUSB4500Component::get_pdo_number_()
+    uint8_t STUSB4500Hub::get_pdo_number_()
     {
       return this->pdo_numb_;
     }
 
-    uint8_t STUSB4500Component::nvm_compare_()
+    uint8_t STUSB4500Hub::nvm_compare_()
     {
       uint8_t all_match = true;
       uint8_t match;
@@ -366,7 +365,7 @@ namespace esphome
       return all_match;
     }
 
-    void STUSB4500Component::nvm_update_()
+    void STUSB4500Hub::nvm_update_()
     {
       // update NVM with ESPHome settings
       this->nvm_set_pdo_number_(this->snk_pdo_numb_);
@@ -393,23 +392,7 @@ namespace esphome
       this->nvm_set_power_above_5v_only_(this->power_only_above_5v_);
     }
 
-    // uint8_t STUSB4500Component::nvm_compare_default_()
-    // {
-    //   uint8_t default_sector[5][8] =
-    //       {{0x00, 0x00, 0xB0, 0xAA, 0x00, 0x45, 0x00, 0x00},
-    //        {0x10, 0x40, 0x9C, 0x1C, 0xFF, 0x01, 0x3C, 0xDF},
-    //        {0x02, 0x40, 0x0F, 0x00, 0x32, 0x00, 0xFC, 0xF1},
-    //        {0x00, 0x19, 0x56, 0xAF, 0xF5, 0x35, 0x5F, 0x00},
-    //        {0x00, 0x4B, 0x90, 0x21, 0x43, 0x00, 0x40, 0xFB}};
-
-    //   for (uint8_t sector = 0; sector < 5; sector++)
-    //     if (this->sector[sector].d64 != convert_little_endian(*reinterpret_cast<uint64_t *>(default_sector[sector])))
-    //       return false;
-
-    //   return true;
-    // }
-
-    void STUSB4500Component::nvm_load_default_()
+    void STUSB4500Hub::nvm_load_default_()
     {
       uint8_t default_sector[5][8] =
           {{0x00, 0x00, 0xB0, 0xAA, 0x00, 0x45, 0x00, 0x00},
@@ -422,7 +405,7 @@ namespace esphome
         this->sector[sector].d64 = convert_little_endian(*reinterpret_cast<uint64_t *>(default_sector[sector]));
     }
 
-    uint8_t STUSB4500Component::nvm_read_()
+    uint8_t STUSB4500Hub::nvm_read_()
     {
       uint8_t buffer[8];
 
@@ -475,7 +458,7 @@ namespace esphome
       return !this->write_register(REG_FTP_CTRL_0, buffer, 2);
     }
 
-    uint8_t STUSB4500Component::nvm_write_()
+    uint8_t STUSB4500Hub::nvm_write_()
     {
       uint8_t buffer[8];
       // ESP_LOGD(TAG, "Writing NVM");
@@ -561,7 +544,7 @@ namespace esphome
       return true;
     }
 
-    uint8_t STUSB4500Component::nvm_wait_()
+    uint8_t STUSB4500Hub::nvm_wait_()
     {
       uint8_t buffer[1];
 
@@ -575,12 +558,12 @@ namespace esphome
       return true;
     }
 
-    uint8_t STUSB4500Component::nvm_get_pdo_number_()
+    uint8_t STUSB4500Hub::nvm_get_pdo_number_()
     {
       return this->sector[3].bank3.DPM_Snk_PDO_Numb;
     }
 
-    float STUSB4500Component::nvm_get_pdo_voltage_(uint8_t pdo_numb)
+    float STUSB4500Hub::nvm_get_pdo_voltage_(uint8_t pdo_numb)
     {
       switch (pdo_numb)
       {
@@ -593,7 +576,7 @@ namespace esphome
       }
     }
 
-    float STUSB4500Component::nvm_get_pdo_current_(uint8_t pdo_numb)
+    float STUSB4500Hub::nvm_get_pdo_current_(uint8_t pdo_numb)
     {
       uint8_t currentValue;
       switch (pdo_numb)
@@ -616,7 +599,7 @@ namespace esphome
         return currentValue * 0.50 - 2.50;
     }
 
-    float STUSB4500Component::nvm_get_upper_limit_percentage_(uint8_t pdo_numb)
+    float STUSB4500Hub::nvm_get_upper_limit_percentage_(uint8_t pdo_numb)
     {
       // returns a fraction from 0.01 to 0.15, or 1 to 15% before conversion
       switch (pdo_numb)
@@ -630,7 +613,7 @@ namespace esphome
       }
     }
 
-    float STUSB4500Component::nvm_get_lower_limit_percentage_(uint8_t pdo_numb)
+    float STUSB4500Hub::nvm_get_lower_limit_percentage_(uint8_t pdo_numb)
     {
       // returns a fraction from 0.01 to 0.15, or 1 to 15% before conversion
       switch (pdo_numb)
@@ -644,39 +627,39 @@ namespace esphome
       }
     }
 
-    float STUSB4500Component::nvm_get_flex_current_()
+    float STUSB4500Hub::nvm_get_flex_current_()
     {
       return (float)(this->sector[4].bank4.Snk_PDO_Flex_I) / 100.0;
     }
 
-    uint16_t STUSB4500Component::nvm_get_vbus_disch_time_to_0v_()
+    uint16_t STUSB4500Hub::nvm_get_vbus_disch_time_to_0v_()
     {
       // return a value in ms with a range of 84ms to 1260ms
       return (uint16_t)this->sector[1].bank1.Vbus_Disch_Time_To_0V * 84;
     }
 
-    uint16_t STUSB4500Component::nvm_get_vbus_disch_time_to_pdo_()
+    uint16_t STUSB4500Hub::nvm_get_vbus_disch_time_to_pdo_()
     {
       // returns a value in ms with a range of 24ms to 360ms,
       return (uint16_t)this->sector[1].bank1.Vbus_Disch_Time_To_PDO * 24;
     }
 
-    uint8_t STUSB4500Component::nvm_get_vbus_disch_disable_()
+    uint8_t STUSB4500Hub::nvm_get_vbus_disch_disable_()
     {
       return this->sector[1].bank1.Vbus_Dchg_Mask;
     }
 
-    uint8_t STUSB4500Component::nvm_get_external_power_(void)
+    uint8_t STUSB4500Hub::nvm_get_external_power_(void)
     {
       return this->sector[3].bank3.Snk_Uncons_Power;
     }
 
-    uint8_t STUSB4500Component::nvm_get_usb_comm_capable_(void)
+    uint8_t STUSB4500Hub::nvm_get_usb_comm_capable_(void)
     {
       return this->sector[3].bank3.USB_Comm_Capable;
     }
 
-    PowerOkConfig STUSB4500Component::nvm_get_power_ok_cfg_(void)
+    PowerOkConfig STUSB4500Hub::nvm_get_power_ok_cfg_(void)
     {
       uint8_t value = this->sector[4].bank4.Power_OK_Cfg;
 
@@ -688,7 +671,7 @@ namespace esphome
         return CONFIGURATION_1;
     }
 
-    GPIOConfig STUSB4500Component::nvm_get_gpio_cfg_(void)
+    GPIOConfig STUSB4500Hub::nvm_get_gpio_cfg_(void)
     {
       uint8_t value = this->sector[1].bank1.GPIO_Cfg;
 
@@ -702,17 +685,17 @@ namespace esphome
         return ERROR_RECOVERY;
     }
 
-    uint8_t STUSB4500Component::nvm_get_power_above_5v_only_(void)
+    uint8_t STUSB4500Hub::nvm_get_power_above_5v_only_(void)
     {
       return this->sector[4].bank4.Power_Only_Above_5V;
     }
 
-    uint8_t STUSB4500Component::nvm_get_req_src_current_(void)
+    uint8_t STUSB4500Hub::nvm_get_req_src_current_(void)
     {
       return this->sector[4].bank4.Req_Src_Current;
     }
 
-    void STUSB4500Component::nvm_set_pdo_number_(uint8_t pdoNumber)
+    void STUSB4500Hub::nvm_set_pdo_number_(uint8_t pdoNumber)
     {
       uint8_t pdoValue;
 
@@ -726,7 +709,7 @@ namespace esphome
       this->sector[3].bank3.DPM_Snk_PDO_Numb = pdoValue;
     }
 
-    void STUSB4500Component::nvm_set_pdo_voltage_(uint8_t pdo_numb, float voltage)
+    void STUSB4500Hub::nvm_set_pdo_voltage_(uint8_t pdo_numb, float voltage)
     {
       uint16_t voltageValue = uint16_t(voltage * 20.0);
       if (voltageValue < 5 * 20)
@@ -747,7 +730,7 @@ namespace esphome
       }
     }
 
-    void STUSB4500Component::nvm_set_pdo_current_(uint8_t pdo_numb, float current)
+    void STUSB4500Hub::nvm_set_pdo_current_(uint8_t pdo_numb, float current)
     {
       // valid currents are as follows:
       // 0.00A, 0.50A, 0.75A, 1.00A, 1.25A, 1.50A, 1.75A,
@@ -775,7 +758,7 @@ namespace esphome
       }
     }
 
-    void STUSB4500Component::nvm_set_flex_current_(float current)
+    void STUSB4500Hub::nvm_set_flex_current_(float current)
     {
       if (current < 0.0)
         current = 0.0;
@@ -786,7 +769,7 @@ namespace esphome
       this->sector[4].bank4.Snk_PDO_Flex_I = current * 100;
     }
 
-    void STUSB4500Component::nvm_set_upper_limit_percentage_(uint8_t pdo_numb, float percent)
+    void STUSB4500Hub::nvm_set_upper_limit_percentage_(uint8_t pdo_numb, float percent)
     {
       // percent is a fraction from 0.01 to 0.15, or 1 to 15% after conversion
       // percent will be forced to a whole percent number in the set
@@ -812,7 +795,7 @@ namespace esphome
       }
     }
 
-    void STUSB4500Component::nvm_set_lower_limit_percentage_(uint8_t pdo_numb, float percent)
+    void STUSB4500Hub::nvm_set_lower_limit_percentage_(uint8_t pdo_numb, float percent)
     {
       // percent is a fraction from 0.01 to 0.15, or 1 to 15% after conversion
       // percent will be forced to a whole percent number in the set
@@ -838,7 +821,7 @@ namespace esphome
       }
     }
 
-    void STUSB4500Component::nvm_set_vbus_disch_time_to_pdo_(uint16_t time)
+    void STUSB4500Hub::nvm_set_vbus_disch_time_to_pdo_(uint16_t time)
     {
       // time is a value in ms with a range of 24ms to 360ms,
       // time will be divided by 24ms ending with a range of 1 - 15
@@ -851,7 +834,7 @@ namespace esphome
       this->sector[1].bank1.Vbus_Disch_Time_To_PDO = time;
     }
 
-    void STUSB4500Component::nvm_set_vbus_disch_time_to_0v_(uint16_t time)
+    void STUSB4500Hub::nvm_set_vbus_disch_time_to_0v_(uint16_t time)
     {
       // time is a value in ms with a range of 84ms to 1260ms,
       // time will be divided by 84ms ending with a range of 1 - 15
@@ -864,7 +847,7 @@ namespace esphome
       this->sector[1].bank1.Vbus_Disch_Time_To_0V = time;
     }
 
-    void STUSB4500Component::nvm_set_vbus_disch_disable_(uint8_t value)
+    void STUSB4500Hub::nvm_set_vbus_disch_disable_(uint8_t value)
     {
       // value is true/false
       if (value != 0)
@@ -873,7 +856,7 @@ namespace esphome
       this->sector[1].bank1.Vbus_Dchg_Mask = value;
     }
 
-    void STUSB4500Component::nvm_set_external_power_(uint8_t value)
+    void STUSB4500Hub::nvm_set_external_power_(uint8_t value)
     {
       if (value != 0)
         value = 1;
@@ -881,7 +864,7 @@ namespace esphome
       this->sector[3].bank3.Snk_Uncons_Power = value;
     }
 
-    void STUSB4500Component::nvm_set_usb_comm_capable_(uint8_t value)
+    void STUSB4500Hub::nvm_set_usb_comm_capable_(uint8_t value)
     {
       if (value != 0)
         value = 1;
@@ -889,7 +872,7 @@ namespace esphome
       this->sector[3].bank3.USB_Comm_Capable = value;
     }
 
-    void STUSB4500Component::nvm_set_power_ok_cfg_(PowerOkConfig value)
+    void STUSB4500Hub::nvm_set_power_ok_cfg_(PowerOkConfig value)
     {
       uint8_t new_value;
       if (value == CONFIGURATION_1)
@@ -902,7 +885,7 @@ namespace esphome
       this->sector[4].bank4.Power_OK_Cfg = new_value;
     }
 
-    void STUSB4500Component::nvm_set_gpio_cfg_(GPIOConfig value)
+    void STUSB4500Hub::nvm_set_gpio_cfg_(GPIOConfig value)
     {
       uint8_t new_value;
       if (value == SW_CTRL_GPIO)
@@ -917,7 +900,7 @@ namespace esphome
       this->sector[1].bank1.GPIO_Cfg = new_value;
     }
 
-    void STUSB4500Component::nvm_set_power_above_5v_only_(uint8_t value)
+    void STUSB4500Hub::nvm_set_power_above_5v_only_(uint8_t value)
     {
       if (value != 0)
         value = 1;
@@ -925,7 +908,7 @@ namespace esphome
       this->sector[4].bank4.Power_Only_Above_5V = value;
     }
 
-    void STUSB4500Component::nvm_set_req_src_current_(uint8_t value)
+    void STUSB4500Hub::nvm_set_req_src_current_(uint8_t value)
     {
       if (value != 0)
         value = 1;
@@ -933,7 +916,7 @@ namespace esphome
       this->sector[4].bank4.Req_Src_Current = value;
     }
 
-    bool STUSB4500Component::turn_gpio_on()
+    bool STUSB4500Hub::turn_gpio_on()
     {
       uint8_t buffer[1];
 
@@ -941,7 +924,7 @@ namespace esphome
       return (this->write_register(REG_GPIO3_SW_GPIO, buffer, 1));
     }
 
-    bool STUSB4500Component::turn_gpio_off()
+    bool STUSB4500Hub::turn_gpio_off()
     {
       uint8_t buffer[1];
 
