@@ -264,23 +264,23 @@ async def to_code(config):
         cg.add(var.set_power_only_above_5v(config[CONF_POWER_ONLY_ABOVE_5V]))
 
 
-# # Actions
-# TurnGpioOn = stusb4500_ns.class_("TurnGpioOn", automation.Action)
-# TurnGpioOff = stusb4500_ns.class_("TurnGpioOff", automation.Action)
+# Actions
+TurnGpioOn = stusb4500_ns.class_("TurnGpioOn", automation.Action)
+TurnGpioOff = stusb4500_ns.class_("TurnGpioOff", automation.Action)
 
-# STUSB4500_ACTION_SCHEMA = maybe_simple_id(
-#     {
-#         cv.Required(CONF_ID): cv.use_id(STUSB4500Hub),
-#     }
-# )
+STUSB4500_ACTION_SCHEMA = maybe_simple_id(
+    {
+        cv.Required(CONF_ID): cv.use_id(STUSB4500Hub),
+    }
+)
 
 
-# @automation.register_action(
-#     "stusb4500.turn_gpio_on", TurnGpioOn, STUSB4500_ACTION_SCHEMA
-# )
-# @automation.register_action(
-#     "stusb4500.turn_gpio_off", TurnGpioOff, STUSB4500_ACTION_SCHEMA
-# )
-# async def stusb4500_fan_to_code(config, action_id, template_arg, args):
-#     paren = await cg.get_variable(config[CONF_ID])
-#     return cg.new_Pvariable(action_id, template_arg, paren)
+@automation.register_action(
+    "stusb4500.turn_gpio_on", TurnGpioOn, STUSB4500_ACTION_SCHEMA
+)
+@automation.register_action(
+    "stusb4500.turn_gpio_off", TurnGpioOff, STUSB4500_ACTION_SCHEMA
+)
+async def stusb4500_fan_to_code(config, action_id, template_arg, args):
+    paren = await cg.get_variable(config[CONF_ID])
+    return cg.new_Pvariable(action_id, template_arg, paren)
