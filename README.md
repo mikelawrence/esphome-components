@@ -51,14 +51,14 @@ sensor:
         - throttle: 1s
 
 ```
-## Configuration Variables
+### Configuration Variables
 + **model** (**Required**, string): The model of the Range Finder Sensor. Options are ```TFMINI_PLUS```, ```TFMINI_S``` or ```TF_LUNA```.
 + **uart_id** (*Optional*, string): Manually specify the ID of the [UART Bus](https://esphome.io/components/uart) if you use multiple UART buses.
 + **sample_rate** (*Optional*, integer): The frame rate at which the sensor will output sensor data in samples per sec. For the TFMINI_PLUS and TFMINI_S the range is 1-1000. For the TFLuna the range is 1-500. Note when low_power mode is set to true for the TFMINI_S and the TFLuna model the is significantly lower from 1-10. Default is 100. 
 + **config_pin** (*Optional*, [Pin Schema](https://esphome.io/guides/configuration-types#config-pin-schema)): This pin when connected will be set high to enable UART mode. (*TF_LUNA only*) 
 + **low_power** (*Optional*, boolean): Turns on low power mode. This also requires sample_rate to be 10 or less. (*TF_LUNA, TFMini-S only*) 
 
-## Sensors
+### Sensors
 + **distance** (*Optional*): Distance in cm. For the TFMINI_PLUS and TFMINI_S the range is 10-1200cm. For the TFLuna the range is 20-800cm. A distance of 10000cm means the sensor is not receiving enough signal, most likely open air. A distance of 0cm means the sensor is saturated and there is no measurement possible. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 + **signal_strength** (*Optional*): Represents the signal strength with a range of 0-65535. The longer the measurement distance, the lower signal strength will be. The lower the reflectivity is, the lower the signal strength will be. When signal strength is less than 100 detection is unreliable and distance is set to 10000cm. When signal strength is 65535 detection is unreliable and distance is set to 0cm. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 + **temperature** (*Optional*): Internal temperature in °C. It's not clear how useful this sensor because it certainly does not measure room temperature. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
@@ -101,7 +101,7 @@ text_sensor:
       name: "PD Status"
 ```
 
-## Configuration Variables
+### Configuration Variables
 + **flash_nvm** (*Optional*, boolean): When set to ```true``` the STUSB4500 NVM will be flashed with the current settings but only if different. To be on the safe side you should not leave this set to ```true```. A power cycle is required to renegotiate. Default is ```false```.
 + **default_nvm** (*Optional*, boolean): When set to ```true``` the STUSB4500 NVM will be flashed with default settings but only if different. To be on the safe side you should not leave this set to ```true```. A power cycle is required to renegotiate. Default is ```false```.
 + **snk_pdo_numb** (*Optional*, integer): Set the number of PDOs that should be negotiated. Range is 1 - 3. A value of 3 means PDO3, PDO2 and PDO1 can be negotiated. A value of 2 means PDO2 and PDO1 can be negotiated. A value of 1 means only PDO1 can be negotiated. Default is 3.
@@ -126,13 +126,13 @@ text_sensor:
 + **gpio_cfg** (*Optional*, enumeration): Selects the GPIO configuration. Options are ```SW_CTRL_GPIO```, ```ERROR_RECOVERY```, ```DEBUG``` or ```SINK_POWER```. Default is ```ERROR_RECOVERY```.
 + **power_only_above_5v** (*Optional*, boolean): When set to ```true``` the STUSB4500 will enable V<sub>BUS</sub> only if PDO2 or PDO3 was negotiated. When ```false``` V<sub>BUS</sub> is enabled at 5V when connected to a non-PD charger. The available current is unknown. Default is ```false```.
 
-## Sensors
+### Sensors
 + **pd_state** (*Optional*): Current PD State as an integer. Range 0 to 3 where 0 is no PD negotiated. A value of 1, 2 or 3 indicates which PDO was negotiated. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
-## Text Sensors
+### Text Sensors
 + **pd_status** (*Optional*): Easy to read PD State (e.g. "12V @ 3A" ). All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
-## Actions
+### Actions
 When the GPIO is configured for software control ```gpio_cfg: SW_CTRL_GPIO ``` these actions control the state of the output. 
 
 + **stusb4500.turn_gpio_on** Will pull the GPIO low.
@@ -151,7 +151,7 @@ Example in lambdas...
   id(pd_controller).turn_gpio_on();
 ```
 
-## NVM Configuration
+### NVM Configuration
 
 > [!CAUTION]
 > When configuring the STUSB4500 for the first time you should realize the default configuration will allow up to 20V on V<sub>BUS</sub>. Make sure your circuit can either support 20V or configure the NVM using a Power Source that will NOT produce 20V like USB 2.0 or a non-PD USB-C charger.
@@ -253,17 +253,17 @@ switch:
 
 ```
 
-## Configuration Variables
+### Configuration Variables
 + **mode** (*Required*, enumeration): This sets the operation mode of the sensor. Options are ```PRESENCE``` and ```SPEED_AND_DISTANCE```.
 
-## Buttons
+### Buttons
 + **config_save** (*Optional*): When you click this button the current configuration will be saved. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. All Options from [Button Component](https://esphome.io/components/button/index.html#base-button-configuration).
 
-## Binary Sensors
+### Binary Sensors
 + **config_changed** (*Optional*): When ```true`` the current sensor configuration has been changed but not saved to the sensor. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
 + **occupancy** (*Optional*): In ```PRESENCE``` mode this indicates presence. In ```SPEED_AND_DISTANCE``` mode this indicates a target is being tracked. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
 
-## Numbers
+### Numbers
 + **min_range** (*Optional*): This is the minimum detection range. Default is 0.6 meters (m) with a range of 0.6 to 25.0 m. The manual recommends not changing this value. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```PRESENCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 + **max_range** (*Optional*): This is the maximum detection range. Default is 6 meters (m) with a range of 0.6 to 25.0 m. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```PRESENCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 + **trigger_range** (*Optional*): Sets the maximum range at which occupancy can switch to present. The range between max detection range and trigger detection range can NOT cause occupancy to switch to present. Default is 0.6 meters (m) with a range of 0.6 to 25.0 m. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```PRESENCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
@@ -274,16 +274,16 @@ switch:
 + **inhibit_time** (*Optional*): The dead-time after switching to the not present state before presence can be detected again. Default is 1 (seconds) with a range of 0.1 to 255.0. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```PRESENCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 + **threshold_factor** (*Optional*): The larger the number the larger the object and more motion is required to trigger the sensor to switch to target tracked state. Default is 5 with a range of 0 to 65535. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 
-## Sensors
+### Sensors
 + **target_distance** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates distance to target in meters (m). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration). 
 + **target_speed** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates target speed in meters per second (m/s). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
 + **target_energy** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates target energy in no units. When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
 
-## Switches
+### Switches
 + **led_enable** (*Optional*): When turned on the green LED will flash when the sensor has been started. The blue LED cannot be disabled with this command. All Options from [Switch Component](https://esphome.io/components/switch/index.html#base-switch-configuration).
 + **micro_motion_enable** (*Optional*): Turns on micro motion mode. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Switch Component](https://esphome.io/components/switch/index.html#base-switch-configuration).
 
-## Actions
+### Actions
 + **dfrobot_c4001.factor_reset** Will perform a factory reset of the module and all configuration values will go back to default. The module will restart with these defaults. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. This is much easier to do with a lambda that accidentally performs a factory reset every second.
 
 Example using automations...
