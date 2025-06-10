@@ -347,7 +347,7 @@ number:
 ```
 ### Configuration Variables
 + **model** (**Optional**, string): The model of the Sensirion SEN5X or SEN6X sensor. Options are ```SEN50```, ```SEN54```, ```SEN55```, ```SEN60```, ```SEN63C```, ```SEN65```, ```SEN66``` or ```SEN68```. Use this if the model cannot be read from the sensor. There were reports of a blank model string on a SEN66 sensor.
-+ **auto_cleaning_interval ** (**Optional**, string): The interval in seconds of the periodic fan-cleaning. Only the SEN50, SEN55 and SEN56 models support automatic fan cleaning.
++ **auto_cleaning_interval** (**Optional**, string): The interval in seconds of the periodic fan-cleaning. Only the SEN50, SEN55 and SEN56 models support automatic fan cleaning.
 
 ### Sensors
 + **co2** (*Optional*): The Carbon Dioxide (CO2) level in ppm. Only the SEN63C and SEN66 models have a CO2 sensor. All Options from [Number](https://esphome.io/components/sensor/#config-number).
@@ -380,16 +380,16 @@ sensor:
   - platform: pressure_sensor
     on_value:
       then:
-        - lambda: !lambda "id(my_sen66)->set_ambient_pressure_compensation(x / 100.0); // Convert Pa to hPa"
+        - lambda: !lambda |-
+            // convert pressure to hPa before sending to sen5x sensor
+            id(my_sen66)->set_ambient_pressure_compensation(x / 100.0);"
 ```
 
 #### sen5x.activate_heater Action
 This action turns the humidity sensor's heater on for 1s at 200mW. This action only works for the SEN63C, SEN65, SEN66 and SEN68 models. 
 
 ```
-sensor:
-  - platform: pressure_sensor
-    on_value:
-      then:
-        - lambda: !lambda "id(my_sen66)->set_ambient_pressure_compensation(x / 100.0); // Convert Pa to hPa"
+on_value:
+  then:
+    - lambda: !lambda "id(my_sen66)->activate_heater();"
 ```
