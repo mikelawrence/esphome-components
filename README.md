@@ -2,7 +2,6 @@
 
 The preferred method to add your own components to ESPHome is to use [External Components](https://esphome.io/components/external_components.html#external-components-git).
 
-
 If you want to make all components available use this config.
 ```yaml
 external_components:
@@ -300,4 +299,97 @@ Example in lambdas...
 ```
 - lambda: |-
   id(mmwave_sensor).factory_reset();
+```
+
+## ESPHome LD2450 External Component
+
+This custom component adds some functionality to the built-in LD2450 Component. Only the differences are listed below.
+
+```yaml
+# Sample configuration entry example
+ld2450:
+  id: ld2450_radar
+  flip_x_axis: true
+number:
+  - platform: ld2450
+    ld2450_id: ld2450_radar
+    installation_angle:
+      name: Installation Angle
+
+```
+### Configuration Variables
++ **flip_x_axis** (*Optional*, boolean): When the DL2450 is mounted upside down you can set this to ```true``` to flip the X axis.
+
+### Numbers
++ **installation_angle** (*Optional*): Allows you to change the installation angle in °. Makes it easy to use when installed in a corner. Default is 0° with a range of ±45°. All Options from [Number](https://esphome.io/components/sensor/#config-number).
+
+## BMP581 External Component
+
+This external component increases the computed conversion times by 1ms. This stops the not ready warnings. There are no other changes.
+
+## SEN5X External Component
+
+This external component adds SEN60, SEN63C, SEN65, SEN66 and SEN68 support to the built-in sen5x component. This component extends [PR #8318](https://github.com/esphome/esphome/pull/8318). Only the differences from sen5x component are listed below.
+
+Temperature compensation is not working for the SEN6x models. Still waiting on the Sensirion Application Note.
+
+```yaml
+# Sample configuration entry example
+sen5x:
+  id: ld2450_radar
+  flip_x_axis: true
+number:
+  - platform: ld2450
+    ld2450_id: ld2450_radar
+    installation_angle:
+      name: Installation Angle
+
+```
+### Configuration Variables
++ **model** (**Optional**, string): The model of the Sensirion SEN5X or SEN6X sensor. Options are ```SEN50```, ```SEN54```, ```SEN55```, ```SEN60```, ```SEN63C```, ```SEN65```, ```SEN66``` or ```SEN68```. Use this if the model cannot be read from the sensor. There were reports of a blank model string on a SEN66 sensor.
++ **auto_cleaning_interval ** (**Optional**, string): The interval in seconds of the periodic fan-cleaning. Only the SEN50, SEN55 and SEN56 models support automatic fan cleaning.
+
+### Sensors
++ **co2** (*Optional*): The Carbon Dioxide (CO2) level in ppm. Only the SEN63C and SEN66 models have a CO2 sensor. All Options from [Number](https://esphome.io/components/sensor/#config-number).
+  - **auto_self_calibration** (*Optional*, boolean): Enables automatic self-calibration (ASC) for the CO2 sensor. Default is ```true```.
+  - **altitude_compensation** (*Optional*, int): Enable compensating deviations due to current altitude (in metres). Notice: setting altitude_compensation is ignored if ambient_pressure_compensation is set.
+  - **ambient_pressure_compensation_source** (*Optional*, ID): Set an external pressure sensor ID used for ambient pressure compensation. The pressure sensor must report pressure in hPa. the correction is applied before updating the state of the CO2 sensor.
++ **hcho** (*Optional*): The Formaldehyde (HCHO) level in ppb. Only the SEN68 model has a HCHO sensor. All Options from [Number](https://esphome.io/components/sensor/#config-number).
+
+
+### Actions
+
+#### sen5x.perform_forced_co2_calibration Action
+This action manually calibrates the CO2 sensor to the provided value in ppm. Let the CO2 sensor operate normally for at least 3 minutes before performing a forced calibration.
+
+```
+on_...:
+  then:
+    - sen5x.perform_forced_calibration:
+        # Global Monthly Mean CO₂
+        # https://gml.noaa.gov/ccgg/trends/global.html
+        value: 426
+        id: my_sen66
+```
+
+#### sen5x.set_ambient_pressure_hpa Action
+This action sets the current pressure (hPa or mbar). Check the datasheet for CO2 pressure compensation. You can also just set the ID of your pressure sensor with ```ambient_pressure_compensation_source```. Only the SEN63C and SEN66 models have a CO2 sensor. 
+
+```
+sensor:
+  - platform: pressure_sensor
+    on_value:
+      then:
+        - lambda: !lambda "id(my_sen66)->set_ambient_pressure_compensation(x / 100.0); // Convert Pa to hPa"
+```
+
+#### sen5x.activate_heater Action
+This action turns the humidity sensor's heater on for 1s at 200mW. This action only works for the SEN63C, SEN65, SEN66 and SEN68 models. 
+
+```
+sensor:
+  - platform: pressure_sensor
+    on_value:
+      then:
+        - lambda: !lambda "id(my_sen66)->set_ambient_pressure_compensation(x / 100.0); // Convert Pa to hPa"
 ```

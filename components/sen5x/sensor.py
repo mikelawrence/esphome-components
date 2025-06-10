@@ -342,7 +342,7 @@ SEN5X_CALIBRATE_ACTION_SCHEMA = maybe_simple_id(
 
 
 @automation.register_action(
-    "sen5x.perform_forced_calibration",
+    "sen5x.perform_forced_co2_calibration",
     PerformForcedCo2CalibrationAction,
     SEN5X_CALIBRATE_ACTION_SCHEMA,
 )
