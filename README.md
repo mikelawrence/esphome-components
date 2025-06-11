@@ -335,15 +335,74 @@ Temperature compensation is not working for the SEN6x models. Still waiting on t
 
 ```yaml
 # Sample configuration entry example
-sen5x:
-  id: ld2450_radar
-  flip_x_axis: true
 number:
-  - platform: ld2450
-    ld2450_id: ld2450_radar
-    installation_angle:
-      name: Installation Angle
+  - platform: template
+    id: co2_forced_cal_value
+    name: "CO2 Calibration Value"
+    device_class: carbon_dioxide
+    entity_category: CONFIG
+    optimistic: true
+    max_value: 1200
+    min_value: 400
+    step: 1
+    initial_value: 420
+    set_action:
+      - delay: 1s
 
+button:
+  - platform: template
+    name: "Start Fan Auto Clean"
+    entity_category: CONFIG
+    on_press:
+      - sen5x.start_fan_autoclean: sen66_sensor
+  - platform: template
+    name: "Activate SHT Heater"
+    entity_category: CONFIG
+    on_press:
+      - sen5x.activate_heater: sen66_sensor
+  - platform: template
+    name: "CO2 Calibrate"
+    entity_category: CONFIG
+    on_press:
+      - sen5x.perform_forced_co2_calibration:
+          value: !lambda |-
+            float value = id(co2_forced_cal_value).state;
+            return value;
+          id: sen66_sensor
+
+sensor:
+  - platform: sen5x
+    id: sen66_sensor
+    i2c_id: i2c2_bus
+    address: 0x6B
+    update_interval: 1s
+    model: SEN66
+    store_baseline: true
+    temperature:
+      name: "Temperature"
+      id: temperature
+    humidity:
+      name: "Humidity"
+      id: humidity
+    pm_1_0:
+      name: "PM <1µm Weight concentration"
+      id: pm_1_0
+    pm_2_5:
+      name: "PM <2.5µm Weight concentration"
+      id: pm_2_5
+    pm_4_0:
+      name: "PM <4µm Weight concentration"
+      id: pm_4_0
+    pm_10_0:
+      name: "PM <10µm Weight concentration"
+      id: pm_10_0
+    co2:
+      name: "CO2"
+      auto_self_calibration: false
+    nox:
+      name: "NOx"
+    voc:
+      name: "VOC"
 ```
 ### Configuration Variables
 + **model** (**Optional**, string): The model of the Sensirion SEN5X or SEN6X sensor. Options are ```SEN50```, ```SEN54```, ```SEN55```, ```SEN60```, ```SEN63C```, ```SEN65```, ```SEN66``` or ```SEN68```. Use this if the model cannot be read from the sensor. There were reports of a blank model string on a SEN66 sensor.
