@@ -30,6 +30,12 @@ TFMini Plus|TFMini-S| TFLuna
 
 ```yaml
 # Sample configuration entry example
+external_components:
+  - source:
+      type: git
+      url: https://github.com/mikelawrence/esphome-components
+    components: [ tfmini ]
+
 sensor:
   - platform: tfmini
     model: TFMINI_PLUS
@@ -79,6 +85,12 @@ It also creates a ```PD State``` and ```PD Status``` Text Sensor.
 
 ```yaml
 # Sample configuration entry example
+external_components:
+  - source:
+      type: git
+      url: https://github.com/mikelawrence/esphome-components
+    components: [ stusb4500 ]
+
 stusb4500:
   alert_pin: GPIO8
   snk_pdo_numb: 3
@@ -204,6 +216,11 @@ More information on the C4001 (SEN0609) sensor is available [here](https://www.d
 
 ```yaml
 # Sample configuration entry example
+external_components:
+  - source:
+      type: git
+      url: https://github.com/mikelawrence/esphome-components
+    components: [ dfrobot_c4001 ]
 
 dfrobot_c4001:
   id: mmwave_sensor
@@ -286,7 +303,7 @@ switch:
 + **dfrobot_c4001.factor_reset** Will perform a factory reset of the module and all configuration values will go back to default. The module will restart with these defaults. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. This is much easier to do with a lambda that accidentally performs a factory reset every second.
 
 Example using automations...
-```
+```yaml
 button:
   - platform: template
     name: Factory Reset
@@ -307,6 +324,12 @@ This custom component adds some functionality to the built-in LD2450 Component. 
 
 ```yaml
 # Sample configuration entry example
+external_components:
+  - source:
+      type: git
+      url: https://github.com/mikelawrence/esphome-components
+    components: [ ld2450 ]
+
 ld2450:
   id: ld2450_radar
   flip_x_axis: true
@@ -335,6 +358,12 @@ Temperature compensation is not working for the SEN6x models. Still waiting on t
 
 ```yaml
 # Sample configuration entry example
+external_components:
+  - source:
+      type: git
+      url: https://github.com/mikelawrence/esphome-components
+    components: [ sen5x ]
+
 number:
   - platform: template
     id: co2_forced_cal_value
