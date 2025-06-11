@@ -350,17 +350,17 @@ number:
 + **auto_cleaning_interval** (**Optional**, string): The interval in seconds of the periodic fan-cleaning. Only the SEN50, SEN55 and SEN56 models support automatic fan cleaning.
 
 ### Sensors
-+ **co2** (*Optional*): The Carbon Dioxide (CO2) level in ppm. Only the SEN63C and SEN66 models have a CO2 sensor. All Options from [Number](https://esphome.io/components/sensor/#config-number).
-  - **auto_self_calibration** (*Optional*, boolean): Enables automatic self-calibration (ASC) for the CO2 sensor. Default is ```true```.
++ **co2** (*Optional*): The Carbon Dioxide (CO₂) level in ppm. Only the SEN63C and SEN66 models have a CO₂ sensor. All Options from [Number](https://esphome.io/components/sensor/#config-number).
+  - **auto_self_calibration** (*Optional*, boolean): Enables automatic self-calibration (ASC) for the CO₂ sensor. Default is ```true```.
   - **altitude_compensation** (*Optional*, int): Enable compensating deviations due to current altitude (in metres). Notice: setting altitude_compensation is ignored if ambient_pressure_compensation is set.
-  - **ambient_pressure_compensation_source** (*Optional*, ID): Set an external pressure sensor ID used for ambient pressure compensation. The pressure sensor must report pressure in hPa. the correction is applied before updating the state of the CO2 sensor.
+  - **ambient_pressure_compensation_source** (*Optional*, ID): Set an external pressure sensor ID used for ambient pressure compensation. The pressure sensor must report pressure in hPa. the correction is applied before updating the state of the CO₂ sensor.
 + **hcho** (*Optional*): The Formaldehyde (HCHO) level in ppb. Only the SEN68 model has a HCHO sensor. All Options from [Number](https://esphome.io/components/sensor/#config-number).
 
 
 ### Actions
 
 #### sen5x.perform_forced_co2_calibration Action
-This action manually calibrates the CO2 sensor to the provided value in ppm. Let the CO2 sensor operate normally for at least 3 minutes before performing a forced calibration.
+This action manually calibrates the CO₂ sensor to the provided value in ppm. Let the CO₂ sensor operate normally for at least 3 minutes before performing a forced calibration.
 
 ```
 on_...:
@@ -373,7 +373,7 @@ on_...:
 ```
 
 #### sen5x.set_ambient_pressure_hpa Action
-This action sets the current pressure (hPa or mbar). Check the datasheet for CO2 pressure compensation. You can also just set the ID of your pressure sensor with ```ambient_pressure_compensation_source```. Only the SEN63C and SEN66 models have a CO2 sensor. 
+This action sets the current pressure (hPa or mbar). Check the datasheet for CO₂ pressure compensation. You can also just set the ID of your pressure sensor with ```ambient_pressure_compensation_source```. Only the SEN63C and SEN66 models have a CO₂ sensor. 
 
 ```
 sensor:
