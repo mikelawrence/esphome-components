@@ -1005,7 +1005,7 @@ namespace esphome
       return result;
     }
 
-    void SEN5XComponent::set_ambient_pressure_compensation(float pressure_in_hpa)
+    bool SEN5XComponent::set_ambient_pressure_compensation(float pressure_in_hpa)
     {
       if (this->model_.value() == SEN63C || this->model_.value() == SEN66)
       {
@@ -1013,7 +1013,7 @@ namespace esphome
         if (!this->initialized_)
         {
           this->co2_ambient_pressure_ = new_ambient_pressure;
-          return;
+          return false;
         }
         // Only send pressure value if it has changed since last update
         if (new_ambient_pressure != this->co2_ambient_pressure_)
@@ -1026,6 +1026,7 @@ namespace esphome
         {
           ESP_LOGD(TAG, "Ambient Pressure compensation skipped - no change required");
         }
+        return true;
       }
       else
       {
@@ -1043,7 +1044,7 @@ namespace esphome
       {
         ESP_LOGE(TAG, ESP_LOG_MSG_FAN_CLEAN_FAIL);
         this->initialized_ = true;
-        return true;
+        return false;
       }
       this->set_timeout(1000, [this]()
                         {
@@ -1093,7 +1094,7 @@ namespace esphome
         {
           ESP_LOGE(TAG, ESP_LOG_MSG_ACT_SHT_HEATER_FAIL);
           this->initialized_ = true;
-          return true;
+          return false;
         }
         this->set_timeout(1000, [this]()
                           {
@@ -1139,7 +1140,7 @@ namespace esphome
         {
           ESP_LOGE(TAG, ESP_LOG_MSG_CO2_CAL_FAIL);
           this->initialized_ = true;
-          return true;
+          return false;
         }
         this->set_timeout(1000, [this, co2]()
         {
