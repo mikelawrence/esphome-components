@@ -367,7 +367,7 @@ external_components:
 number:
   - platform: template
     id: co2_forced_cal_value
-    name: "CO2 Calibration Value"
+    name: "CO₂ Calibration Value"
     device_class: carbon_dioxide
     entity_category: CONFIG
     optimistic: true
@@ -390,7 +390,7 @@ button:
     on_press:
       - sen5x.activate_heater: sen66_sensor
   - platform: template
-    name: "CO2 Calibrate"
+    name: "CO₂ Calibrate"
     entity_category: CONFIG
     on_press:
       - sen5x.perform_forced_co2_calibration:
@@ -426,7 +426,7 @@ sensor:
       name: "PM <10µm Weight concentration"
       id: pm_10_0
     co2:
-      name: "CO2"
+      name: "CO₂"
       auto_self_calibration: false
     nox:
       name: "NOx"
@@ -474,7 +474,7 @@ sensor:
 ```
 
 #### sen5x.activate_heater Action
-This action turns the humidity sensor's heater on for 1s at 200mW. This action only works for the SEN63C, SEN65, SEN66 and SEN68 models. 
+This action turns the humidity sensor's heater on for 1s at 200mW. This action only works for the SEN63C, SEN65, SEN66 and SEN68 models. Unlike the SHT4X there is no further configuration nor a way to setup automatic heating interval. I may need to add code to emulate the automatic nature built-in to the SHT4X for the heater.
 
 ```
 on_value:

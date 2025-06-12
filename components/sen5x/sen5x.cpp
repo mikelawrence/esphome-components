@@ -11,7 +11,7 @@ namespace esphome
   {
 
     static const char *const TAG = "sen5x";
-    static const char *const ESP_LOG_MSG_CO2_CAL_FAIL = "Perform Forced CO2 Calibration failed";
+    static const char *const ESP_LOG_MSG_CO2_CAL_FAIL = "Perform Forced CO₂ Calibration failed";
     static const char *const ESP_LOG_MSG_ACT_SHT_HEATER_FAIL = "Activate SHT Heater failed";
     static const char *const ESP_LOG_MSG_FAN_CLEAN_FAIL = "Fan Cleaning failed";
 
@@ -473,14 +473,14 @@ namespace esphome
                this->model_.value() == SEN55 || this->model_.value() == SEN60 ||
                this->model_.value() == SEN65 || this->model_.value() == SEN68))
           {
-            ESP_LOGE(TAG, "CO2 Sensor Auto Self Calibrate Parameter is not supported");
+            ESP_LOGE(TAG, "CO₂ Sensor Auto Self Calibrate Parameter is not supported");
             this->error_code_ = UNSUPPORTED_CONF;
             this->mark_failed();
             return;
           }
           if (!this->write_command(SEN6X_CMD_CO2_SENSOR_AUTOMATIC_SELF_CALIBRATION, this->co2_auto_calibrate_.value() ? 0x01 : 0x00))
           {
-            ESP_LOGE(TAG, "Failed to set CO2 Sensor Automatic Self Calibration");
+            ESP_LOGE(TAG, "Failed to set CO₂ Sensor Automatic Self Calibration");
             this->error_code_ = COMMUNICATION_FAILED;
             this->mark_failed();
             return;
@@ -500,14 +500,14 @@ namespace esphome
                this->model_.value() == SEN55 || this->model_.value() == SEN60 ||
                this->model_.value() == SEN65 || this->model_.value() == SEN68))
           {
-            ESP_LOGE(TAG, "CO2 Altitude Compensation Parameter is not supported");
+            ESP_LOGE(TAG, "CO₂ Altitude Compensation Parameter is not supported");
             this->error_code_ = UNSUPPORTED_CONF;
             this->mark_failed();
             return;
           }
           if (!this->write_command(SEN6X_CMD_CO2_SENSOR_AUTOMATIC_SELF_CALIBRATION, this->co2_auto_calibrate_.value() ? 0x01 : 0x00))
           {
-            ESP_LOGE(TAG, "Failed to set CO2 Sensor Automatic Self Calibration");
+            ESP_LOGE(TAG, "Failed to set CO₂ Sensor Automatic Self Calibration");
             this->error_code_ = COMMUNICATION_FAILED;
             this->mark_failed();
             return;
@@ -557,7 +557,7 @@ namespace esphome
                                       this->model_.value() == SEN55 || this->model_.value() == SEN60 ||
                                       this->model_.value() == SEN65 || this->model_.value() == SEN68))
         {
-          ESP_LOGE(TAG, "CO2 Sensor is not supported");
+          ESP_LOGE(TAG, "CO₂ Sensor is not supported");
           this->nox_sensor_ = nullptr; // mark as not used
           this->error_code_ = UNSUPPORTED_CONF;
           this->mark_failed();
@@ -672,7 +672,7 @@ namespace esphome
       LOG_SENSOR("  ", "Humidity", this->humidity_sensor_);
       LOG_SENSOR("  ", "VOC", this->voc_sensor_);
       LOG_SENSOR("  ", "NOx", this->nox_sensor_);
-      LOG_SENSOR("  ", "CO2", this->co2_sensor_);
+      LOG_SENSOR("  ", "CO₂", this->co2_sensor_);
       if (this->co2_sensor_ != nullptr)
       {
         ESP_LOGCONFIG(TAG, "    Automatic self calibration: %s", co2_auto_calibrate_ ? "On" : "Off");
@@ -1007,22 +1007,30 @@ namespace esphome
 
     void SEN5XComponent::set_ambient_pressure_compensation(float pressure_in_hpa)
     {
-      uint16_t new_ambient_pressure = (uint16_t)pressure_in_hpa;
-      if (!this->initialized_)
+      if (this->model_.value() == SEN63C || this->model_.value() == SEN66)
       {
-        this->co2_ambient_pressure_ = new_ambient_pressure;
-        return;
-      }
-      // Only send pressure value if it has changed since last update
-      if (new_ambient_pressure != this->co2_ambient_pressure_)
-      {
-        update_co2_ambient_pressure_compensation_(new_ambient_pressure);
-        this->co2_ambient_pressure_ = new_ambient_pressure;
-        this->set_timeout(20, [this]() {});
+        uint16_t new_ambient_pressure = (uint16_t)pressure_in_hpa;
+        if (!this->initialized_)
+        {
+          this->co2_ambient_pressure_ = new_ambient_pressure;
+          return;
+        }
+        // Only send pressure value if it has changed since last update
+        if (new_ambient_pressure != this->co2_ambient_pressure_)
+        {
+          update_co2_ambient_pressure_compensation_(new_ambient_pressure);
+          this->co2_ambient_pressure_ = new_ambient_pressure;
+          this->set_timeout(20, [this]() {});
+        }
+        else
+        {
+          ESP_LOGD(TAG, "Ambient Pressure compensation skipped - no change required");
+        }
       }
       else
       {
-        ESP_LOGD(TAG, "Ambient Pressure compensation skipped - no change required");
+        ESP_LOGE(TAG, "Set Ambient Pressure Compensation is not supported");
+        return false;
       }
     }
 
@@ -1122,47 +1130,55 @@ namespace esphome
 
     bool SEN5XComponent::perform_forced_co2_calibration(uint16_t co2)
     {
-      ESP_LOGE(TAG, "Perform Forced CO2 Calibration started, target co2=%d", co2);
-      this->initialized_ = false; // prevent update from trying to read the sensors
-      // measurements must be stopped first
-      if (!this->stop_measurements_())
+      if (this->model_.value() == SEN63C || this->model_.value() == SEN66)
       {
-        ESP_LOGE(TAG, ESP_LOG_MSG_CO2_CAL_FAIL);
-        this->initialized_ = true;
-        return true;
-      }
-      this->set_timeout(1000, [this, co2]()
-                        {
-        if (!this->write_command(SEN6X_CMD_PERFORM_FORCED_CO2_RECALIBRATION, co2)) {
-          ESP_LOGE(TAG, "I2C Write error Perform Forced CO2 Recalibration (error=%d)", this->last_error_);
-          if (!this->running_) {
-            this->start_measurements_();
-            ESP_LOGE(TAG, ESP_LOG_MSG_CO2_CAL_FAIL);
-          }
-        } else {
-          this->set_timeout(500, [this]() {
-            uint16_t correction = 0;
-            if (!this->read_data(correction)) {
+        ESP_LOGE(TAG, "Perform Forced CO₂ Calibration started, target co2=%d", co2);
+        this->initialized_ = false; // prevent update from trying to read the sensors
+        // measurements must be stopped first
+        if (!this->stop_measurements_())
+        {
+          ESP_LOGE(TAG, ESP_LOG_MSG_CO2_CAL_FAIL);
+          this->initialized_ = true;
+          return true;
+        }
+        this->set_timeout(1000, [this, co2]()
+        {
+          if (!this->write_command(SEN6X_CMD_PERFORM_FORCED_CO2_RECALIBRATION, co2)) {
+            ESP_LOGE(TAG, "I2C Write error Perform Forced CO₂ Recalibration (error=%d)", this->last_error_);
+            if (!this->running_) {
               this->start_measurements_();
               ESP_LOGE(TAG, ESP_LOG_MSG_CO2_CAL_FAIL);
-            } else {
-              if (correction == 0xFFFF) {
+            }
+          } else {
+            this->set_timeout(500, [this]() {
+              uint16_t correction = 0;
+              if (!this->read_data(correction)) {
                 this->start_measurements_();
-                ESP_LOGE(TAG, "Perform Forced CO2 Calibration command reports failure");
+                ESP_LOGE(TAG, ESP_LOG_MSG_CO2_CAL_FAIL);
               } else {
-                if (!this->start_measurements_()) {
-                  ESP_LOGE(TAG, ESP_LOG_MSG_CO2_CAL_FAIL);
+                if (correction == 0xFFFF) {
+                  this->start_measurements_();
+                  ESP_LOGE(TAG, "Perform Forced CO₂ Calibration command reports failure");
                 } else {
-                  ESP_LOGD(TAG, "Perform Forced CO2 Calibration complete");
+                  if (!this->start_measurements_()) {
+                    ESP_LOGE(TAG, ESP_LOG_MSG_CO2_CAL_FAIL);
+                  } else {
+                    ESP_LOGD(TAG, "Perform Forced CO₂ Calibration complete");
+                  }
                 }
               }
-            }
-          });
-        }
-        this->set_timeout(50, [this]() {
-          this->initialized_ = true;
-        }); });
-      return true;
+            });
+          }
+          this->set_timeout(50, [this]() {
+            this->initialized_ = true;
+          }); });
+        return true;
+      }
+      else
+      {
+        ESP_LOGE(TAG, "Perform Forced CO₂ Calibration is not supported");
+        return false;
+      }
     }
   } // namespace sen5x
 } // namespace esphome
