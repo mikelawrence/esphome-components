@@ -104,19 +104,6 @@ static const Sen5xType str_to_model(const char *product_name) {
   }
 }
 
-bool is_sen6x() {
-  switch (this->model_.value()) {
-    case SEN60:
-    case SEN63C:
-    case SEN65:
-    case SEN66:
-    case SEN68:
-      return true;
-    default:
-      return false;
-  }
-}
-
 void SEN5XComponent::setup() { this->internal_setup_(0); }
 
 void SEN5XComponent::internal_setup_(uint8_t state) {
@@ -850,6 +837,19 @@ bool SEN5XComponent::set_ambient_pressure_compensation(float pressure_in_hpa) {
   } else {
     ESP_LOGE(TAG, "Set Ambient Pressure Compensation is not supported");
     return false;
+  }
+}
+
+bool SEN5XComponent::is_sen6x() {
+  switch (this->model_.value()) {
+    case SEN60:
+    case SEN63C:
+    case SEN65:
+    case SEN66:
+    case SEN68:
+      return true;
+    default:
+      return false;
   }
 }
 
