@@ -438,11 +438,11 @@ sensor:
 + **auto_cleaning_interval** (**Optional**, string): The interval in seconds of the periodic fan-cleaning. Only the SEN50, SEN55 and SEN56 models support automatic fan cleaning.
 
 ### Sensors
-+ **co2** (*Optional*): The Carbon Dioxide (CO₂) level in ppm. Only the SEN63C and SEN66 models have a CO₂ sensor. All Options from [Number](https://esphome.io/components/sensor/#config-number).
++ **co2** (*Optional*): The Carbon Dioxide (CO₂) level in ppm. Only the SEN63C and SEN66 models have a CO₂ sensor. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
   - **auto_self_calibration** (*Optional*, boolean): Enables automatic self-calibration (ASC) for the CO₂ sensor. Default is ```true```.
   - **altitude_compensation** (*Optional*, int): Enable compensating deviations due to current altitude (in metres). Notice: setting altitude_compensation is ignored if ambient_pressure_compensation is set.
-  - **ambient_pressure_compensation_source** (*Optional*, ID): Set an external pressure sensor ID used for ambient pressure compensation. The pressure sensor must report pressure in hPa. the correction is applied before updating the state of the CO₂ sensor.
-+ **hcho** (*Optional*): The Formaldehyde (HCHO) level in ppb. Only the SEN68 model has a HCHO sensor. All Options from [Number](https://esphome.io/components/sensor/#config-number).
+  - **ambient_pressure_compensation_source** (*Optional*, ID): Set an external pressure sensor ID used for ambient pressure compensation. The pressure sensor must report pressure in hPa. The correction is applied before updating the state of the CO₂ sensor.
++ **hcho** (*Optional*): The Formaldehyde (HCHO) level in ppb. Only the SEN68 model has a HCHO sensor. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
 
 ### Actions
