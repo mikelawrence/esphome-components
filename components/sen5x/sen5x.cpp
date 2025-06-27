@@ -6,7 +6,6 @@
 
 namespace esphome
 {
-  static const char *const ESP_LOG_MSG_COMM_FAIL = "Communication Failed";
   namespace sen5x
   {
 
