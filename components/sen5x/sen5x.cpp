@@ -60,7 +60,7 @@ static const int8_t SEN5X_INDEX_SCALE_FACTOR = 10;                            //
 static const int8_t SEN5X_MIN_INDEX_VALUE = 1 * SEN5X_INDEX_SCALE_FACTOR;     // must be adjusted by the scale factor
 static const int16_t SEN5X_MAX_INDEX_VALUE = 500 * SEN5X_INDEX_SCALE_FACTOR;  // must be adjusted by the scale factor
 
-static const char *SEN5XComponent::model_to_str(Sen5xType model) {
+static const char *model_to_str(Sen5xType model) {
   switch (model) {
     case SEN50:
       return "SEN50";
@@ -82,7 +82,7 @@ static const char *SEN5XComponent::model_to_str(Sen5xType model) {
       return "UNKNOWN MODEL";
   }
 }
-static const Sen5xType SEN5XComponent::str_to_model(const char *product_name) {
+static const Sen5xType str_to_model(const char *product_name) {
   if (product_name == "SEN50") {
     return SEN50;
   } else if (product_name == "SEN54") {
@@ -104,7 +104,7 @@ static const Sen5xType SEN5XComponent::str_to_model(const char *product_name) {
   }
 }
 
-bool SEN5XComponent::is_sen6x() {
+bool is_sen6x() {
   switch (this->model_.value()) {
     case SEN60:
     case SEN63C:
