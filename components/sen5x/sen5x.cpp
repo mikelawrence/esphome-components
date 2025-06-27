@@ -5,7 +5,6 @@
 #include <cinttypes>
 
 namespace esphome {
-static const char *const ESP_LOG_MSG_COMM_FAIL = "Communication Failed";
 namespace sen5x {
 
 static const char *const TAG = "sen5x";
@@ -60,6 +59,63 @@ static const uint16_t C_GET_FIRMWARE_VERSION = 0xD100;      //-------------  *  
 static const int8_t SEN5X_INDEX_SCALE_FACTOR = 10;                            // used for VOC and NOx index values
 static const int8_t SEN5X_MIN_INDEX_VALUE = 1 * SEN5X_INDEX_SCALE_FACTOR;     // must be adjusted by the scale factor
 static const int16_t SEN5X_MAX_INDEX_VALUE = 500 * SEN5X_INDEX_SCALE_FACTOR;  // must be adjusted by the scale factor
+
+static const char *SEN5XComponent::model_to_str(Sen5xType model) {
+  switch (model) {
+    case SEN50:
+      return "SEN50";
+    case SEN54:
+      return "SEN54";
+    case SEN55:
+      return "SEN55";
+    case SEN60:
+      return "SEN60";
+    case SEN63C:
+      return "SEN63C";
+    case SEN65:
+      return "SEN65";
+    case SEN66:
+      return "SEN66";
+    case SEN68:
+      return "SEN68";
+    default:
+      return "UNKNOWN MODEL";
+  }
+}
+static const Sen5xType SEN5XComponent::str_to_model(const char *product_name) {
+  if (product_name == "SEN50") {
+    return SEN50;
+  } else if (product_name == "SEN54") {
+    return SEN54;
+  } else if (product_name == "SEN55") {
+    return SEN55;
+  } else if (product_name == "SEN60") {
+    return SEN60;
+  } else if (product_name == "SEN63C") {
+    return SEN63C;
+  } else if (product_name == "SEN65") {
+    return SEN65;
+  } else if (product_name == "SEN66") {
+    return SEN66;
+  } else if (product_name == "SEN68") {
+    return SEN68;
+  } else {
+    return UNKNOWN_MODEL;
+  }
+}
+
+bool SEN5XComponent::is_sen6x() {
+  switch (this->model_.value()) {
+    case SEN60:
+    case SEN63C:
+    case SEN65:
+    case SEN66:
+    case SEN68:
+      return true;
+    default:
+      return false;
+  }
+}
 
 void SEN5XComponent::setup() { this->internal_setup_(0); }
 
@@ -794,63 +850,6 @@ bool SEN5XComponent::set_ambient_pressure_compensation(float pressure_in_hpa) {
   } else {
     ESP_LOGE(TAG, "Set Ambient Pressure Compensation is not supported");
     return false;
-  }
-}
-
-static const char *model_to_str(Sen5xType model) {
-  switch (model) {
-    case SEN50:
-      return "SEN50";
-    case SEN54:
-      return "SEN54";
-    case SEN55:
-      return "SEN55";
-    case SEN60:
-      return "SEN60";
-    case SEN63C:
-      return "SEN63C";
-    case SEN65:
-      return "SEN65";
-    case SEN66:
-      return "SEN66";
-    case SEN68:
-      return "SEN68";
-    default:
-      return "UNKNOWN MODEL";
-  }
-}
-static const Sen5xType str_to_model(const char *product_name) {
-  if (product_name == "SEN50") {
-    return SEN50;
-  } else if (product_name == "SEN54") {
-    return SEN54;
-  } else if (product_name == "SEN55") {
-    return SEN55;
-  } else if (product_name == "SEN60") {
-    return SEN60;
-  } else if (product_name == "SEN63C") {
-    return SEN63C;
-  } else if (product_name == "SEN65") {
-    return SEN65;
-  } else if (product_name == "SEN66") {
-    return SEN66;
-  } else if (product_name == "SEN68") {
-    return SEN68;
-  } else {
-    return UNKNOWN_MODEL;
-  }
-}
-
-bool SEN5XComponent::is_sen6x() {
-  switch (this->model_.value()) {
-    case SEN60:
-    case SEN63C:
-    case SEN65:
-    case SEN66:
-    case SEN68:
-      return true;
-    default:
-      return false;
   }
 }
 
