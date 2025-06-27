@@ -212,7 +212,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
         this->mark_failed();
         return;
       }
-      if (this->model_.is_sen6x()) {
+      if (this->is_sen6x()) {
         this->firmware_minor_ = firmware && 0xFF;
         this->firmware_major_ = firmware >> 8;
         ESP_LOGD(TAG, "Firmware version %u.%u", this->firmware_major_, this->firmware_minor_);
