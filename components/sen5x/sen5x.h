@@ -31,7 +31,12 @@ struct Sen5xBaselines {
 } PACKED;  // NOLINT
 
 enum Sen5xType { SEN50, SEN54, SEN55, SEN60, SEN63C, SEN65, SEN66, SEN68, UNKNOWN_MODEL };
-enum RhtAccelerationMode : uint16_t { LOW_ACCELERATION = 0, MEDIUM_ACCELERATION = 1, HIGH_ACCELERATION = 2, UNKNOWN_ACCELERATION=100};
+enum RhtAccelerationMode : uint16_t {
+  LOW_ACCELERATION = 0,
+  MEDIUM_ACCELERATION = 1,
+  HIGH_ACCELERATION = 2,
+  UNKNOWN_ACCELERATION = 100
+};
 
 struct GasTuning {
   uint16_t index_offset;
@@ -101,7 +106,7 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
     temp_comp.time_constant = time_constant;
     temperature_compensation_ = temp_comp;
   }
-  void set_co2_auto_calibrate(bool value) {co2_auto_calibrate_ = value; }
+  void set_co2_auto_calibrate(bool value) { co2_auto_calibrate_ = value; }
   void set_co2_altitude_compensation(uint16_t altitude) { co2_altitude_compensation_ = altitude; }
   void set_ambient_pressure_source(sensor::Sensor *pressure) { co2_ambient_pressure_source_ = pressure; }
   bool start_fan_cleaning();
@@ -110,7 +115,6 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   bool set_ambient_pressure_compensation(float pressure_in_hpa);
 
  protected:
-  bool is_sen5x();
   bool is_sen6x();
   void internal_setup_(uint8_t state);
   bool start_measurements_();
@@ -126,12 +130,10 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   sensor::Sensor *pm_2_5_sensor_{nullptr};
   sensor::Sensor *pm_4_0_sensor_{nullptr};
   sensor::Sensor *pm_10_0_sensor_{nullptr};
-  // SEN54 and SEN55 only
   sensor::Sensor *temperature_sensor_{nullptr};
   sensor::Sensor *humidity_sensor_{nullptr};
   sensor::Sensor *voc_sensor_{nullptr};
   sensor::Sensor *hcho_sensor_{nullptr};
-  // SEN55 and SEN66 only
   sensor::Sensor *nox_sensor_{nullptr};
   sensor::Sensor *co2_sensor_{nullptr};
 
