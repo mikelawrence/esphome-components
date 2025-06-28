@@ -31,11 +31,7 @@ struct Sen5xBaselines {
 } PACKED;  // NOLINT
 
 enum Sen5xType { SEN50, SEN54, SEN55, SEN60, SEN63C, SEN65, SEN66, SEN68, UNKNOWN_MODEL };
-enum RhtAccelerationMode : uint16_t {
-  LOW_ACCELERATION = 0,
-  MEDIUM_ACCELERATION = 1,
-  HIGH_ACCELERATION = 2
-};
+enum RhtAccelerationMode : uint16_t { LOW_ACCELERATION = 0, MEDIUM_ACCELERATION = 1, HIGH_ACCELERATION = 2 };
 
 struct GasTuning {
   uint16_t index_offset;
