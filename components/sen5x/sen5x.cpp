@@ -4,9 +4,9 @@
 #include "esphome/core/log.h"
 #include <cinttypes>
 
-#define ESP_LOG_MSG_CO2_CAL_FAIL "Perform Forced CO₂ Calibration failed";
-#define ESP_LOG_MSG_ACT_SHT_HEATER_FAIL "Activate SHT Heater failed";
-#define ESP_LOG_MSG_FAN_CLEAN_FAIL "Fan Cleaning failed";
+#define ESP_LOG_MSG_CO2_CAL_FAIL "Perform Forced CO₂ Calibration failed"
+#define ESP_LOG_MSG_ACT_SHT_HEATER_FAIL "Activate SHT Heater failed"
+#define ESP_LOG_MSG_FAN_CLEAN_FAIL "Fan Cleaning failed"
 
 namespace esphome {
 namespace sen5x {
