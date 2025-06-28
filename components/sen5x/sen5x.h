@@ -34,8 +34,7 @@ enum Sen5xType { SEN50, SEN54, SEN55, SEN60, SEN63C, SEN65, SEN66, SEN68, UNKNOW
 enum RhtAccelerationMode : uint16_t {
   LOW_ACCELERATION = 0,
   MEDIUM_ACCELERATION = 1,
-  HIGH_ACCELERATION = 2,
-  UNKNOWN_ACCELERATION = 100
+  HIGH_ACCELERATION = 2
 };
 
 struct GasTuning {
@@ -123,8 +122,8 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   bool write_tuning_parameters_(uint16_t i2c_command, const GasTuning &tuning);
   bool write_temperature_compensation_(const TemperatureCompensation &compensation);
   bool update_co2_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
-  const char *model_to_str(Sen5xType model);
-  Sen5xType str_to_model(const char *product_name);
+  const char *model_to_str_(Sen5xType model);
+  Sen5xType str_to_model_(const char *product_name);
   ERRORCODE error_code_;
   bool initialized_{false};
   bool running_{false};

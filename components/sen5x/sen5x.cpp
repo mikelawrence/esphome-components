@@ -135,11 +135,11 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
           return;
         } else {
           // update blank product name from model parameter
-          this->product_name_ = model_to_str(this->model_.value());
+          this->product_name_ = model_to_str_(this->model_.value());
         }
       } else if (!this->model_.has_value()) {
         // model is not defined, get it from product name
-        this->model_.value() = str_to_model(this->product_name_.c_str());
+        this->model_.value() = str_to_model_(this->product_name_.c_str());
         if (this->model_.value() == UNKNOWN_MODEL) {
           ESP_LOGE(TAG, "Product Name from sensor is not a known sensor");
           this->error_code_ = PRODUCT_NAME_FAILED;
@@ -148,7 +148,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
         }
       } else {
         // product name and model specified in config, they must match
-        if (this->product_name_ != model_to_str(this->model_.value())) {
+        if (this->product_name_ != model_to_str_(this->model_.value())) {
           ESP_LOGE(TAG, "Sensor Product Name does not match 'model' in configuration");
           this->error_code_ = PRODUCT_NAME_FAILED;
           this->mark_failed();
@@ -441,7 +441,7 @@ void SEN5XComponent::dump_config() {
   }
   LOG_I2C_DEVICE(this);
   if (this->model_.has_value()) {
-    ESP_LOGCONFIG(TAG, "  Model: %s", model_to_str(this->model_.value()));
+    ESP_LOGCONFIG(TAG, "  Model: %s", model_to_str_(this->model_.value()));
   }
   ESP_LOGCONFIG(TAG, "  Product Name: %s", this->product_name_.c_str());
   ESP_LOGCONFIG(TAG, "  Serial number: %s", this->serial_number_.c_str());
@@ -546,6 +546,7 @@ void SEN5XComponent::update() {
     case SEN68:
       cmd = SEN68_CMD_READ_MEASUREMENT;
       length = 9;
+      break;
     default:
       cmd = SEN5X_CMD_READ_MEASUREMENT;
       length = 9;
@@ -682,6 +683,7 @@ bool SEN5XComponent::start_measurements_() {
     case SEN66:
     case SEN68:
       cmd = CMD_START_MEASUREMENTS;
+      break;
     default:
       cmd = SEN60_CMD_START_MEASUREMENTS;
       break;
@@ -802,7 +804,7 @@ bool SEN5XComponent::is_sen6x_() {
       return false;
   }
 }
-const char *SEN5XComponent::model_to_str(Sen5xType model) {
+const char *SEN5XComponent::model_to_str_(Sen5xType model) {
   switch (model) {
     case SEN50:
       return "SEN50";
@@ -825,7 +827,7 @@ const char *SEN5XComponent::model_to_str(Sen5xType model) {
   }
 }
 
-Sen5xType SEN5XComponent::str_to_model(const char *product_name) {
+Sen5xType SEN5XComponent::str_to_model_(const char *product_name) {
   if (strcmp(product_name, "SEN50") == 0) {
     return SEN50;
   } else if (strcmp(product_name, "SEN54") == 0) {
