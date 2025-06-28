@@ -115,7 +115,7 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   bool set_ambient_pressure_compensation(float pressure_in_hpa);
 
  protected:
-  bool is_sen6x();
+  bool is_sen6x_();
   void internal_setup_(uint8_t state);
   bool start_measurements_();
   bool stop_measurements_();
