@@ -4,13 +4,14 @@
 #include "esphome/core/log.h"
 #include <cinttypes>
 
+#define ESP_LOG_MSG_CO2_CAL_FAIL = "Perform Forced CO₂ Calibration failed";
+#define ESP_LOG_MSG_ACT_SHT_HEATER_FAIL = "Activate SHT Heater failed";
+#define ESP_LOG_MSG_FAN_CLEAN_FAIL = "Fan Cleaning failed";
+
 namespace esphome {
 namespace sen5x {
 
 static const char *const TAG = "sen5x";
-static const char *const ESP_LOG_MSG_CO2_CAL_FAIL = "Perform Forced CO₂ Calibration failed";
-static const char *const ESP_LOG_MSG_ACT_SHT_HEATER_FAIL = "Activate SHT Heater failed";
-static const char *const ESP_LOG_MSG_FAN_CLEAN_FAIL = "Fan Cleaning failed";
 
 static const uint16_t SEN5X_CMD_READ_MEASUREMENT = 0x03C4;
 static const uint16_t SEN60_CMD_READ_MEASUREMENT = 0xEC05;
@@ -79,21 +80,21 @@ static const char *model_to_str(Sen5xType model) {
   }
 }
 static const Sen5xType str_to_model(const char *product_name) {
-  if (product_name == "SEN50") {
+  if (strcmp(product_name, "SEN50") == 0) {
     return SEN50;
-  } else if (product_name == "SEN54") {
+  } else if (strcmp(product_name, "SEN54") == 0) {
     return SEN54;
-  } else if (product_name == "SEN55") {
+  } else if (strcmp(product_name, "SEN55") == 0) {
     return SEN55;
-  } else if (product_name == "SEN60") {
+  } else if (strcmp(product_name, "SEN60") == 0) {
     return SEN60;
-  } else if (product_name == "SEN63C") {
+  } else if (strcmp(product_name, "SEN63C") == 0) {
     return SEN63C;
-  } else if (product_name == "SEN65") {
+  } else if (strcmp(product_name, "SEN65") == 0) {
     return SEN65;
-  } else if (product_name == "SEN66") {
+  } else if (strcmp(product_name, "SEN66") == 0) {
     return SEN66;
-  } else if (product_name == "SEN68") {
+  } else if (strcmp(product_name, "SEN68") == 0) {
     return SEN68;
   } else {
     return UNKNOWN_MODEL;
@@ -688,7 +689,7 @@ void SEN5XComponent::update() {
       if (this->model_.value() == SEN66) {
         measurement = measurements[8];
       }
-      ESP_LOGVV(TAG, "co2 = 0x%.4x", co2);
+      ESP_LOGVV(TAG, "co2 = 0x%.4x", measurement);
       float co2 = measurement == UINT16_MAX ? NAN : measurement / 1.0f;
       if (this->co2_sensor_ != nullptr) {
         this->co2_sensor_->publish_state(co2);
