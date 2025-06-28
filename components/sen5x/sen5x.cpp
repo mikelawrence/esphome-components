@@ -12,49 +12,45 @@ static const char *const ESP_LOG_MSG_CO2_CAL_FAIL = "Perform Forced CO₂ Calibr
 static const char *const ESP_LOG_MSG_ACT_SHT_HEATER_FAIL = "Activate SHT Heater failed";
 static const char *const ESP_LOG_MSG_FAN_CLEAN_FAIL = "Fan Cleaning failed";
 
-//------------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------SEN50|SEN54|SEN55|SEN60|SEN63|SEN65|SEN66|SEN68
-//------------------------------------------------------------------------------------------------------------------------
-static const uint16_t SEN5X_C_READ_MEASUREMENT = 0x03C4;       //----------  *  |  *  |  *  |     |     |     |     |
-static const uint16_t SEN60_C_READ_MEASUREMENT = 0xEC05;       //----------     |     |     |  *  |     |     |     |
-static const uint16_t SEN63_C_READ_MEASUREMENT = 0x0471;       //----------     |     |     |     |  *  |     |     |
-static const uint16_t SEN65_C_READ_MEASUREMENT = 0x0446;       //----------     |     |     |     |     |  *  |     |
-static const uint16_t SEN66_C_READ_MEASUREMENT = 0x0300;       //----------     |     |     |     |     |     |  *  |
-static const uint16_t SEN68_C_READ_MEASUREMENT = 0x0467;       //----------     |     |     |     |     |     |     |  *
-static const uint16_t SEN60_C_RESET = 0x3F8D;                  //----------     |     |     |  *  |     |     |     |
-static const uint16_t SEN60_C_START_MEASUREMENTS = 0x2152;     //----------     |     |     |  *  |     |     |     |
-static const uint16_t SEN60_C_STOP_MEASUREMENTS = 0x3F86;      //----------     |     |     |  *  |     |     |     |
-static const uint16_t SEN60_C_GET_DATA_READY_STATUS = 0xE4B8;  //----------     |     |     |  *  |     |     |     |
-static const uint16_t SEN60_C_START_CLEANING_FAN = 0x3730;     //----------     |     |     |  *  |     |     |     |
-static const uint16_t SEN60_C_GET_SERIAL_NUMBER = 0x3682;      //----------     |     |     |  *  |     |     |     |
-static const uint16_t SEN60_C_READ_DEVICE_STATUS = 0xD206;     //----------     |     |     |  *  |     |     |     |
+static const uint16_t SEN5X_CMD_READ_MEASUREMENT = 0x03C4;
+static const uint16_t SEN60_CMD_READ_MEASUREMENT = 0xEC05;
+static const uint16_t SEN63_CMD_READ_MEASUREMENT = 0x0471;
+static const uint16_t SEN65_CMD_READ_MEASUREMENT = 0x0446;
+static const uint16_t SEN66_CMD_READ_MEASUREMENT = 0x0300;
+static const uint16_t SEN68_CMD_READ_MEASUREMENT = 0x0467;
+static const uint16_t SEN60_CMD_RESET = 0x3F8D;
+static const uint16_t SEN60_CMD_START_MEASUREMENTS = 0x2152;
+static const uint16_t SEN60_CMD_STOP_MEASUREMENTS = 0x3F86;
+static const uint16_t SEN60_CMD_GET_DATA_READY_STATUS = 0xE4B8;
+static const uint16_t SEN60_CMD_START_CLEANING_FAN = 0x3730;
+static const uint16_t SEN60_CMD_GET_SERIAL_NUMBER = 0x3682;
+static const uint16_t SEN60_CMD_READ_DEVICE_STATUS = 0xD206;
 
-static const uint16_t SEN6X_C_TEMPERATURE_ACCEL_PARAMETERS = 0x6100;  //---     |     |     |     |  *  |  *  |  *  |  *
-static const uint16_t SEN6X_C_PERFORM_FORCED_CO2_RECAL = 0x6707;      //---     |     |     |     |  *  |     |  *  |
-static const uint16_t SEN6X_C_CO2_SENSOR_AUTO_SELF_CAL = 0x6711;      //---     |     |     |     |  *  |     |  *  |
-static const uint16_t SEN6X_C_AMBIENT_PRESSURE = 0x6720;              //---     |     |     |     |  *  |  *  |  *  |  *
-static const uint16_t SEN6X_C_SENSOR_ALTITUDE = 0x6736;               //---     |     |     |     |  *  |  *  |  *  |  *
-static const uint16_t SEN6X_C_ACTIVATE_SHT_HEATER = 0x6765;           //---     |     |     |     |  *  |  *  |  *  |  *
-static const uint16_t SEN6X_C_READ_DEVICE_STATUS = 0xD206;            //---     |     |     |     |  *  |  *  |  *  |  *
-static const uint16_t SEN6X_C_READ_AND_CLEAR_DEVICE_STATUS = 0xD210;  //---     |     |     |     |  *  |  *  |  *  |  *
+static const uint16_t SEN6X_CMD_TEMPERATURE_ACCEL_PARAMETERS = 0x6100;
+static const uint16_t SEN6X_CMD_PERFORM_FORCED_CO2_RECAL = 0x6707;
+static const uint16_t SEN6X_CMD_CO2_SENSOR_AUTO_SELF_CAL = 0x6711;
+static const uint16_t SEN6X_CMD_AMBIENT_PRESSURE = 0x6720;
+static const uint16_t SEN6X_CMD_SENSOR_ALTITUDE = 0x6736;
+static const uint16_t SEN6X_CMD_ACTIVATE_SHT_HEATER = 0x6765;
+static const uint16_t SEN6X_CMD_READ_DEVICE_STATUS = 0xD206;
+static const uint16_t SEN6X_CMD_READ_AND_CLEAR_DEVICE_STATUS = 0xD210;
 
-static const uint16_t SEN5X_C_START_MEASUREMENTS_RHT_ONLY = 0x0037;  //----  *  |  *  |  *  |     |     |     |     |
-static const uint16_t SEN5X_C_RHT_ACCELERATION_MODE = 0x60F7;        //----  *  |  *  |  *  |     |     |     |     |
-static const uint16_t SEN5X_C_AUTO_CLEANING_INTERVAL = 0x8004;       //----  *  |  *  |  *  |     |     |     |     |
+static const uint16_t SEN5X_CMD_START_MEASUREMENTS_RHT_ONLY = 0x0037;
+static const uint16_t SEN5X_CMD_RHT_ACCELERATION_MODE = 0x60F7;
+static const uint16_t SEN5X_CMD_AUTO_CLEANING_INTERVAL = 0x8004;
 
-static const uint16_t C_RESET = 0xD304;                     //-------------  *  |  *  |  *  |     |  *  |  *  |  *  |  *
-static const uint16_t C_START_MEASUREMENTS = 0x0021;        //-------------  *  |  *  |  *  |     |  *  |  *  |  *  |  *
-static const uint16_t C_STOP_MEASUREMENTS = 0x0104;         //-------------  *  |  *  |  *  |     |  *  |  *  |  *  |  *
-static const uint16_t C_START_CLEANING_FAN = 0x5607;        //-------------  *  |  *  |  *  |     |  *  |  *  |  *  |  *
-static const uint16_t C_TEMPERATURE_COMPENSATION = 0x60B2;  //-------------  *  |  *  |  *  |     |  *  |  *  |  *  |  *
-static const uint16_t C_VOC_ALGORITHM_TUNING = 0x60D0;      //-------------  *  |  *  |  *  |     |     |  *  |  *  |  *
-static const uint16_t C_NOX_ALGORITHM_TUNING = 0x60E1;      //-------------  *  |  *  |  *  |     |     |  *  |  *  |  *
-static const uint16_t C_VOC_ALGORITHM_STATE = 0x6181;       //-------------  *  |  *  |  *  |     |     |  *  |  *  |  *
-static const uint16_t C_GET_PRODUCT_NAME = 0xD014;          //-------------  *  |  *  |  *  |     |  *  |  *  |  *  |  *
-static const uint16_t C_GET_SERIAL_NUMBER = 0xD033;         //-------------  *  |  *  |  *  |     |  *  |  *  |  *  |  *
-static const uint16_t C_GET_DATA_READY_STATUS = 0x0202;     //-------------  *  |  *  |  *  |     |  *  |  *  |  *  |  *
-static const uint16_t C_GET_FIRMWARE_VERSION = 0xD100;      //-------------  *  |  *  |  *  |  ?  |  *  |  *  |  *  |  *
-//-------------------------------------------------------------------------------------------------------------------------
+static const uint16_t CMD_RESET = 0xD304;
+static const uint16_t CMD_START_MEASUREMENTS = 0x0021;
+static const uint16_t CMD_STOP_MEASUREMENTS = 0x0104;
+static const uint16_t CMD_START_CLEANING_FAN = 0x5607;
+static const uint16_t CMD_TEMPERATURE_COMPENSATION = 0x60B2;
+static const uint16_t CMD_VOC_ALGORITHM_TUNING = 0x60D0;
+static const uint16_t CMD_NOX_ALGORITHM_TUNING = 0x60E1;
+static const uint16_t CMD_VOC_ALGORITHM_STATE = 0x6181;
+static const uint16_t CMD_GET_PRODUCT_NAME = 0xD014;
+static const uint16_t CMD_GET_SERIAL_NUMBER = 0xD033;
+static const uint16_t CMD_GET_DATA_READY_STATUS = 0x0202;
+static const uint16_t CMD_GET_FIRMWARE_VERSION = 0xD100;
 
 static const int8_t SEN5X_INDEX_SCALE_FACTOR = 10;                            // used for VOC and NOx index values
 static const int8_t SEN5X_MIN_INDEX_VALUE = 1 * SEN5X_INDEX_SCALE_FACTOR;     // must be adjusted by the scale factor
@@ -116,7 +112,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
       break;
     case 1:
       // Check if measurement is ready before reading the value
-      if (!this->write_command(C_GET_DATA_READY_STATUS)) {
+      if (!this->write_command(CMD_GET_DATA_READY_STATUS)) {
         ESP_LOGE(TAG, "Failed to write data ready status command");
         this->error_code_ = COMMUNICATION_FAILED;
         this->mark_failed();
@@ -142,17 +138,18 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
           this->mark_failed();
           return;
         }
-        // According to the SEN5x datasheet the sensor will only respond to other commands after waiting 200 ms after
-        // issuing the stop_periodic_measurement command
-        // According to the SEN66 datasheet the sensor will only respond to other commands after waiting 1000 ms after
-        stop_measurement_delay = 1000;
+        if (this->is_sen6x()) {
+          stop_measurement_delay = 1000;
+        } else {
+          stop_measurement_delay = 200;
+        }
       } else {
         stop_measurement_delay = 0;
       }
       this->set_timeout(stop_measurement_delay, [this]() { this->internal_setup_(3); });
       break;
     case 3:
-      if (!this->get_register(C_GET_SERIAL_NUMBER, string_number, 16, 20)) {
+      if (!this->get_register(CMD_GET_SERIAL_NUMBER, string_number, 16, 20)) {
         ESP_LOGE(TAG, "Failed to read serial number");
         this->error_code_ = SERIAL_NUMBER_IDENTIFICATION_FAILED;
         this->mark_failed();
@@ -163,7 +160,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
       this->set_timeout(20, [this]() { this->internal_setup_(4); });
       break;
     case 4:
-      if (!this->get_register(C_GET_PRODUCT_NAME, string_number, 16, 20)) {
+      if (!this->get_register(CMD_GET_PRODUCT_NAME, string_number, 16, 20)) {
         ESP_LOGE(TAG, "Failed to read product name");
         this->error_code_ = PRODUCT_NAME_FAILED;
         this->mark_failed();
@@ -206,7 +203,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
       break;
     case 5:
       uint16_t firmware;
-      if (!this->get_register(C_GET_FIRMWARE_VERSION, &firmware, 1, 20)) {
+      if (!this->get_register(CMD_GET_FIRMWARE_VERSION, &firmware, 1, 20)) {
         ESP_LOGE(TAG, "Failed to read firmware version");
         this->error_code_ = FIRMWARE_FAILED;
         this->mark_failed();
@@ -227,8 +224,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
       if (this->voc_sensor_ && this->store_baseline_) {
         uint32_t combined_serial =
             encode_uint24(this->serial_number_[0], this->serial_number_[1], this->serial_number_[2]);
-        // Hash with compilation time and serial number
-        // This ensures the baseline storage is cleared after OTA
+        // Hash with compilation time and serial number, this ensures the baseline storage is cleared after OTA
         // Serial numbers are unique to each sensor, so multiple sensors can be used without conflict
         uint32_t hash = fnv1_hash(App.get_compilation_time() + this->serial_number_);
         this->pref_ = global_preferences->make_preference<Sen5xBaselines>(hash, true);
@@ -251,7 +247,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
           states[2] = voc_baselines_storage_.state1 >> 16;
           states[3] = voc_baselines_storage_.state1 & 0xFFFF;
 
-          if (!this->write_command(C_VOC_ALGORITHM_STATE, states, 4)) {
+          if (!this->write_command(CMD_VOC_ALGORITHM_STATE, states, 4)) {
             ESP_LOGE(TAG, "Failed to set VOC baseline from saved state");
           }
         }
@@ -267,7 +263,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
           this->mark_failed();
           return;
         }
-        if (!write_command(SEN5X_C_AUTO_CLEANING_INTERVAL, this->auto_cleaning_interval_.value())) {
+        if (!write_command(SEN5X_CMD_AUTO_CLEANING_INTERVAL, this->auto_cleaning_interval_.value())) {
           ESP_LOGE(TAG, "Failed to set Automatic Cleaning Interval");
           this->error_code_ = COMMUNICATION_FAILED;
           this->mark_failed();
@@ -285,7 +281,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
           this->mark_failed();
           return;
         }
-        if (!this->write_command(SEN5X_C_RHT_ACCELERATION_MODE, this->acceleration_mode_.value())) {
+        if (!this->write_command(SEN5X_CMD_RHT_ACCELERATION_MODE, this->acceleration_mode_.value())) {
           ESP_LOGE(TAG, "Failed to set RH/T Acceleration Mode");
           this->error_code_ = COMMUNICATION_FAILED;
           this->mark_failed();
@@ -304,7 +300,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
           this->mark_failed();
           return;
         }
-        if (!this->write_tuning_parameters_(C_VOC_ALGORITHM_TUNING, this->voc_tuning_params_.value())) {
+        if (!this->write_tuning_parameters_(CMD_VOC_ALGORITHM_TUNING, this->voc_tuning_params_.value())) {
           ESP_LOGE(TAG, "Failed to set VOC Algorithm Tuning Parameters");
           this->error_code_ = COMMUNICATION_FAILED;
           this->mark_failed();
@@ -323,7 +319,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
           this->mark_failed();
           return;
         }
-        if (!this->write_tuning_parameters_(C_NOX_ALGORITHM_TUNING, this->nox_tuning_params_.value())) {
+        if (!this->write_tuning_parameters_(CMD_NOX_ALGORITHM_TUNING, this->nox_tuning_params_.value())) {
           ESP_LOGE(TAG, "Failed to set VOC Algorithm Tuning Parameters");
           this->error_code_ = COMMUNICATION_FAILED;
           this->mark_failed();
@@ -362,7 +358,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
           this->mark_failed();
           return;
         }
-        if (!this->write_command(SEN6X_C_CO2_SENSOR_AUTO_SELF_CAL, this->co2_auto_calibrate_.value() ? 0x01 : 0x00)) {
+        if (!this->write_command(SEN6X_CMD_CO2_SENSOR_AUTO_SELF_CAL, this->co2_auto_calibrate_.value() ? 0x01 : 0x00)) {
           ESP_LOGE(TAG, "Failed to set CO₂ Sensor Automatic Self Calibration");
           this->error_code_ = COMMUNICATION_FAILED;
           this->mark_failed();
@@ -382,7 +378,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
           this->mark_failed();
           return;
         }
-        if (!this->write_command(SEN6X_C_CO2_SENSOR_AUTO_SELF_CAL, this->co2_auto_calibrate_.value() ? 0x01 : 0x00)) {
+        if (!this->write_command(SEN6X_CMD_CO2_SENSOR_AUTO_SELF_CAL, this->co2_auto_calibrate_.value() ? 0x01 : 0x00)) {
           ESP_LOGE(TAG, "Failed to set CO₂ Sensor Automatic Self Calibration");
           this->error_code_ = COMMUNICATION_FAILED;
           this->mark_failed();
@@ -545,7 +541,7 @@ void SEN5XComponent::update() {
   // Store baselines after defined interval or if the difference between current and stored baseline becomes too
   // much
   if (this->store_baseline_ && this->seconds_since_last_store_ > SHORTEST_BASELINE_STORE_INTERVAL) {
-    if (this->write_command(C_VOC_ALGORITHM_STATE)) {
+    if (this->write_command(CMD_VOC_ALGORITHM_STATE)) {
       // run it a bit later to avoid adding a delay here
       this->set_timeout(550, [this]() {
         uint16_t states[4];
@@ -577,27 +573,27 @@ void SEN5XComponent::update() {
     case SEN50:
     case SEN54:
     case SEN55:
-      cmd = SEN5X_C_READ_MEASUREMENT;
+      cmd = SEN5X_CMD_READ_MEASUREMENT;
       length = 9;
       break;
     case SEN60:
-      cmd = SEN60_C_READ_MEASUREMENT;
+      cmd = SEN60_CMD_READ_MEASUREMENT;
       length = 4;
       break;
     case SEN63C:
-      cmd = SEN63_C_READ_MEASUREMENT;
+      cmd = SEN63_CMD_READ_MEASUREMENT;
       length = 7;
       break;
     case SEN65:
-      cmd = SEN65_C_READ_MEASUREMENT;
+      cmd = SEN65_CMD_READ_MEASUREMENT;
       length = 8;
       break;
     case SEN66:
-      cmd = SEN66_C_READ_MEASUREMENT;
+      cmd = SEN66_CMD_READ_MEASUREMENT;
       length = 9;
       break;
     case SEN68:
-      cmd = SEN68_C_READ_MEASUREMENT;
+      cmd = SEN68_CMD_READ_MEASUREMENT;
       length = 9;
       break;
   }
@@ -721,20 +717,20 @@ bool SEN5XComponent::start_measurements_() {
     case SEN50:
     case SEN54:
     case SEN55:
-      cmd = SEN5X_C_START_MEASUREMENTS_RHT_ONLY;
+      cmd = SEN5X_CMD_START_MEASUREMENTS_RHT_ONLY;
       if (this->pm_1_0_sensor_ || this->pm_2_5_sensor_ || this->pm_4_0_sensor_ || this->pm_10_0_sensor_) {
         // if any of the gas sensors are active we need a full measurement
-        cmd = C_START_MEASUREMENTS;
+        cmd = CMD_START_MEASUREMENTS;
       }
       break;
     case SEN60:
-      cmd = SEN60_C_START_MEASUREMENTS;
+      cmd = SEN60_CMD_START_MEASUREMENTS;
       break;
     case SEN63C:
     case SEN65:
     case SEN66:
     case SEN68:
-      cmd = C_START_MEASUREMENTS;
+      cmd = CMD_START_MEASUREMENTS;
       break;
   }
 
@@ -750,9 +746,9 @@ bool SEN5XComponent::start_measurements_() {
 bool SEN5XComponent::stop_measurements_() {
   uint16_t cmd;
   if (this->model_.value() == SEN60) {
-    cmd = SEN60_C_STOP_MEASUREMENTS;
+    cmd = SEN60_CMD_STOP_MEASUREMENTS;
   } else {
-    cmd = C_STOP_MEASUREMENTS;
+    cmd = CMD_STOP_MEASUREMENTS;
   }
   auto result = this->write_command(cmd);
   if (!result) {
@@ -803,7 +799,7 @@ bool SEN5XComponent::write_temperature_compensation_(const TemperatureCompensati
   params[0] = compensation.offset;
   params[1] = compensation.normalized_offset_slope;
   params[2] = compensation.time_constant;
-  auto result = this->write_command(C_TEMPERATURE_COMPENSATION, params, 3);
+  auto result = this->write_command(CMD_TEMPERATURE_COMPENSATION, params, 3);
   if (!result) {
     ESP_LOGE(TAG, "Write error Temperature Compensation (error=%d)", this->last_error_);
   }
@@ -811,7 +807,8 @@ bool SEN5XComponent::write_temperature_compensation_(const TemperatureCompensati
 }
 
 bool SEN5XComponent::update_co2_ambient_pressure_compensation_(uint16_t pressure_in_hpa) {
-  auto result = this->write_command(SEN6X_C_CO2_SENSOR_AUTO_SELF_CAL, this->co2_auto_calibrate_.value() ? 0x01 : 0x00);
+  auto result =
+      this->write_command(SEN6X_CMD_CO2_SENSOR_AUTO_SELF_CAL, this->co2_auto_calibrate_.value() ? 0x01 : 0x00);
   if (!result) {
     ESP_LOGE(TAG, "Write error Auto Self Calibration (error=%d)", this->last_error_);
   }
@@ -865,9 +862,9 @@ bool SEN5XComponent::start_fan_cleaning() {
   this->set_timeout(1000, [this]() {
     uint16_t cmd;
     if (this->model_.value() == SEN60) {
-      cmd = SEN60_C_START_CLEANING_FAN;
+      cmd = SEN60_CMD_START_CLEANING_FAN;
     } else {
-      cmd = C_START_CLEANING_FAN;
+      cmd = CMD_START_CLEANING_FAN;
     }
     if (!this->write_command(cmd)) {
       ESP_LOGE(TAG, "I2C Write error Start Cleaning Fan (error=%d)", this->last_error_);
@@ -905,7 +902,7 @@ bool SEN5XComponent::activate_heater() {
       return false;
     }
     this->set_timeout(1000, [this]() {
-      if (!this->write_command(SEN6X_C_ACTIVATE_SHT_HEATER)) {
+      if (!this->write_command(SEN6X_CMD_ACTIVATE_SHT_HEATER)) {
         ESP_LOGE(TAG, "I2C Write error Activate SHT Heater (error=%d)", this->last_error_);
         if (!this->running_) {
           this->start_measurements_();
@@ -944,7 +941,7 @@ bool SEN5XComponent::perform_forced_co2_calibration(uint16_t co2) {
       return false;
     }
     this->set_timeout(1000, [this, co2]() {
-      if (!this->write_command(SEN6X_C_PERFORM_FORCED_CO2_RECAL, co2)) {
+      if (!this->write_command(SEN6X_CMD_PERFORM_FORCED_CO2_RECAL, co2)) {
         ESP_LOGE(TAG, "I2C Write error Perform Forced CO₂ Recalibration (error=%d)", this->last_error_);
         if (!this->running_) {
           this->start_measurements_();
