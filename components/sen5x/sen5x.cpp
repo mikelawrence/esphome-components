@@ -57,50 +57,6 @@ static const int8_t SEN5X_INDEX_SCALE_FACTOR = 10;                            //
 static const int8_t SEN5X_MIN_INDEX_VALUE = 1 * SEN5X_INDEX_SCALE_FACTOR;     // must be adjusted by the scale factor
 static const int16_t SEN5X_MAX_INDEX_VALUE = 500 * SEN5X_INDEX_SCALE_FACTOR;  // must be adjusted by the scale factor
 
-static const char *model_to_str(Sen5xType model) {
-  switch (model) {
-    case SEN50:
-      return "SEN50";
-    case SEN54:
-      return "SEN54";
-    case SEN55:
-      return "SEN55";
-    case SEN60:
-      return "SEN60";
-    case SEN63C:
-      return "SEN63C";
-    case SEN65:
-      return "SEN65";
-    case SEN66:
-      return "SEN66";
-    case SEN68:
-      return "SEN68";
-    default:
-      return "UNKNOWN MODEL";
-  }
-}
-static const Sen5xType str_to_model(const char *product_name) {
-  if (strcmp(product_name, "SEN50") == 0) {
-    return SEN50;
-  } else if (strcmp(product_name, "SEN54") == 0) {
-    return SEN54;
-  } else if (strcmp(product_name, "SEN55") == 0) {
-    return SEN55;
-  } else if (strcmp(product_name, "SEN60") == 0) {
-    return SEN60;
-  } else if (strcmp(product_name, "SEN63C") == 0) {
-    return SEN63C;
-  } else if (strcmp(product_name, "SEN65") == 0) {
-    return SEN65;
-  } else if (strcmp(product_name, "SEN66") == 0) {
-    return SEN66;
-  } else if (strcmp(product_name, "SEN68") == 0) {
-    return SEN68;
-  } else {
-    return UNKNOWN_MODEL;
-  }
-}
-
 void SEN5XComponent::setup() { this->internal_setup_(0); }
 
 void SEN5XComponent::internal_setup_(uint8_t state) {
@@ -168,7 +124,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
         return;
       }
       this->product_name_ = convert_to_string_(string_number, 16);
-      if (this->product_name_ == "") {
+      if (this->product_name_.empty()) {
         // If blank the user must set the model parameter in the configuration
         // original PR indicated the SEN66 did not report Product Name, mine do
         // just in case I added the model configuration parameter so the user can specify the model
@@ -211,7 +167,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
         return;
       }
       if (this->is_sen6x_()) {
-        this->firmware_minor_ = firmware && 0xFF;
+        this->firmware_minor_ = firmware & 0xFF;
         this->firmware_major_ = firmware >> 8;
         ESP_LOGD(TAG, "Firmware version %u.%u", this->firmware_major_, this->firmware_minor_);
       } else {
@@ -223,8 +179,6 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
       break;
     case 6:
       if (this->voc_sensor_ && this->store_baseline_) {
-        uint32_t combined_serial =
-            encode_uint24(this->serial_number_[0], this->serial_number_[1], this->serial_number_[2]);
         // Hash with compilation time and serial number, this ensures the baseline storage is cleared after OTA
         // Serial numbers are unique to each sensor, so multiple sensors can be used without conflict
         uint32_t hash = fnv1_hash(App.get_compilation_time() + this->serial_number_);
@@ -256,7 +210,6 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
       this->set_timeout(20, [this]() { this->internal_setup_(7); });
       break;
     case 7:
-      bool result;
       if (this->auto_cleaning_interval_.has_value()) {
         if (this->is_sen6x_()) {
           ESP_LOGE(TAG, "Automatic Cleaning Interval is not supported");
@@ -530,7 +483,7 @@ void SEN5XComponent::dump_config() {
                     this->co2_ambient_pressure_source_->get_name().c_str());
     } else {
       if (this->co2_altitude_compensation_.has_value()) {
-        ESP_LOGCONFIG(TAG, "    Altitude compensation: %dm", this->co2_altitude_compensation_);
+        ESP_LOGCONFIG(TAG, "    Altitude compensation: %dm", this->co2_altitude_compensation_.value());
       }
     }
   }
@@ -574,12 +527,6 @@ void SEN5XComponent::update() {
   uint16_t cmd;
   uint8_t length;
   switch (this->model_.value()) {
-    case SEN50:
-    case SEN54:
-    case SEN55:
-      cmd = SEN5X_CMD_READ_MEASUREMENT;
-      length = 9;
-      break;
     case SEN60:
       cmd = SEN60_CMD_READ_MEASUREMENT;
       length = 4;
@@ -598,6 +545,9 @@ void SEN5XComponent::update() {
       break;
     case SEN68:
       cmd = SEN68_CMD_READ_MEASUREMENT;
+      length = 9;
+    default:
+      cmd = SEN5X_CMD_READ_MEASUREMENT;
       length = 9;
       break;
   }
@@ -727,14 +677,13 @@ bool SEN5XComponent::start_measurements_() {
         cmd = CMD_START_MEASUREMENTS;
       }
       break;
-    case SEN60:
-      cmd = SEN60_CMD_START_MEASUREMENTS;
-      break;
     case SEN63C:
     case SEN65:
     case SEN66:
     case SEN68:
       cmd = CMD_START_MEASUREMENTS;
+    default:
+      cmd = SEN60_CMD_START_MEASUREMENTS;
       break;
   }
 
@@ -763,7 +712,7 @@ bool SEN5XComponent::stop_measurements_() {
   return result;
 }
 
-std::string SEN5XComponent::convert_to_string_(uint16_t array[], uint8_t length) {
+std::string SEN5XComponent::convert_to_string_(const uint16_t array[], uint8_t length) {
   std::string new_string;
   const uint16_t *current_int = array;
   char current_char;
@@ -830,7 +779,7 @@ bool SEN5XComponent::set_ambient_pressure_compensation(float pressure_in_hpa) {
     if (new_ambient_pressure != this->co2_ambient_pressure_) {
       update_co2_ambient_pressure_compensation_(new_ambient_pressure);
       this->co2_ambient_pressure_ = new_ambient_pressure;
-      this->set_timeout(20, [this]() {});
+      this->set_timeout(20, []() {});
     } else {
       ESP_LOGD(TAG, "Ambient Pressure compensation skipped - no change required");
     }
@@ -851,6 +800,50 @@ bool SEN5XComponent::is_sen6x_() {
       return true;
     default:
       return false;
+  }
+}
+const char *SEN5XComponent::model_to_str(Sen5xType model) {
+  switch (model) {
+    case SEN50:
+      return "SEN50";
+    case SEN54:
+      return "SEN54";
+    case SEN55:
+      return "SEN55";
+    case SEN60:
+      return "SEN60";
+    case SEN63C:
+      return "SEN63C";
+    case SEN65:
+      return "SEN65";
+    case SEN66:
+      return "SEN66";
+    case SEN68:
+      return "SEN68";
+    default:
+      return "UNKNOWN MODEL";
+  }
+}
+
+Sen5xType SEN5XComponent::str_to_model(const char *product_name) {
+  if (strcmp(product_name, "SEN50") == 0) {
+    return SEN50;
+  } else if (strcmp(product_name, "SEN54") == 0) {
+    return SEN54;
+  } else if (strcmp(product_name, "SEN55") == 0) {
+    return SEN55;
+  } else if (strcmp(product_name, "SEN60") == 0) {
+    return SEN60;
+  } else if (strcmp(product_name, "SEN63C") == 0) {
+    return SEN63C;
+  } else if (strcmp(product_name, "SEN65") == 0) {
+    return SEN65;
+  } else if (strcmp(product_name, "SEN66") == 0) {
+    return SEN66;
+  } else if (strcmp(product_name, "SEN68") == 0) {
+    return SEN68;
+  } else {
+    return UNKNOWN_MODEL;
   }
 }
 
