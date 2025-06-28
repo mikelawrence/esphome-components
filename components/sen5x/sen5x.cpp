@@ -4,9 +4,9 @@
 #include "esphome/core/log.h"
 #include <cinttypes>
 
-#define ESP_LOG_MSG_CO2_CAL_FAIL = "Perform Forced CO₂ Calibration failed";
-#define ESP_LOG_MSG_ACT_SHT_HEATER_FAIL = "Activate SHT Heater failed";
-#define ESP_LOG_MSG_FAN_CLEAN_FAIL = "Fan Cleaning failed";
+#define ESP_LOG_MSG_CO2_CAL_FAIL "Perform Forced CO₂ Calibration failed";
+#define ESP_LOG_MSG_ACT_SHT_HEATER_FAIL "Activate SHT Heater failed";
+#define ESP_LOG_MSG_FAN_CLEAN_FAIL "Fan Cleaning failed";
 
 namespace esphome {
 namespace sen5x {
@@ -139,7 +139,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
           this->mark_failed();
           return;
         }
-        if (this->is_sen6x()) {
+        if (this->is_sen6x_()) {
           stop_measurement_delay = 1000;
         } else {
           stop_measurement_delay = 200;
@@ -210,7 +210,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
         this->mark_failed();
         return;
       }
-      if (this->is_sen6x()) {
+      if (this->is_sen6x_()) {
         this->firmware_minor_ = firmware && 0xFF;
         this->firmware_major_ = firmware >> 8;
         ESP_LOGD(TAG, "Firmware version %u.%u", this->firmware_major_, this->firmware_minor_);
@@ -258,7 +258,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
     case 7:
       bool result;
       if (this->auto_cleaning_interval_.has_value()) {
-        if (this->is_sen6x()) {
+        if (this->is_sen6x_()) {
           ESP_LOGE(TAG, "Automatic Cleaning Interval is not supported");
           this->error_code_ = UNSUPPORTED_CONF;
           this->mark_failed();
@@ -276,7 +276,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
       break;
     case 8:
       if (this->acceleration_mode_.has_value()) {
-        if (this->is_sen6x()) {
+        if (this->is_sen6x_()) {
           ESP_LOGE(TAG, "RH/T Acceleration Mode is not supported");
           this->error_code_ = UNSUPPORTED_CONF;
           this->mark_failed();
@@ -333,7 +333,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
       break;
     case 11:
       if (this->temperature_compensation_.has_value()) {
-        if (this->model_ == SEN50 || this->is_sen6x()) {
+        if (this->model_ == SEN50 || this->is_sen6x_()) {
           ESP_LOGE(TAG, "Temperature Compensation Parameters are not supported");
           this->error_code_ = UNSUPPORTED_CONF;
           this->mark_failed();
@@ -492,7 +492,7 @@ void SEN5XComponent::dump_config() {
   }
   ESP_LOGCONFIG(TAG, "  Product Name: %s", this->product_name_.c_str());
   ESP_LOGCONFIG(TAG, "  Serial number: %s", this->serial_number_.c_str());
-  if (this->is_sen6x()) {
+  if (this->is_sen6x_()) {
     ESP_LOGCONFIG(TAG, "  Firmware version: %u.%u", this->firmware_major_, this->firmware_minor_);
   } else {
     ESP_LOGCONFIG(TAG, "  Firmware version: %u", this->firmware_major_);
@@ -841,7 +841,7 @@ bool SEN5XComponent::set_ambient_pressure_compensation(float pressure_in_hpa) {
   }
 }
 
-bool SEN5XComponent::is_sen6x() {
+bool SEN5XComponent::is_sen6x_() {
   switch (this->model_.value()) {
     case SEN60:
     case SEN63C:
@@ -858,7 +858,7 @@ bool SEN5XComponent::start_fan_cleaning() {
   ESP_LOGV(TAG, "Fan Cleaning started");
   this->initialized_ = false;  // prevent update from trying to read the sensors
   // measurements must be stopped first for certain devices
-  if (this->is_sen6x() && !this->stop_measurements_()) {
+  if (this->is_sen6x_() && !this->stop_measurements_()) {
     ESP_LOGE(TAG, ESP_LOG_MSG_FAN_CLEAN_FAIL);
     this->initialized_ = true;
     return false;
@@ -900,7 +900,7 @@ bool SEN5XComponent::activate_heater() {
     ESP_LOGV(TAG, "Activate SHT Heater started");
     this->initialized_ = false;  // prevent update from trying to read the sensors
     // measurements must be stopped first for certain devices
-    if (this->is_sen6x() && !this->stop_measurements_()) {
+    if (this->is_sen6x_() && !this->stop_measurements_()) {
       ESP_LOGE(TAG, ESP_LOG_MSG_ACT_SHT_HEATER_FAIL);
       this->initialized_ = true;
       return false;
