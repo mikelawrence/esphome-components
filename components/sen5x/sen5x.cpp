@@ -449,7 +449,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
       this->set_timeout(20, [this]() { this->internal_setup_(16); });
       break;
     case 16:
-      initialized_ = true;
+      this->initialized_ = true;
       ESP_LOGD(TAG, "Sensor initialized");
       break;
   }
@@ -457,6 +457,9 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
 
 void SEN5XComponent::dump_config() {
   ESP_LOGCONFIG(TAG, "sen5x:");
+  if (!this->initialized_) {
+    ESP_LOGCONFIG(TAG, "  Initialization is not complete, some values may not be filled in");
+  }
   if (this->is_failed()) {
     switch (this->error_code_) {
       case COMMUNICATION_FAILED:
@@ -534,7 +537,7 @@ void SEN5XComponent::dump_config() {
 }
 
 void SEN5XComponent::update() {
-  if (!initialized_) {
+  if (!this->initialized_) {
     return;
   }
 

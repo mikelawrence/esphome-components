@@ -137,8 +137,8 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   sensor::Sensor *nox_sensor_{nullptr};
   sensor::Sensor *co2_sensor_{nullptr};
 
-  std::string product_name_;
-  std::string serial_number_;
+  std::string product_name_ = "Unknown";
+  std::string serial_number_ = "Unknown";
   uint8_t firmware_major_{0xFF};
   uint8_t firmware_minor_{0xFF};
   Sen5xBaselines voc_baselines_storage_;
