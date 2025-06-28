@@ -123,8 +123,8 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   bool write_tuning_parameters_(uint16_t i2c_command, const GasTuning &tuning);
   bool write_temperature_compensation_(const TemperatureCompensation &compensation);
   bool update_co2_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
-  const char *SEN5XComponent::model_to_str(Sen5xType model);
-  Sen5xType SEN5XComponent::str_to_model(const char *product_name);
+  const char *model_to_str(Sen5xType model);
+  Sen5xType str_to_model(const char *product_name);
   ERRORCODE error_code_;
   bool initialized_{false};
   bool running_{false};
