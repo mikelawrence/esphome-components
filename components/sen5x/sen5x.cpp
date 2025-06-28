@@ -11,7 +11,7 @@ static const char *const TAG = "sen5x";
 static const char *const ESP_LOG_MSG_CO2_CAL_FAIL = "Perform Forced CO₂ Calibration failed";
 static const char *const ESP_LOG_MSG_ACT_SHT_HEATER_FAIL = "Activate SHT Heater failed";
 static const char *const ESP_LOG_MSG_FAN_CLEAN_FAIL = "Fan Cleaning failed";
-
+f
 //------------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------SEN50|SEN54|SEN55|SEN60|SEN63|SEN65|SEN66|SEN68
 //------------------------------------------------------------------------------------------------------------------------
