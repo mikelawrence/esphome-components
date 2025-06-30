@@ -4,7 +4,7 @@ import esphome.codegen as cg
 from esphome.components import i2c, sensirion_common, sensor
 import esphome.config_validation as cv
 from esphome.const import (
-    CONF_ALTITUDE_COMPENSATION,
+    # CONF_ALTITUDE_COMPENSATION,
     CONF_AMBIENT_PRESSURE_COMPENSATION,
     CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE,
     CONF_AUTOMATIC_SELF_CALIBRATION,
@@ -56,6 +56,7 @@ RhtAccelerationMode = sen5x_ns.enum("RhtAccelerationMode")
 
 CONF_ACCELERATION_MODE = "acceleration_mode"
 CONF_ALGORITHM_TUNING = "algorithm_tuning"
+CONF_ALTITUDE_COMPENSATION = "altitude_compensation"
 CONF_AUTO_CLEANING_INTERVAL = "auto_cleaning_interval"
 CONF_GATING_MAX_DURATION_MINUTES = "gating_max_duration_minutes"
 CONF_HCHO = "hcho"
