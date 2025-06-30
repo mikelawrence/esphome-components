@@ -197,7 +197,6 @@ CONFIG_SCHEMA = (
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_STORE_BASELINE, default=True): cv.boolean,
-            cv.Optional(CONF_VOC_BASELINE): cv.hex_uint16_t,
             cv.Optional(CONF_TEMPERATURE): sensor.sensor_schema(
                 unit_of_measurement=UNIT_CELSIUS,
                 icon=ICON_THERMOMETER,
@@ -346,7 +345,7 @@ SEN5X_CALIBRATE_ACTION_SCHEMA = maybe_simple_id(
     PerformForcedCo2CalibrationAction,
     SEN5X_CALIBRATE_ACTION_SCHEMA,
 )
-async def sen5x_frcc_to_code(config, action_id, template_arg, args):
+async def sen5x_pfcc_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
     template_ = await cg.templatable(config[CONF_VALUE], args, cg.uint16)
