@@ -4,7 +4,12 @@ import esphome.codegen as cg
 from esphome.components import i2c, sensirion_common, sensor
 import esphome.config_validation as cv
 from esphome.const import (
+    CONF_ALTITUDE_COMPENSATION,
+    CONF_AMBIENT_PRESSURE_COMPENSATION,
+    CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE,
+    CONF_AUTOMATIC_SELF_CALIBRATION,
     CONF_CO2,
+    CONF_GAIN_FACTOR,
     CONF_HUMIDITY,
     CONF_ID,
     CONF_MODEL,
@@ -50,13 +55,8 @@ RhtAccelerationMode = sen5x_ns.enum("RhtAccelerationMode")
 
 
 CONF_ACCELERATION_MODE = "acceleration_mode"
-CONF_ALTITUDE_COMPENSATION = "altitude_compensation"
-CONF_AMBIENT_PRESSURE_COMPENSATION = "ambient_pressure_compensation"
-CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE = "ambient_pressure_compensation_source"
 CONF_ALGORITHM_TUNING = "algorithm_tuning"
 CONF_AUTO_CLEANING_INTERVAL = "auto_cleaning_interval"
-CONF_AUTO_SELF_CALIBRATION = "auto_self_calibration"
-CONF_GAIN_FACTOR = "gain_factor"
 CONF_GATING_MAX_DURATION_MINUTES = "gating_max_duration_minutes"
 CONF_HCHO = "hcho"
 CONF_INDEX_OFFSET = "index_offset"
@@ -118,7 +118,7 @@ GAS_SENSOR = cv.Schema(
 
 CO2_SENSOR = cv.Schema(
     {
-        cv.Optional(CONF_AUTO_SELF_CALIBRATION, default=True): cv.boolean,
+        cv.Optional(CONF_AUTOMATIC_SELF_CALIBRATION, default=True): cv.boolean,
         cv.Optional(CONF_ALTITUDE_COMPENSATION, default="0m"): cv.All(
             cv.float_with_unit("altitude", "(m|m a.s.l.|MAMSL|MASL)"),
             cv.int_range(min=0, max=0xFFFF, max_included=False),
@@ -247,7 +247,7 @@ SETTING_MAP = {
 }
 
 CO2_SETTING_MAP = {
-    CONF_AUTO_SELF_CALIBRATION: "set_co2_auto_calibrate",
+    CONF_AUTOMATIC_SELF_CALIBRATION: "set_co2_auto_calibrate",
     CONF_ALTITUDE_COMPENSATION: "set_co2_altitude_compensation",
     CONF_AMBIENT_PRESSURE_COMPENSATION: "set_co2_ambient_pressure_compensation",
 }

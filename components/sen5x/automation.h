@@ -7,7 +7,6 @@
 namespace esphome {
 namespace sen5x {
 
-
 template<typename... Ts> class SetAmbientPressurehPa : public Action<Ts...>, public Parented<SEN5XComponent> {
  public:
   void play(Ts... x) override {
@@ -20,7 +19,8 @@ template<typename... Ts> class SetAmbientPressurehPa : public Action<Ts...>, pub
   TEMPLATABLE_VALUE(uint16_t, value)
 };
 
-template<typename... Ts> class PerformForcedCo2CalibrationAction : public Action<Ts...>, public Parented<SEN5XComponent> {
+template<typename... Ts>
+class PerformForcedCo2CalibrationAction : public Action<Ts...>, public Parented<SEN5XComponent> {
  public:
   void play(Ts... x) override {
     if (this->value_.has_value()) {
