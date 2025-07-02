@@ -265,80 +265,69 @@ CO2_SETTING_MAP = {
 def final_validate(config):
     model = config[CONF_MODEL]
     if CONF_ACCELERATION_MODE in config:
-        if (
-            model == MODEL_SEN50
-            or model == MODEL_SEN60
-            or model == MODEL_SEN63C
-            or model == MODEL_SEN65
-            or model == MODEL_SEN66
-            or model == MODEL_SEN68
-        ):
+        if model in {
+            MODEL_SEN50,
+            MODEL_SEN60,
+            MODEL_SEN63C,
+            MODEL_SEN65,
+            MODEL_SEN66,
+            MODEL_SEN68,
+        }:
             raise cv.Invalid(
                 f"Model {model} does not support '{CONF_ACCELERATION_MODE}'."
             )
     if CONF_AUTO_CLEANING_INTERVAL in config:
-        if (
-            model == MODEL_SEN60
-            or model == MODEL_SEN63C
-            or model == MODEL_SEN65
-            or model == MODEL_SEN66
-            or model == MODEL_SEN68
-        ):
+        if model in {MODEL_SEN60, MODEL_SEN63C, MODEL_SEN65, MODEL_SEN66, MODEL_SEN68}:
             raise cv.Invalid(
                 f"'Model' {model} does not support '{CONF_AUTO_CLEANING_INTERVAL}'."
             )
     if CONF_STORE_BASELINE in config:
-        if model == MODEL_SEN50 or model == MODEL_SEN60 or model == MODEL_SEN63C:
+        if model in {MODEL_SEN50, MODEL_SEN60, MODEL_SEN63C}:
             raise cv.Invalid(f"Model {model} does not support '{CONF_STORE_BASELINE}'.")
     if CONF_TEMPERATURE_COMPENSATION in config:
-        if (
-            model == MODEL_SEN50
-            or model == MODEL_SEN60
-            or model == MODEL_SEN63C
-            or model == MODEL_SEN65
-            or model == MODEL_SEN66
-            or model == MODEL_SEN68
-        ):
+        if model in {
+            MODEL_SEN50,
+            MODEL_SEN60,
+            MODEL_SEN63C,
+            MODEL_SEN65,
+            MODEL_SEN66,
+            MODEL_SEN68,
+        }:
             raise cv.Invalid(
                 f"Model {model} does not support '{CONF_TEMPERATURE_COMPENSATION}'."
             )
     if CONF_VOC in config:
-        if model == MODEL_SEN50 or model == MODEL_SEN60 or model == MODEL_SEN63C:
+        if model in {MODEL_SEN50, MODEL_SEN60, MODEL_SEN63C}:
             raise cv.Invalid(f"Model {model} does not support '{CONF_VOC}'.")
     if CONF_NOX in config:
-        if (
-            model == MODEL_SEN50
-            or model == MODEL_SEN54
-            or model == MODEL_SEN60
-            or model == MODEL_SEN63C
-        ):
+        if model in {MODEL_SEN50, MODEL_SEN54, MODEL_SEN60, MODEL_SEN63C}:
             raise cv.Invalid(f"Model {model} does not support '{CONF_NOX}'.")
     if CONF_CO2 in config:
-        if (
-            model == MODEL_SEN50
-            or model == MODEL_SEN54
-            or model == MODEL_SEN55
-            or model == MODEL_SEN60
-            or model == MODEL_SEN65
-            or model == MODEL_SEN68
-        ):
+        if model in {
+            MODEL_SEN50,
+            MODEL_SEN54,
+            MODEL_SEN55,
+            MODEL_SEN60,
+            MODEL_SEN65,
+            MODEL_SEN68,
+        }:
             raise cv.Invalid(f"Model {model} does not support '{CONF_CO2}'.")
     if CONF_HCHO in config:
-        if (
-            model == MODEL_SEN50
-            or model == MODEL_SEN54
-            or model == MODEL_SEN55
-            or model == MODEL_SEN60
-            or model == MODEL_SEN63C
-            or model == MODEL_SEN65
-            or model == MODEL_SEN66
-        ):
+        if model in {
+            MODEL_SEN50,
+            MODEL_SEN54,
+            MODEL_SEN55,
+            MODEL_SEN60,
+            MODEL_SEN63C,
+            MODEL_SEN65,
+            MODEL_SEN68,
+        }:
             raise cv.Invalid(f"Model {model} does not support '{CONF_HCHO}'.")
     if CONF_TEMPERATURE in config:
-        if model == MODEL_SEN50 or model == MODEL_SEN60:
+        if model in {MODEL_SEN50, MODEL_SEN60}:
             raise cv.Invalid(f"Model {model} does not support '{CONF_TEMPERATURE}'.")
     if CONF_HUMIDITY in config:
-        if model == MODEL_SEN50 or model == MODEL_SEN60:
+        if model in {MODEL_SEN50, MODEL_SEN60}:
             raise cv.Invalid(f"Model {model} does not support '{CONF_HUMIDITY}'.")
 
 
