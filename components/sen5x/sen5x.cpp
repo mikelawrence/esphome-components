@@ -4,10 +4,6 @@
 #include "esphome/core/log.h"
 #include <cinttypes>
 
-#define ESP_LOG_MSG_CO2_CAL_FAIL "Perform Forced CO₂ Calibration failed"
-#define ESP_LOG_MSG_ACT_SHT_HEATER_FAIL "Activate SHT Heater failed"
-#define ESP_LOG_MSG_FAN_CLEAN_FAIL "Fan Cleaning failed"
-
 namespace esphome {
 namespace sen5x {
 
@@ -57,30 +53,83 @@ static const int8_t SEN5X_INDEX_SCALE_FACTOR = 10;                            //
 static const int8_t SEN5X_MIN_INDEX_VALUE = 1 * SEN5X_INDEX_SCALE_FACTOR;     // must be adjusted by the scale factor
 static const int16_t SEN5X_MAX_INDEX_VALUE = 500 * SEN5X_INDEX_SCALE_FACTOR;  // must be adjusted by the scale factor
 
-void SEN5XComponent::setup() { this->internal_setup_(0); }
+static inline const char *model_to_str_(Sen5xType model) {
+  switch (model) {
+    case SEN50:
+      return "SEN50";
+    case SEN54:
+      return "SEN54";
+    case SEN55:
+      return "SEN55";
+    case SEN60:
+      return "SEN60";
+    case SEN63C:
+      return "SEN63C";
+    case SEN65:
+      return "SEN65";
+    case SEN66:
+      return "SEN66";
+    case SEN68:
+      return "SEN68";
+    default:
+      return "UNKNOWN MODEL";
+  }
+}
 
-void SEN5XComponent::internal_setup_(uint8_t state) {
+static inline Sen5xType str_to_model_(std::string product_name) {
+  if (product_name == "SEN50") {
+    return SEN50;
+  } else if (product_name == "SEN54") {
+    return SEN54;
+  } else if (product_name == "SEN55") {
+    return SEN55;
+  } else if (product_name == "SEN60") {
+    return SEN60;
+  } else if (product_name == "SEN63C") {
+    return SEN63C;
+  } else if (product_name == "SEN65") {
+    return SEN65;
+  } else if (product_name == "SEN66") {
+    return SEN66;
+  } else if (product_name == "SEN68") {
+    return SEN68;
+  } else {
+    return UNKNOWN_MODEL;
+  }
+}
+
+static inline std::string convert_to_string_(uint16_t array[], uint8_t length) {
+  for (int i = 0; i < length; i++) {
+    array[i] = convert_big_endian(array[i]);
+  }
+  std::string new_string = reinterpret_cast<const char *>(array);
+  return new_string;
+}
+
+void SEN5XComponent::setup() { this->internal_setup_(SM_START_1); }
+
+void SEN5XComponent::internal_setup_(SetupStates state) {
   uint16_t string_number[16] = {0};
   switch (state) {
-    case 0:
-      ESP_LOGCONFIG(TAG, "Setting up sen5x...");
+    case SM_START:
+      ESP_LOGCONFIG(TAG, "Setting up");
       // the sensor needs 1000 ms to enter the idle state
-      this->set_timeout(1000, [this]() { this->internal_setup_(1); });
+      this->set_timeout(1000, [this]() { this->internal_setup_(SM_START_1); });
       break;
-    case 1:
+    case SM_START_1:
       // Check if measurement is ready before reading the value
       if (!this->write_command(CMD_GET_DATA_READY_STATUS)) {
-        ESP_LOGE(TAG, "Failed to write data ready status command");
+        ESP_LOGE(TAG, "Communication failed");
         this->error_code_ = COMMUNICATION_FAILED;
         this->mark_failed();
         return;
       }
-      this->set_timeout(20, [this]() { this->internal_setup_(2); });
+      this->set_timeout(20, [this]() { this->internal_setup_(SM_START_2); });
       break;
-    case 2:
+    case SM_START_2:
       uint16_t raw_read_status;
       if (!this->read_data(raw_read_status)) {
-        ESP_LOGE(TAG, "Failed to read data ready status");
+        ESP_LOGE(TAG, "Communication failed");
         this->error_code_ = COMMUNICATION_FAILED;
         this->mark_failed();
         return;
@@ -88,9 +137,9 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
       uint32_t stop_measurement_delay;
       // In order to query the device periodic measurement must be ceased
       if (raw_read_status) {
-        ESP_LOGV(TAG, "Sensor has data available, stopping periodic measurement");
+        ESP_LOGV(TAG, "Stopping periodic measurement");
         if (!this->stop_measurements_()) {
-          ESP_LOGE(TAG, "Failed to stop measurements");
+          ESP_LOGE(TAG, "Communication failed");
           this->error_code_ = COMMUNICATION_FAILED;
           this->mark_failed();
           return;
@@ -103,22 +152,22 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
       } else {
         stop_measurement_delay = 0;
       }
-      this->set_timeout(stop_measurement_delay, [this]() { this->internal_setup_(3); });
+      this->set_timeout(stop_measurement_delay, [this]() { this->internal_setup_(SM_GET_SN); });
       break;
-    case 3:
+    case SM_GET_SN:
       if (!this->get_register(CMD_GET_SERIAL_NUMBER, string_number, 16, 20)) {
-        ESP_LOGE(TAG, "Failed to read serial number");
+        ESP_LOGE(TAG, "Communication failed");
         this->error_code_ = SERIAL_NUMBER_IDENTIFICATION_FAILED;
         this->mark_failed();
         return;
       }
       this->serial_number_ = convert_to_string_(string_number, 16);
       ESP_LOGV(TAG, "Serial number %s", this->serial_number_.c_str());
-      this->set_timeout(20, [this]() { this->internal_setup_(4); });
+      this->set_timeout(20, [this]() { this->internal_setup_(SM_GET_PN); });
       break;
-    case 4:
+    case SM_GET_PN:
       if (!this->get_register(CMD_GET_PRODUCT_NAME, string_number, 16, 20)) {
-        ESP_LOGE(TAG, "Failed to read product name");
+        ESP_LOGE(TAG, "Communication failed");
         this->error_code_ = PRODUCT_NAME_FAILED;
         this->mark_failed();
         return;
@@ -129,7 +178,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
         // original PR indicated the SEN66 did not report Product Name, mine do
         // just in case I added the model configuration parameter so the user can specify the model
         if (!this->model_.has_value()) {
-          ESP_LOGE(TAG, "Sensor Product Name is blank, add 'model' to configuration");
+          ESP_LOGE(TAG, "Product Name failed");
           this->error_code_ = PRODUCT_NAME_FAILED;
           this->mark_failed();
           return;
@@ -139,9 +188,9 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
         }
       } else if (!this->model_.has_value()) {
         // model is not defined, get it from product name
-        this->model_.value() = str_to_model_(this->product_name_.c_str());
+        this->model_.value() = str_to_model_(this->product_name_);
         if (this->model_.value() == UNKNOWN_MODEL) {
-          ESP_LOGE(TAG, "Product Name from sensor is not a known sensor");
+          ESP_LOGE(TAG, "Product Name failed");
           this->error_code_ = PRODUCT_NAME_FAILED;
           this->mark_failed();
           return;
@@ -149,19 +198,19 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
       } else {
         // product name and model specified in config, they must match
         if (this->product_name_ != model_to_str_(this->model_.value())) {
-          ESP_LOGE(TAG, "Sensor Product Name does not match 'model' in configuration");
+          ESP_LOGE(TAG, "Product Name failed");
           this->error_code_ = PRODUCT_NAME_FAILED;
           this->mark_failed();
           return;
         }
       }
       ESP_LOGV(TAG, "Product Name %s", this->product_name_.c_str());
-      this->set_timeout(20, [this]() { this->internal_setup_(5); });
+      this->set_timeout(20, [this]() { this->internal_setup_(SM_GET_FW); });
       break;
-    case 5:
+    case SM_GET_FW:
       uint16_t firmware;
       if (!this->get_register(CMD_GET_FIRMWARE_VERSION, &firmware, 1, 20)) {
-        ESP_LOGE(TAG, "Failed to read firmware version");
+        ESP_LOGE(TAG, "Communication failed");
         this->error_code_ = FIRMWARE_FAILED;
         this->mark_failed();
         return;
@@ -169,15 +218,15 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
       if (this->is_sen6x_()) {
         this->firmware_minor_ = firmware & 0xFF;
         this->firmware_major_ = firmware >> 8;
-        ESP_LOGD(TAG, "Firmware version %u.%u", this->firmware_major_, this->firmware_minor_);
+        ESP_LOGV(TAG, "Firmware version %u.%u", this->firmware_major_, this->firmware_minor_);
       } else {
         this->firmware_major_ = firmware >> 8;
         this->firmware_minor_ = 0xFF;  // not defined
-        ESP_LOGD(TAG, "Firmware version %u", this->firmware_major_);
+        ESP_LOGV(TAG, "Firmware version %u", this->firmware_major_);
       }
-      this->set_timeout(20, [this]() { this->internal_setup_(6); });
+      this->set_timeout(20, [this]() { this->internal_setup_(SM_SET_VOCB); });
       break;
-    case 6:
+    case SM_SET_VOCB:
       if (this->voc_sensor_ && this->store_baseline_) {
         // Hash with compilation time and serial number, this ensures the baseline storage is cleared after OTA
         // Serial numbers are unique to each sensor, so multiple sensors can be used without conflict
@@ -185,7 +234,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
         this->pref_ = global_preferences->make_preference<Sen5xBaselines>(hash, true);
 
         if (this->pref_.load(&this->voc_baselines_storage_)) {
-          ESP_LOGI(TAG, "Loaded VOC baseline state0: 0x%04" PRIX32 ", state1: 0x%04" PRIX32,
+          ESP_LOGV(TAG, "Loaded VOC baseline state0: 0x%04" PRIX32 ", state1: 0x%04" PRIX32,
                    this->voc_baselines_storage_.state0, voc_baselines_storage_.state1);
         }
 
@@ -193,7 +242,7 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
         this->seconds_since_last_store_ = 0;
 
         if (this->voc_baselines_storage_.state0 > 0 && this->voc_baselines_storage_.state1 > 0) {
-          ESP_LOGI(TAG, "Setting VOC baseline from save state0: 0x%04" PRIX32 ", state1: 0x%04" PRIX32,
+          ESP_LOGD(TAG, "Restoring VOC baseline from save state0: 0x%04" PRIX32 ", state1: 0x%04" PRIX32,
                    this->voc_baselines_storage_.state0, voc_baselines_storage_.state1);
           uint16_t states[4];
 
@@ -203,217 +252,130 @@ void SEN5XComponent::internal_setup_(uint8_t state) {
           states[3] = voc_baselines_storage_.state1 & 0xFFFF;
 
           if (!this->write_command(CMD_VOC_ALGORITHM_STATE, states, 4)) {
-            ESP_LOGE(TAG, "Failed to set VOC baseline from saved state");
+            ESP_LOGE(TAG, "Communication failed");
           }
         }
       }
-      this->set_timeout(20, [this]() { this->internal_setup_(7); });
+      this->set_timeout(20, [this]() { this->internal_setup_(SM_SET_ACI); });
       break;
-    case 7:
+    case SM_SET_ACI:
       if (this->auto_cleaning_interval_.has_value()) {
-        if (this->is_sen6x_()) {
-          ESP_LOGE(TAG, "Automatic Cleaning Interval is not supported");
-          this->error_code_ = UNSUPPORTED_CONF;
-          this->mark_failed();
-          return;
-        }
         if (!write_command(SEN5X_CMD_AUTO_CLEANING_INTERVAL, this->auto_cleaning_interval_.value())) {
-          ESP_LOGE(TAG, "Failed to set Automatic Cleaning Interval");
+          ESP_LOGE(TAG, "Communication failed");
           this->error_code_ = COMMUNICATION_FAILED;
           this->mark_failed();
           return;
         }
+        this->set_timeout(20, [this]() { this->internal_setup_(SM_SET_RHTAM); });
       } else {
-        this->internal_setup_(8);
+        this->internal_setup_(SM_SET_RHTAM);
       }
       break;
-    case 8:
+    case SM_SET_RHTAM:
       if (this->acceleration_mode_.has_value()) {
-        if (this->is_sen6x_()) {
-          ESP_LOGE(TAG, "RH/T Acceleration Mode is not supported");
-          this->error_code_ = UNSUPPORTED_CONF;
-          this->mark_failed();
-          return;
-        }
         if (!this->write_command(SEN5X_CMD_RHT_ACCELERATION_MODE, this->acceleration_mode_.value())) {
-          ESP_LOGE(TAG, "Failed to set RH/T Acceleration Mode");
+          ESP_LOGE(TAG, "Communication failed");
           this->error_code_ = COMMUNICATION_FAILED;
           this->mark_failed();
           return;
         }
-        this->set_timeout(20, [this]() { this->internal_setup_(9); });
+        this->set_timeout(20, [this]() { this->internal_setup_(SM_SET_VOCT); });
       } else {
-        this->internal_setup_(9);
+        this->internal_setup_(SM_SET_VOCT);
       }
       break;
-    case 9:
+    case SM_SET_VOCT:
       if (this->voc_tuning_params_.has_value()) {
-        if (this->model_ == SEN50 || this->model_ == SEN60 || this->model_ == SEN63C) {
-          ESP_LOGE(TAG, "VOC Algorithm Tuning Parameters is not supported");
-          this->error_code_ = UNSUPPORTED_CONF;
-          this->mark_failed();
-          return;
-        }
         if (!this->write_tuning_parameters_(CMD_VOC_ALGORITHM_TUNING, this->voc_tuning_params_.value())) {
-          ESP_LOGE(TAG, "Failed to set VOC Algorithm Tuning Parameters");
+          ESP_LOGE(TAG, "Communication failed");
           this->error_code_ = COMMUNICATION_FAILED;
           this->mark_failed();
           return;
         }
-        this->set_timeout(20, [this]() { this->internal_setup_(10); });
+        this->set_timeout(20, [this]() { this->internal_setup_(SM_SET_NOXT); });
       } else {
-        this->internal_setup_(10);
+        this->internal_setup_(SM_SET_NOXT);
       }
       break;
-    case 10:
+    case SM_SET_NOXT:
       if (this->nox_tuning_params_.has_value()) {
-        if (this->model_ == SEN50 || this->model_ == SEN60 || this->model_ == SEN63C) {
-          ESP_LOGE(TAG, "NOx Algorithm Tuning Parameters is not supported");
-          this->error_code_ = UNSUPPORTED_CONF;
-          this->mark_failed();
-          return;
-        }
         if (!this->write_tuning_parameters_(CMD_NOX_ALGORITHM_TUNING, this->nox_tuning_params_.value())) {
-          ESP_LOGE(TAG, "Failed to set VOC Algorithm Tuning Parameters");
+          ESP_LOGE(TAG, "Communication failed");
           this->error_code_ = COMMUNICATION_FAILED;
           this->mark_failed();
           return;
         }
-        this->set_timeout(20, [this]() { this->internal_setup_(11); });
+        this->set_timeout(20, [this]() { this->internal_setup_(SM_SET_TP); });
       } else {
-        this->internal_setup_(11);
+        this->internal_setup_(SM_SET_TP);
       }
       break;
-    case 11:
+    case SM_SET_TP:
       if (this->temperature_compensation_.has_value()) {
-        if (this->model_ == SEN50 || this->is_sen6x_()) {
-          ESP_LOGE(TAG, "Temperature Compensation Parameters are not supported");
-          this->error_code_ = UNSUPPORTED_CONF;
-          this->mark_failed();
-          return;
-        }
         if (!this->write_temperature_compensation_(this->temperature_compensation_.value())) {
-          ESP_LOGE(TAG, "Failed to set Temperature Compensation Parameters");
+          ESP_LOGE(TAG, "Communication failed");
           this->error_code_ = COMMUNICATION_FAILED;
           this->mark_failed();
           return;
         }
-        this->set_timeout(20, [this]() { this->internal_setup_(12); });
+        this->set_timeout(20, [this]() { this->internal_setup_(SM_SET_CO2ASC); });
       } else {
-        this->internal_setup_(12);
+        this->internal_setup_(SM_SET_CO2ASC);
       }
       break;
-    case 12:
+    case SM_SET_CO2ASC:
       if (this->co2_auto_calibrate_.has_value()) {
-        if ((this->model_.value() == SEN50 || this->model_.value() == SEN54 || this->model_.value() == SEN55 ||
-             this->model_.value() == SEN60 || this->model_.value() == SEN65 || this->model_.value() == SEN68)) {
-          ESP_LOGE(TAG, "CO₂ Sensor Auto Self Calibrate Parameter is not supported");
-          this->error_code_ = UNSUPPORTED_CONF;
-          this->mark_failed();
-          return;
-        }
         if (!this->write_command(SEN6X_CMD_CO2_SENSOR_AUTO_SELF_CAL, this->co2_auto_calibrate_.value() ? 0x01 : 0x00)) {
-          ESP_LOGE(TAG, "Failed to set CO₂ Sensor Automatic Self Calibration");
+          ESP_LOGE(TAG, "Communication failed");
           this->error_code_ = COMMUNICATION_FAILED;
           this->mark_failed();
           return;
         }
-        this->set_timeout(20, [this]() { this->internal_setup_(13); });
+        this->set_timeout(20, [this]() { this->internal_setup_(SM_SET_CO2AC); });
       } else {
-        this->internal_setup_(13);
+        this->internal_setup_(SM_SET_CO2AC);
       }
       break;
-    case 13:
+    case SM_SET_CO2AC:
       if (this->co2_altitude_compensation_.has_value()) {
-        if ((this->model_.value() == SEN50 || this->model_.value() == SEN54 || this->model_.value() == SEN55 ||
-             this->model_.value() == SEN60 || this->model_.value() == SEN65 || this->model_.value() == SEN68)) {
-          ESP_LOGE(TAG, "CO₂ Altitude Compensation Parameter is not supported");
-          this->error_code_ = UNSUPPORTED_CONF;
-          this->mark_failed();
-          return;
-        }
         if (!this->write_command(SEN6X_CMD_SENSOR_ALTITUDE, this->co2_altitude_compensation_.value())) {
-          ESP_LOGE(TAG, "Failed to set CO₂ Sensor Altitude Compensation");
+          ESP_LOGE(TAG, "Communication failed");
           this->error_code_ = COMMUNICATION_FAILED;
           this->mark_failed();
           return;
         }
-        this->set_timeout(20, [this]() { this->internal_setup_(14); });
+        this->set_timeout(20, [this]() { this->internal_setup_(SM_SENSOR_CHECK); });
       } else {
-        this->internal_setup_(14);
+        this->internal_setup_(SM_SENSOR_CHECK);
       }
       break;
-    case 14:
-      if (this->humidity_sensor_ && (this->model_.value() == SEN50 || this->model_.value() == SEN60)) {
-        ESP_LOGE(TAG, "Humidity Sensor is not supported");
-        this->humidity_sensor_ = nullptr;  // mark as not used
-        this->error_code_ = UNSUPPORTED_CONF;
-        this->mark_failed();
-        return;
-      } else if (this->temperature_sensor_ && (this->model_.value() == SEN50 || this->model_.value() == SEN60)) {
-        ESP_LOGE(TAG, "Temperature Sensor is not supported");
-        this->temperature_sensor_ = nullptr;  // mark as not used
-        this->error_code_ = UNSUPPORTED_CONF;
-        this->mark_failed();
-        return;
-      } else if (this->voc_sensor_ &&
-                 (this->model_.value() == SEN50 || this->model_.value() == SEN60 || this->model_.value() == SEN63C)) {
-        ESP_LOGE(TAG, "VOC Sensor is not supported");
-        this->voc_sensor_ = nullptr;  // mark as not used
-        this->error_code_ = UNSUPPORTED_CONF;
-        this->mark_failed();
-        return;
-      } else if (this->nox_sensor_ &&
-                 (this->model_.value() == SEN50 || this->model_.value() == SEN60 || this->model_.value() == SEN63C)) {
-        ESP_LOGE(TAG, "NOx Sensor is not supported");
-        this->nox_sensor_ = nullptr;  // mark as not used
-        this->error_code_ = UNSUPPORTED_CONF;
-        this->mark_failed();
-        return;
-      } else if (this->co2_sensor_ &&
-                 (this->model_.value() == SEN50 || this->model_.value() == SEN54 || this->model_.value() == SEN55 ||
-                  this->model_.value() == SEN60 || this->model_.value() == SEN65 || this->model_.value() == SEN68)) {
-        ESP_LOGE(TAG, "CO₂ Sensor is not supported");
-        this->nox_sensor_ = nullptr;  // mark as not used
-        this->error_code_ = UNSUPPORTED_CONF;
-        this->mark_failed();
-        return;
-      } else if (this->co2_ambient_pressure_source_ &&
-                 (this->model_.value() == SEN50 || this->model_.value() == SEN54 || this->model_.value() == SEN55 ||
-                  this->model_.value() == SEN60 || this->model_.value() == SEN65 || this->model_.value() == SEN68)) {
-        ESP_LOGE(TAG, "Ambient Pressure Compensation Source is not supported");
-        this->co2_ambient_pressure_source_ = nullptr;  // mark as not used
-        this->error_code_ = UNSUPPORTED_CONF;
-        this->mark_failed();
-        return;
+    case SM_SENSOR_CHECK:
+      if (this->co2_ambient_pressure_source_ == nullptr) {
+        // if ambient pressure was updated then send it to the sensor
+        if (this->co2_ambient_pressure_ != 0) {
+          this->update_co2_ambient_pressure_compensation_(this->co2_ambient_pressure_);
+        }
       }
-      // if ambient pressure was already updated then send it to the sensor
-      if (this->co2_ambient_pressure_source_ && (this->co2_ambient_pressure_ != 0)) {
-        this->update_co2_ambient_pressure_compensation_(this->co2_ambient_pressure_);
-      }
-      this->set_timeout(2000, [this]() { this->internal_setup_(15); });
+      this->set_timeout(2000, [this]() { this->internal_setup_(SM_START_MEAS); });
       break;
-    case 15:
+    case SM_START_MEAS:
       // Finally start sensor measurements
       if (!this->start_measurements_()) {
         this->error_code_ = MEASUREMENT_INIT_FAILED;
         this->mark_failed();
         return;
       }
-      this->set_timeout(20, [this]() { this->internal_setup_(16); });
+      this->set_timeout(20, [this]() { this->internal_setup_(SM_DONE); });
       break;
-    case 16:
+    case SM_DONE:
       this->initialized_ = true;
-      ESP_LOGD(TAG, "Sensor initialized");
+      ESP_LOGD(TAG, "Initialized");
       break;
   }
 }
 
 void SEN5XComponent::dump_config() {
   ESP_LOGCONFIG(TAG, "sen5x:");
-  if (!this->initialized_) {
-    ESP_LOGCONFIG(TAG, "  Initialization is not complete, some values may not be filled in");
-  }
   if (this->is_failed()) {
     switch (this->error_code_) {
       case COMMUNICATION_FAILED:
@@ -423,7 +385,7 @@ void SEN5XComponent::dump_config() {
         ESP_LOGE(TAG, "  Measurement Initialization failed!");
         break;
       case SERIAL_NUMBER_IDENTIFICATION_FAILED:
-        ESP_LOGE(TAG, "  Unable to read sensor serial id");
+        ESP_LOGE(TAG, "  Unable to read sensor serial number");
         break;
       case PRODUCT_NAME_FAILED:
         ESP_LOGE(TAG, "  Product name issue");
@@ -435,16 +397,22 @@ void SEN5XComponent::dump_config() {
         ESP_LOGE(TAG, "  Unsupported configuration");
         break;
       default:
-        ESP_LOGE(TAG, "  Unknown setup error!");
+        ESP_LOGE(TAG, "  Unknown setup error");
         break;
     }
   }
-  LOG_I2C_DEVICE(this);
-  if (this->model_.has_value()) {
-    ESP_LOGCONFIG(TAG, "  Model: %s", model_to_str_(this->model_.value()));
+  if (!this->initialized_) {
+    ESP_LOGCONFIG(TAG, "  Initializing, values may be incomplete");
   }
-  ESP_LOGCONFIG(TAG, "  Product Name: %s", this->product_name_.c_str());
-  ESP_LOGCONFIG(TAG, "  Serial number: %s", this->serial_number_.c_str());
+  ESP_LOGCONFIG(TAG,
+                "  Address: 0x%02X\n"
+                "  Update Interval: %ums\n"
+                "  Model: %s\n"
+                "  Product Name: %s\n"
+                "  Serial number: %s\n",
+                this->address_, this->update_interval_, model_to_str_(this->model_.value()),
+                this->product_name_.c_str(), this->serial_number_.c_str());
+
   if (this->is_sen6x_()) {
     ESP_LOGCONFIG(TAG, "  Firmware version: %u.%u", this->firmware_major_, this->firmware_minor_);
   } else {
@@ -466,14 +434,16 @@ void SEN5XComponent::dump_config() {
         break;
     }
   }
-  LOG_UPDATE_INTERVAL(this);
   LOG_SENSOR("  ", "PM  1.0", this->pm_1_0_sensor_);
   LOG_SENSOR("  ", "PM  2.5", this->pm_2_5_sensor_);
   LOG_SENSOR("  ", "PM  4.0", this->pm_4_0_sensor_);
   LOG_SENSOR("  ", "PM 10.0", this->pm_10_0_sensor_);
   LOG_SENSOR("  ", "Temperature", this->temperature_sensor_);
   LOG_SENSOR("  ", "Humidity", this->humidity_sensor_);
+  LOG_SENSOR("  ", "HCHO", this->hcho_sensor_);
   LOG_SENSOR("  ", "VOC", this->voc_sensor_);
+  if (this->voc_sensor_ != nullptr) {
+  }
   LOG_SENSOR("  ", "NOx", this->nox_sensor_);
   LOG_SENSOR("  ", "CO₂", this->co2_sensor_);
   if (this->co2_sensor_ != nullptr) {
@@ -487,7 +457,6 @@ void SEN5XComponent::dump_config() {
       }
     }
   }
-  LOG_SENSOR("  ", "HCHO", this->hcho_sensor_);
 }
 
 void SEN5XComponent::update() {
@@ -514,10 +483,10 @@ void SEN5XComponent::update() {
             this->voc_baselines_storage_.state1 = state1;
 
             if (this->pref_.save(&this->voc_baselines_storage_)) {
-              ESP_LOGI(TAG, "Stored VOC baseline state0: 0x%04" PRIX32 " ,state1: 0x%04" PRIX32,
+              ESP_LOGV(TAG, "Stored VOC baseline state0: 0x%04" PRIX32 " ,state1: 0x%04" PRIX32,
                        this->voc_baselines_storage_.state0, voc_baselines_storage_.state1);
             } else {
-              ESP_LOGW(TAG, "Could not store VOC baselines");
+              ESP_LOGE(TAG, "Could not store VOC baselines");
             }
           }
         }
@@ -555,7 +524,7 @@ void SEN5XComponent::update() {
 
   if (!this->write_command(cmd)) {
     this->status_set_warning();
-    ESP_LOGD(TAG, "Failed to write Measurement Command (last_error=%d)", this->last_error_);
+    ESP_LOGD(TAG, "Communication failed");
     return;
   }
 
@@ -564,93 +533,92 @@ void SEN5XComponent::update() {
 
     if (!this->read_data(measurements, length)) {
       this->status_set_warning();
-      ESP_LOGD(TAG, "read data error (%d)", this->last_error_);
       return;
     }
 
     // supported by all
-    ESP_LOGVV(TAG, "pm_1_0 = 0x%.4x", measurements[0]);
-    float pm_1_0 = measurements[0] == UINT16_MAX ? NAN : measurements[0] / 10.0f;
     if (this->pm_1_0_sensor_ != nullptr) {
+      ESP_LOGV(TAG, "pm_1_0 = 0x%.4x", measurements[0]);
+      float pm_1_0 = measurements[0] == UINT16_MAX ? NAN : measurements[0] / 10.0f;
       this->pm_1_0_sensor_->publish_state(pm_1_0);
     }
 
     // supported by all
-    ESP_LOGVV(TAG, "pm_2_5 = 0x%.4x", measurements[1]);
-    float pm_2_5 = measurements[1] == UINT16_MAX ? NAN : measurements[1] / 10.0f;
     if (this->pm_2_5_sensor_ != nullptr) {
+      ESP_LOGV(TAG, "pm_2_5 = 0x%.4x", measurements[1]);
+      float pm_2_5 = measurements[1] == UINT16_MAX ? NAN : measurements[1] / 10.0f;
       this->pm_2_5_sensor_->publish_state(pm_2_5);
     }
 
     // supported by all
-    ESP_LOGVV(TAG, "pm_4_0 = 0x%.4x", measurements[2]);
-    float pm_4_0 = measurements[2] == UINT16_MAX ? NAN : measurements[2] / 10.0f;
     if (this->pm_4_0_sensor_ != nullptr) {
+      ESP_LOGV(TAG, "pm_4_0 = 0x%.4x", measurements[2]);
+      float pm_4_0 = measurements[2] == UINT16_MAX ? NAN : measurements[2] / 10.0f;
       this->pm_4_0_sensor_->publish_state(pm_4_0);
     }
 
     // supported by all
-    ESP_LOGVV(TAG, "pm_10_0 = 0x%.4x", measurements[3]);
-    float pm_10_0 = measurements[3] == UINT16_MAX ? NAN : measurements[3] / 10.0f;
     if (this->pm_10_0_sensor_ != nullptr) {
+      ESP_LOGV(TAG, "pm_10_0 = 0x%.4x", measurements[3]);
+      float pm_10_0 = measurements[3] == UINT16_MAX ? NAN : measurements[3] / 10.0f;
       this->pm_10_0_sensor_->publish_state(pm_10_0);
     }
 
     if (this->model_.value() == SEN54 || this->model_.value() == SEN55 || this->model_.value() == SEN63C ||
         this->model_.value() == SEN65 || this->model_.value() == SEN66 || this->model_.value() == SEN68) {
-      ESP_LOGVV(TAG, "humidity = 0x%.4x", measurements[4]);
-      float humidity = measurements[4] == INT16_MAX ? NAN : static_cast<int16_t>(measurements[4]) / 100.0f;
       if (this->humidity_sensor_ != nullptr) {
+        ESP_LOGV(TAG, "humidity = 0x%.4x", measurements[4]);
+        float humidity = measurements[4] == INT16_MAX ? NAN : static_cast<int16_t>(measurements[4]) / 100.0f;
         this->humidity_sensor_->publish_state(humidity);
       }
 
-      ESP_LOGVV(TAG, "temperature = 0x%.4x", measurements[5]);
-      float temperature = measurements[5] == INT16_MAX ? NAN : static_cast<int16_t>(measurements[5]) / 200.0f;
       if (this->temperature_sensor_ != nullptr) {
+        ESP_LOGV(TAG, "temperature = 0x%.4x", measurements[5]);
+        float temperature = measurements[5] == INT16_MAX ? NAN : static_cast<int16_t>(measurements[5]) / 200.0f;
         this->temperature_sensor_->publish_state(temperature);
       }
     }
 
     if (this->model_.value() == SEN54 || this->model_.value() == SEN55 || this->model_.value() == SEN65 ||
         this->model_.value() == SEN66 || this->model_.value() == SEN68) {
-      ESP_LOGVV(TAG, "voc = 0x%.4x", measurements[6]);
-      int16_t voc_idx = static_cast<int16_t>(measurements[6]);
-      float voc = (voc_idx < SEN5X_MIN_INDEX_VALUE || voc_idx > SEN5X_MAX_INDEX_VALUE)
-                      ? NAN
-                      : static_cast<float>(voc_idx) / 10.0f;
       if (this->voc_sensor_ != nullptr) {
+        ESP_LOGV(TAG, "voc = 0x%.4x", measurements[6]);
+        int16_t voc_idx = static_cast<int16_t>(measurements[6]);
+        float voc = (voc_idx < SEN5X_MIN_INDEX_VALUE || voc_idx > SEN5X_MAX_INDEX_VALUE)
+                        ? NAN
+                        : static_cast<float>(voc_idx) / 10.0f;
         this->voc_sensor_->publish_state(voc);
       }
     }
 
     if (this->model_.value() == SEN55 || this->model_.value() == SEN65 || this->model_.value() == SEN66 ||
         this->model_.value() == SEN68) {
-      ESP_LOGVV(TAG, "nox = 0x%.4x", measurements[7]);
-      int16_t nox_idx = static_cast<int16_t>(measurements[7]);
-      float nox = (nox_idx < SEN5X_MIN_INDEX_VALUE || nox_idx > SEN5X_MAX_INDEX_VALUE)
-                      ? NAN
-                      : static_cast<float>(nox_idx) / 10.0f;
       if (this->nox_sensor_ != nullptr) {
+        ESP_LOGV(TAG, "nox = 0x%.4x", measurements[7]);
+        int16_t nox_idx = static_cast<int16_t>(measurements[7]);
+        float nox = (nox_idx < SEN5X_MIN_INDEX_VALUE || nox_idx > SEN5X_MAX_INDEX_VALUE)
+                        ? NAN
+                        : static_cast<float>(nox_idx) / 10.0f;
         this->nox_sensor_->publish_state(nox);
       }
     }
 
     if (this->model_.value() == SEN63C || this->model_.value() == SEN66) {
-      uint16_t measurement = measurements[6];
-      if (this->model_.value() == SEN66) {
-        measurement = measurements[8];
-      }
-      ESP_LOGVV(TAG, "co2 = 0x%.4x", measurement);
-      float co2 = measurement == UINT16_MAX ? NAN : measurement / 1.0f;
       if (this->co2_sensor_ != nullptr) {
+        uint16_t measurement = measurements[6];
+        if (this->model_.value() == SEN66) {
+          measurement = measurements[8];
+        }
+        ESP_LOGV(TAG, "co2 = 0x%.4x", measurement);
+        float co2 = measurement == UINT16_MAX ? NAN : measurement / 1.0f;
         this->co2_sensor_->publish_state(co2);
       }
     }
 
     if (this->model_.value() == SEN68) {
-      ESP_LOGVV(TAG, "HCHO = 0x%.4x", measurements[8]);
-      float hcho = measurements[8] == UINT16_MAX ? NAN : measurements[8] / 10.0f;
       if (this->hcho_sensor_ != nullptr) {
+        ESP_LOGV(TAG, "HCHO = 0x%.4x", measurements[8]);
+        float hcho = measurements[8] == UINT16_MAX ? NAN : measurements[8] / 10.0f;
         this->hcho_sensor_->publish_state(hcho);
       }
     }
@@ -691,7 +659,7 @@ bool SEN5XComponent::start_measurements_() {
 
   auto result = this->write_command(cmd);
   if (!result) {
-    ESP_LOGE(TAG, "I2C Write error Start Measurements (error=%d)", this->last_error_);
+    ESP_LOGE(TAG, "Communication failed");
   } else {
     this->running_ = true;
   }
@@ -707,33 +675,13 @@ bool SEN5XComponent::stop_measurements_() {
   }
   auto result = this->write_command(cmd);
   if (!result) {
-    ESP_LOGE(TAG, "I2C Write error Stop Measurements (error=%d)", this->last_error_);
+    ESP_LOGE(TAG, "Communication failed");
   } else {
     this->running_ = false;
   }
   return result;
 }
 
-std::string SEN5XComponent::convert_to_string_(const uint16_t array[], uint8_t length) {
-  std::string new_string;
-  const uint16_t *current_int = array;
-  char current_char;
-  // 2 ASCII bytes are encoded in an int
-  do {
-    // first char
-    current_char = *current_int >> 8;
-    if (current_char) {
-      new_string.push_back(current_char);
-      // second char
-      current_char = *current_int & 0xFF;
-      if (current_char) {
-        new_string.push_back(current_char);
-      }
-    }
-    current_int++;
-  } while (current_char && --length);
-  return new_string;
-}
 bool SEN5XComponent::write_tuning_parameters_(uint16_t i2c_command, const GasTuning &tuning) {
   uint16_t params[6];
   params[0] = tuning.index_offset;
@@ -744,7 +692,7 @@ bool SEN5XComponent::write_tuning_parameters_(uint16_t i2c_command, const GasTun
   params[5] = tuning.gain_factor;
   auto result = this->write_command(i2c_command, params, 6);
   if (!result) {
-    ESP_LOGE(TAG, "I2C Write error Tuning Parameters (error=%d)", this->last_error_);
+    ESP_LOGE(TAG, "Communication failed");
   }
   return result;
 }
@@ -756,7 +704,7 @@ bool SEN5XComponent::write_temperature_compensation_(const TemperatureCompensati
   params[2] = compensation.time_constant;
   auto result = this->write_command(CMD_TEMPERATURE_COMPENSATION, params, 3);
   if (!result) {
-    ESP_LOGE(TAG, "Write error Temperature Compensation (error=%d)", this->last_error_);
+    ESP_LOGE(TAG, "Communication failed");
   }
   return result;
 }
@@ -765,7 +713,7 @@ bool SEN5XComponent::update_co2_ambient_pressure_compensation_(uint16_t pressure
   auto result =
       this->write_command(SEN6X_CMD_CO2_SENSOR_AUTO_SELF_CAL, this->co2_auto_calibrate_.value() ? 0x01 : 0x00);
   if (!result) {
-    ESP_LOGE(TAG, "Write error Auto Self Calibration (error=%d)", this->last_error_);
+    ESP_LOGE(TAG, "Communication failed");
   }
   return result;
 }
@@ -782,8 +730,6 @@ bool SEN5XComponent::set_ambient_pressure_compensation(float pressure_in_hpa) {
       update_co2_ambient_pressure_compensation_(new_ambient_pressure);
       this->co2_ambient_pressure_ = new_ambient_pressure;
       this->set_timeout(20, []() {});
-    } else {
-      ESP_LOGD(TAG, "Ambient Pressure compensation skipped - no change required");
     }
     return true;
   } else {
@@ -804,57 +750,13 @@ bool SEN5XComponent::is_sen6x_() {
       return false;
   }
 }
-const char *SEN5XComponent::model_to_str_(Sen5xType model) {
-  switch (model) {
-    case SEN50:
-      return "SEN50";
-    case SEN54:
-      return "SEN54";
-    case SEN55:
-      return "SEN55";
-    case SEN60:
-      return "SEN60";
-    case SEN63C:
-      return "SEN63C";
-    case SEN65:
-      return "SEN65";
-    case SEN66:
-      return "SEN66";
-    case SEN68:
-      return "SEN68";
-    default:
-      return "UNKNOWN MODEL";
-  }
-}
-
-Sen5xType SEN5XComponent::str_to_model_(const char *product_name) {
-  if (strcmp(product_name, "SEN50") == 0) {
-    return SEN50;
-  } else if (strcmp(product_name, "SEN54") == 0) {
-    return SEN54;
-  } else if (strcmp(product_name, "SEN55") == 0) {
-    return SEN55;
-  } else if (strcmp(product_name, "SEN60") == 0) {
-    return SEN60;
-  } else if (strcmp(product_name, "SEN63C") == 0) {
-    return SEN63C;
-  } else if (strcmp(product_name, "SEN65") == 0) {
-    return SEN65;
-  } else if (strcmp(product_name, "SEN66") == 0) {
-    return SEN66;
-  } else if (strcmp(product_name, "SEN68") == 0) {
-    return SEN68;
-  } else {
-    return UNKNOWN_MODEL;
-  }
-}
 
 bool SEN5XComponent::start_fan_cleaning() {
-  ESP_LOGV(TAG, "Fan Cleaning started");
+  ESP_LOGD(TAG, "Fan Cleaning started");
   this->initialized_ = false;  // prevent update from trying to read the sensors
   // measurements must be stopped first for certain devices
   if (this->is_sen6x_() && !this->stop_measurements_()) {
-    ESP_LOGE(TAG, ESP_LOG_MSG_FAN_CLEAN_FAIL);
+    ESP_LOGE(TAG, "Fan Cleaning failed");
     this->initialized_ = true;
     return false;
   }
@@ -866,18 +768,18 @@ bool SEN5XComponent::start_fan_cleaning() {
       cmd = CMD_START_CLEANING_FAN;
     }
     if (!this->write_command(cmd)) {
-      ESP_LOGE(TAG, "I2C Write error Start Cleaning Fan (error=%d)", this->last_error_);
+      ESP_LOGE(TAG, "Communication failed");
       if (!this->running_) {
         this->start_measurements_();
         this->set_timeout(50, [this]() {
-          ESP_LOGE(TAG, ESP_LOG_MSG_FAN_CLEAN_FAIL);
+          ESP_LOGE(TAG, "Fan Cleaning failed");
           this->initialized_ = true;
         });
       }
     } else {
       this->set_timeout(10000, [this]() {
         if (!this->running_ && !this->start_measurements_()) {
-          ESP_LOGE(TAG, ESP_LOG_MSG_FAN_CLEAN_FAIL);
+          ESP_LOGE(TAG, "Fan Cleaning failed");
         } else {
           ESP_LOGD(TAG, "Fan Cleaning complete");
           this->initialized_ = true;
@@ -892,30 +794,27 @@ bool SEN5XComponent::start_fan_cleaning() {
 bool SEN5XComponent::activate_heater() {
   if (this->model_.value() == SEN63C || this->model_.value() == SEN65 || this->model_.value() == SEN66 ||
       this->model_.value() == SEN68) {
-    ESP_LOGV(TAG, "Activate SHT Heater started");
+    ESP_LOGV(TAG, "Activate Heater started");
     this->initialized_ = false;  // prevent update from trying to read the sensors
     // measurements must be stopped first for certain devices
     if (this->is_sen6x_() && !this->stop_measurements_()) {
-      ESP_LOGE(TAG, ESP_LOG_MSG_ACT_SHT_HEATER_FAIL);
+      ESP_LOGE(TAG, "Activate Heater failed");
       this->initialized_ = true;
       return false;
     }
     this->set_timeout(1000, [this]() {
       if (!this->write_command(SEN6X_CMD_ACTIVATE_SHT_HEATER)) {
-        ESP_LOGE(TAG, "I2C Write error Activate SHT Heater (error=%d)", this->last_error_);
+        ESP_LOGE(TAG, "Communication failed");
         if (!this->running_) {
           this->start_measurements_();
-          this->set_timeout(1300, [this]() {
-            ESP_LOGE(TAG, ESP_LOG_MSG_ACT_SHT_HEATER_FAIL);
-            this->initialized_ = true;
-          });
+          this->set_timeout(1300, [this]() { this->initialized_ = true; });
         }
       } else {
         this->set_timeout(20000, [this]() {
           if (!this->running_ && !this->start_measurements_()) {
-            ESP_LOGE(TAG, ESP_LOG_MSG_ACT_SHT_HEATER_FAIL);
+            ESP_LOGE(TAG, "Activate Heater failed");
           } else {
-            ESP_LOGD(TAG, "Activate SHT Heater complete");
+            ESP_LOGD(TAG, "Activate Heater complete");
             this->initialized_ = true;
           }
           this->set_timeout(50, [this]() { this->initialized_ = true; });
@@ -924,41 +823,41 @@ bool SEN5XComponent::activate_heater() {
     });
     return true;
   } else {
-    ESP_LOGE(TAG, "Activate SHT Heater is not supported");
+    ESP_LOGE(TAG, "Activate Heater is not supported");
     return false;
   }
 }
 
 bool SEN5XComponent::perform_forced_co2_calibration(uint16_t co2) {
   if (this->model_.value() == SEN63C || this->model_.value() == SEN66) {
-    ESP_LOGE(TAG, "Perform Forced CO₂ Calibration started, target co2=%d", co2);
+    ESP_LOGD(TAG, "Perform Forced CO₂ Calibration started, target co2=%d", co2);
     this->initialized_ = false;  // prevent update from trying to read the sensors
     // measurements must be stopped first
     if (!this->stop_measurements_()) {
-      ESP_LOGE(TAG, ESP_LOG_MSG_CO2_CAL_FAIL);
+      ESP_LOGE(TAG, "Perform Forced CO₂ Calibration failed");
       this->initialized_ = true;
       return false;
     }
     this->set_timeout(1000, [this, co2]() {
       if (!this->write_command(SEN6X_CMD_PERFORM_FORCED_CO2_RECAL, co2)) {
-        ESP_LOGE(TAG, "I2C Write error Perform Forced CO₂ Recalibration (error=%d)", this->last_error_);
+        ESP_LOGE(TAG, "Communication failed");
         if (!this->running_) {
           this->start_measurements_();
-          ESP_LOGE(TAG, ESP_LOG_MSG_CO2_CAL_FAIL);
+          ESP_LOGE(TAG, "Perform Forced CO₂ Calibration failed");
         }
       } else {
         this->set_timeout(500, [this]() {
           uint16_t correction = 0;
           if (!this->read_data(correction)) {
             this->start_measurements_();
-            ESP_LOGE(TAG, ESP_LOG_MSG_CO2_CAL_FAIL);
+            ESP_LOGE(TAG, "Perform Forced CO₂ Calibration failed");
           } else {
             if (correction == 0xFFFF) {
               this->start_measurements_();
               ESP_LOGE(TAG, "Perform Forced CO₂ Calibration command reports failure");
             } else {
               if (!this->start_measurements_()) {
-                ESP_LOGE(TAG, ESP_LOG_MSG_CO2_CAL_FAIL);
+                ESP_LOGE(TAG, "Perform Forced CO₂ Calibration failed");
               } else {
                 ESP_LOGD(TAG, "Perform Forced CO₂ Calibration complete");
               }

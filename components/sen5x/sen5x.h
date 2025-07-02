@@ -32,6 +32,25 @@ struct Sen5xBaselines {
 
 enum Sen5xType { SEN50, SEN54, SEN55, SEN60, SEN63C, SEN65, SEN66, SEN68, UNKNOWN_MODEL };
 enum RhtAccelerationMode : uint16_t { LOW_ACCELERATION = 0, MEDIUM_ACCELERATION = 1, HIGH_ACCELERATION = 2 };
+enum SetupStates {
+  SM_START,
+  SM_START_1,
+  SM_START_2,
+  SM_GET_SN,
+  SM_GET_PN,
+  SM_GET_FW,
+  SM_SET_VOCB,
+  SM_SET_ACI,
+  SM_SET_RHTAM,
+  SM_SET_VOCT,
+  SM_SET_NOXT,
+  SM_SET_TP,
+  SM_SET_CO2ASC,
+  SM_SET_CO2AC,
+  SM_SENSOR_CHECK,
+  SM_START_MEAS,
+  SM_DONE
+};
 
 struct GasTuning {
   uint16_t index_offset;
@@ -50,26 +69,27 @@ struct TemperatureCompensation {
 
 class SEN5XComponent : public PollingComponent, public sensirion_common::SensirionI2CDevice {
  public:
-  float get_setup_priority() const override { return setup_priority::DATA; }
   void setup() override;
   void dump_config() override;
   void update() override;
 
-  void set_pm_1_0_sensor(sensor::Sensor *pm_1_0) { pm_1_0_sensor_ = pm_1_0; }
-  void set_pm_2_5_sensor(sensor::Sensor *pm_2_5) { pm_2_5_sensor_ = pm_2_5; }
-  void set_pm_4_0_sensor(sensor::Sensor *pm_4_0) { pm_4_0_sensor_ = pm_4_0; }
-  void set_pm_10_0_sensor(sensor::Sensor *pm_10_0) { pm_10_0_sensor_ = pm_10_0; }
+  void set_pm_1_0_sensor(sensor::Sensor *pm_1_0) { this->pm_1_0_sensor_ = pm_1_0; }
+  void set_pm_2_5_sensor(sensor::Sensor *pm_2_5) { this->pm_2_5_sensor_ = pm_2_5; }
+  void set_pm_4_0_sensor(sensor::Sensor *pm_4_0) { this->pm_4_0_sensor_ = pm_4_0; }
+  void set_pm_10_0_sensor(sensor::Sensor *pm_10_0) { this->pm_10_0_sensor_ = pm_10_0; }
 
-  void set_voc_sensor(sensor::Sensor *voc_sensor) { voc_sensor_ = voc_sensor; }
-  void set_nox_sensor(sensor::Sensor *nox_sensor) { nox_sensor_ = nox_sensor; }
-  void set_co2_sensor(sensor::Sensor *co2_sensor) { co2_sensor_ = co2_sensor; }
-  void set_hcho_sensor(sensor::Sensor *hcho_sensor) { hcho_sensor_ = hcho_sensor; }
-  void set_humidity_sensor(sensor::Sensor *humidity_sensor) { humidity_sensor_ = humidity_sensor; }
-  void set_temperature_sensor(sensor::Sensor *temperature_sensor) { temperature_sensor_ = temperature_sensor; }
-  void set_store_baseline(bool store_baseline) { store_baseline_ = store_baseline; }
-  void set_model(Sen5xType model) { model_ = model; }
-  void set_acceleration_mode(RhtAccelerationMode mode) { acceleration_mode_ = mode; }
-  void set_auto_cleaning_interval(uint32_t auto_cleaning_interval) { auto_cleaning_interval_ = auto_cleaning_interval; }
+  void set_voc_sensor(sensor::Sensor *voc_sensor) { this->voc_sensor_ = voc_sensor; }
+  void set_nox_sensor(sensor::Sensor *nox_sensor) { this->nox_sensor_ = nox_sensor; }
+  void set_co2_sensor(sensor::Sensor *co2_sensor) { this->co2_sensor_ = co2_sensor; }
+  void set_hcho_sensor(sensor::Sensor *hcho_sensor) { this->hcho_sensor_ = hcho_sensor; }
+  void set_humidity_sensor(sensor::Sensor *humidity_sensor) { this->humidity_sensor_ = humidity_sensor; }
+  void set_temperature_sensor(sensor::Sensor *temperature_sensor) { this->temperature_sensor_ = temperature_sensor; }
+  void set_store_baseline(bool store_baseline) { this->store_baseline_ = store_baseline; }
+  void set_model(Sen5xType model) { this->model_ = model; }
+  void set_acceleration_mode(RhtAccelerationMode mode) { this->acceleration_mode_ = mode; }
+  void set_auto_cleaning_interval(uint32_t auto_cleaning_interval) {
+    this->auto_cleaning_interval_ = auto_cleaning_interval;
+  }
   void set_voc_algorithm_tuning(uint16_t index_offset, uint16_t learning_time_offset_hours,
                                 uint16_t learning_time_gain_hours, uint16_t gating_max_duration_minutes,
                                 uint16_t std_initial, uint16_t gain_factor) {
@@ -80,7 +100,7 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
     tuning_params.gating_max_duration_minutes = gating_max_duration_minutes;
     tuning_params.std_initial = std_initial;
     tuning_params.gain_factor = gain_factor;
-    voc_tuning_params_ = tuning_params;
+    this->voc_tuning_params_ = tuning_params;
   }
   void set_nox_algorithm_tuning(uint16_t index_offset, uint16_t learning_time_offset_hours,
                                 uint16_t learning_time_gain_hours, uint16_t gating_max_duration_minutes,
@@ -92,18 +112,18 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
     tuning_params.gating_max_duration_minutes = gating_max_duration_minutes;
     tuning_params.std_initial = 50;
     tuning_params.gain_factor = gain_factor;
-    nox_tuning_params_ = tuning_params;
+    this->nox_tuning_params_ = tuning_params;
   }
   void set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant) {
     TemperatureCompensation temp_comp;
     temp_comp.offset = offset * 200;
     temp_comp.normalized_offset_slope = normalized_offset_slope * 10000;
     temp_comp.time_constant = time_constant;
-    temperature_compensation_ = temp_comp;
+    this->temperature_compensation_ = temp_comp;
   }
-  void set_co2_auto_calibrate(bool value) { co2_auto_calibrate_ = value; }
-  void set_co2_altitude_compensation(uint16_t altitude) { co2_altitude_compensation_ = altitude; }
-  void set_ambient_pressure_source(sensor::Sensor *pressure) { co2_ambient_pressure_source_ = pressure; }
+  void set_co2_auto_calibrate(bool value) { this->co2_auto_calibrate_ = value; }
+  void set_co2_altitude_compensation(uint16_t altitude) { this->co2_altitude_compensation_ = altitude; }
+  void set_ambient_pressure_source(sensor::Sensor *pressure) { this->co2_ambient_pressure_source_ = pressure; }
   bool start_fan_cleaning();
   bool activate_heater();
   bool perform_forced_co2_calibration(uint16_t co2);
@@ -111,15 +131,12 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
 
  protected:
   bool is_sen6x_();
-  void internal_setup_(uint8_t state);
+  void internal_setup_(SetupStates state);
   bool start_measurements_();
   bool stop_measurements_();
-  std::string convert_to_string_(const uint16_t array[], uint8_t length);
   bool write_tuning_parameters_(uint16_t i2c_command, const GasTuning &tuning);
   bool write_temperature_compensation_(const TemperatureCompensation &compensation);
   bool update_co2_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
-  const char *model_to_str_(Sen5xType model);
-  Sen5xType str_to_model_(const char *product_name);
   ERRORCODE error_code_;
   bool initialized_{false};
   bool running_{false};
