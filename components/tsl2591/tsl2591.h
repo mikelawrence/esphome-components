@@ -14,7 +14,7 @@ namespace tsl2591 {
  * Specific values of the enum constants are register values taken from the TSL2591 datasheet.
  * Longer times mean more accurate results, but will take more energy/more time.
  */
-enum TSL2591IntegrationTime : uint8_t {
+enum TSL2591IntegrationTime {
   TSL2591_INTEGRATION_TIME_100MS = 0b000,
   TSL2591_INTEGRATION_TIME_200MS = 0b001,
   TSL2591_INTEGRATION_TIME_300MS = 0b010,
@@ -41,7 +41,7 @@ enum TSL2591ComponentGain {
  * Specific values of the enum constants are register values taken from the TSL2591 datasheet.
  * Higher values are better for low light situations, but can increase noise.
  */
-enum TSL2591Gain : uint8_t {
+enum TSL2591Gain {
   TSL2591_GAIN_LOW = 0b00 << 4,   // 1x
   TSL2591_GAIN_MED = 0b01 << 4,   // 25x
   TSL2591_GAIN_HIGH = 0b10 << 4,  // 400x
