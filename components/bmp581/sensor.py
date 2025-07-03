@@ -95,7 +95,7 @@ def compute_measurement_conversion_time(config):
         ]
 
     # Datasheet indicates a 5% possible error in each conversion time listed
-    return math.ceil(pressure_conversion_time + temperature_conversion_time + 1)
+    return math.ceil(1.05 * (pressure_conversion_time + temperature_conversion_time) + 1)
 
 
 CONFIG_SCHEMA = (
