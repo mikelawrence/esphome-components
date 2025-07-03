@@ -320,7 +320,7 @@ def final_validate(config):
             MODEL_SEN60,
             MODEL_SEN63C,
             MODEL_SEN65,
-            MODEL_SEN68,
+            MODEL_SEN66,
         }:
             raise cv.Invalid(f"Model {model} does not support '{CONF_HCHO}'.")
     if CONF_TEMPERATURE in config:
