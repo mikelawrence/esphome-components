@@ -130,7 +130,7 @@ CO2_SENSOR = cv.Schema(
         cv.Optional(CONF_AUTOMATIC_SELF_CALIBRATION, default=True): cv.boolean,
         cv.Optional(CONF_ALTITUDE_COMPENSATION, default="0m"): cv.All(
             cv.float_with_unit("altitude", "(m|m a.s.l.|MAMSL|MASL)"),
-            cv.int_range(min=0, max=0xFFFF, max_included=False),
+            cv.int_range(min=0, max=3000, max_included=False),
         ),
         cv.Optional(CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE): cv.use_id(
             sensor.Sensor
@@ -320,7 +320,7 @@ def final_validate(config):
             MODEL_SEN60,
             MODEL_SEN63C,
             MODEL_SEN65,
-            MODEL_SEN68,
+            MODEL_SEN66,
         }:
             raise cv.Invalid(f"Model {model} does not support '{CONF_HCHO}'.")
     if CONF_TEMPERATURE in config:

@@ -242,7 +242,7 @@ void SEN5XComponent::internal_setup_(SetupStates state) {
         this->seconds_since_last_store_ = 0;
 
         if (this->voc_baselines_storage_.state0 > 0 && this->voc_baselines_storage_.state1 > 0) {
-          ESP_LOGD(TAG, "Restoring VOC baseline from save state0: 0x%04" PRIX32 ", state1: 0x%04" PRIX32,
+          ESP_LOGV(TAG, "Restoring VOC baseline from save state0: 0x%04" PRIX32 ", state1: 0x%04" PRIX32,
                    this->voc_baselines_storage_.state0, voc_baselines_storage_.state1);
           uint16_t states[4];
 
@@ -794,7 +794,7 @@ bool SEN5XComponent::start_fan_cleaning() {
 bool SEN5XComponent::activate_heater() {
   if (this->model_.value() == SEN63C || this->model_.value() == SEN65 || this->model_.value() == SEN66 ||
       this->model_.value() == SEN68) {
-    ESP_LOGV(TAG, "Activate Heater started");
+    ESP_LOGD(TAG, "Activate Heater started");
     this->initialized_ = false;  // prevent update from trying to read the sensors
     // measurements must be stopped first for certain devices
     if (this->is_sen6x_() && !this->stop_measurements_()) {
