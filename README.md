@@ -340,15 +340,12 @@ number:
       name: Installation Angle
 
 ```
+
 ### Configuration Variables
 + **flip_x_axis** (*Optional*, boolean): When the DL2450 is mounted upside down you can set this to ```true``` to flip the X axis.
 
 ### Numbers
 + **installation_angle** (*Optional*): Allows you to change the installation angle in °. Makes it easy to use when installed in a corner. Default is 0° with a range of ±45°. All Options from [Number](https://esphome.io/components/sensor/#config-number).
-
-## BMP581 External Component
-
-This external component increases the computed conversion times by 1ms. This stops the not ready warnings. There are no other changes.
 
 ## SEN5X External Component
 

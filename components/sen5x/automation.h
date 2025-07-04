@@ -32,24 +32,14 @@ class PerformForcedCo2CalibrationAction : public Action<Ts...>, public Parented<
   TEMPLATABLE_VALUE(uint16_t, value)
 };
 
-template<typename... Ts> class StartFanAction : public Action<Ts...> {
+template<typename... Ts> class StartFanAction : public Action<Ts...>, public Parented<SEN5XComponent> {
  public:
-  explicit StartFanAction(SEN5XComponent *sen5x) : sen5x_(sen5x) {}
-
-  void play(Ts... x) override { this->sen5x_->start_fan_cleaning(); }
-
- protected:
-  SEN5XComponent *sen5x_;
+  void play(Ts... x) override { this->parent_->start_fan_cleaning(); }
 };
 
-template<typename... Ts> class ActivateHeaterAction : public Action<Ts...> {
+template<typename... Ts> class ActivateHeaterAction : public Action<Ts...>, public Parented<SEN5XComponent> {
  public:
-  explicit ActivateHeaterAction(SEN5XComponent *sen5x) : sen5x_(sen5x) {}
-
-  void play(Ts... x) override { this->sen5x_->activate_heater(); }
-
- protected:
-  SEN5XComponent *sen5x_;
+  void play(Ts... x) override { this->parent_->activate_heater(); }
 };
 
 }  // namespace sen5x
