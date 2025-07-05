@@ -262,34 +262,34 @@ void DFRobotC4001Hub::config_save() {
 }
 
 void DFRobotC4001Hub::dump_config() {
-  ESP_LOGCONFIG(TAG, "DFRobot C4001 mmWave Radar:\n"
-                    "  SW Version: %s\n"
-                    "  HW Version: %s\n"
-                    "  Mode: %s\n",
-                    this->sw_version_.c_str(),
-                    this->hw_version_.c_str(),
-                    this->mode_ == Mode_Presence ? "PRESENCE" : "SPEED_AND_DISTANCE");
+  ESP_LOGCONFIG(TAG,
+                "DFRobot C4001 mmWave Radar:\n"
+                "  SW Version: %s\n"
+                "  HW Version: %s\n"
+                "  Mode: %s\n",
+                this->sw_version_.c_str(), this->hw_version_.c_str(),
+                this->mode_ == Mode_Presence ? "PRESENCE" : "SPEED_AND_DISTANCE");
 #ifdef USE_BUTTON
-                    LOG_BUTTON("  ", "Config Save Button", this->config_save_button_);
+  LOG_BUTTON("  ", "Config Save Button", this->config_save_button_);
 #endif
 #ifdef USE_BINARY_SENSOR
-                    LOG_BINARY_SENSOR("  ", "Occupancy", this->occupancy_binary_sensor_);
-                    LOG_BINARY_SENSOR("  ", "Config Changed", this->config_changed_binary_sensor_);
+  LOG_BINARY_SENSOR("  ", "Occupancy", this->occupancy_binary_sensor_);
+  LOG_BINARY_SENSOR("  ", "Config Changed", this->config_changed_binary_sensor_);
 #endif
 #ifdef USE_NUMBER
-                    LOG_NUMBER("  ", "Maximum Range Number", this->max_range_number_);
-                    LOG_NUMBER("  ", "Minimum Range Number", this->min_range_number_);
-                    LOG_NUMBER("  ", "Trigger Range Number", this->trigger_range_number_);
-                    LOG_NUMBER("  ", "Hold Sensitivity Number", this->hold_sensitivity_number_);
-                    LOG_NUMBER("  ", "Trigger Sensitivity Number", this->trigger_sensitivity_number_);
-                    LOG_NUMBER("  ", "On Latency Number", this->on_latency_number_);
-                    LOG_NUMBER("  ", "Off Latency Number", this->off_latency_number_);
-                    LOG_NUMBER("  ", "Inhibit Time Number", this->inhibit_time_number_);
-                    LOG_NUMBER("  ", "Threshold Factor Number", this->threshold_factor_number_);
+  LOG_NUMBER("  ", "Maximum Range Number", this->max_range_number_);
+  LOG_NUMBER("  ", "Minimum Range Number", this->min_range_number_);
+  LOG_NUMBER("  ", "Trigger Range Number", this->trigger_range_number_);
+  LOG_NUMBER("  ", "Hold Sensitivity Number", this->hold_sensitivity_number_);
+  LOG_NUMBER("  ", "Trigger Sensitivity Number", this->trigger_sensitivity_number_);
+  LOG_NUMBER("  ", "On Latency Number", this->on_latency_number_);
+  LOG_NUMBER("  ", "Off Latency Number", this->off_latency_number_);
+  LOG_NUMBER("  ", "Inhibit Time Number", this->inhibit_time_number_);
+  LOG_NUMBER("  ", "Threshold Factor Number", this->threshold_factor_number_);
 #endif
 #ifdef USE_SWITCH
-                    LOG_SWITCH("  ", "Turn on LED Switch", this->led_enable_switch_);
-                    LOG_SWITCH("  ", "Micro Motion Enable Switch", this->micro_motion_enable_switch_);
+  LOG_SWITCH("  ", "Turn on LED Switch", this->led_enable_switch_);
+  LOG_SWITCH("  ", "Micro Motion Enable Switch", this->micro_motion_enable_switch_);
 #endif
 }
 
