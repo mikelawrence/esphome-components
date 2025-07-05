@@ -6,7 +6,7 @@ from esphome.const import (
     ENTITY_CATEGORY_CONFIG,
 )
 
-from .. import HUB_CHILD_SCHEMA, CONF_DFROBOT_C4001, dfrobot_c4001_ns
+from .. import HUB_CHILD_SCHEMA, CONF_DFROBOT_C4001_ID, dfrobot_c4001_ns
 
 
 CONF_CONFIG_SAVE = "config_save"
@@ -30,8 +30,8 @@ CONFIG_SCHEMA = (
 
 
 async def to_code(config):
-    sens0609_hub = await cg.get_variable(config[CONF_DFROBOT_C4001])
+    sens0609_hub = await cg.get_variable(config[CONF_DFROBOT_C4001_ID])
     if config_save := config.get(CONF_CONFIG_SAVE):
         b = await button.new_button(config_save)
-        await cg.register_parented(b, config[CONF_DFROBOT_C4001])
+        await cg.register_parented(b, config[CONF_DFROBOT_C4001_ID])
         cg.add(sens0609_hub.set_config_save_button(b))

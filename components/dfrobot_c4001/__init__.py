@@ -15,7 +15,7 @@ DEPENDENCIES = ["uart"]
 CODEOWNERS = ["@mikelawrence"]
 MULTI_CONF = True
 
-CONF_DFROBOT_C4001 = "dfrobot_c4001"
+CONF_DFROBOT_C4001_ID = "dfrobot_c4001_id"
 MODE = ""
 
 dfrobot_c4001_ns = cg.esphome_ns.namespace("dfrobot_c4001")
@@ -38,7 +38,7 @@ DFRobotC4001FactoryResetAction = dfrobot_c4001_ns.class_(
 
 HUB_CHILD_SCHEMA = cv.Schema(
     {
-        cv.GenerateID(CONF_DFROBOT_C4001): cv.use_id(DFRobotC4001Hub),
+        cv.GenerateID(CONF_DFROBOT_C4001_ID): cv.use_id(DFRobotC4001Hub),
     }
 )
 
