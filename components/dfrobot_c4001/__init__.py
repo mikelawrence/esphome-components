@@ -5,10 +5,8 @@ from esphome.automation import maybe_simple_id
 from esphome.components import uart
 
 from esphome.const import (
-    CONF_FACTORY_RESET,
     CONF_ID,
     CONF_MODE,
-    CONF_SENSITIVITY,
 )
 
 
@@ -17,11 +15,13 @@ DEPENDENCIES = ["uart"]
 CODEOWNERS = ["@mikelawrence"]
 MULTI_CONF = True
 
-CONF_DFROBOT_C4001_HUB_ID = "dfrobot_c4001_id"
+CONF_DFROBOT_C4001_HUB_ID = "dfrobot_c4001_hub_id"
 MODE = ""
 
 dfrobot_c4001_ns = cg.esphome_ns.namespace("dfrobot_c4001")
-DFRobotC4001Hub = dfrobot_c4001_ns.class_("DFRobotC4001Hub", cg.Component, uart.UARTDevice)
+DFRobotC4001Hub = dfrobot_c4001_ns.class_(
+    "DFRobotC4001Hub", cg.Component, uart.UARTDevice
+)
 ModeConfig = dfrobot_c4001_ns.enum("ModeConfig")
 
 CONF_MODE_SELECTS = {

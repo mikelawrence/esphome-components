@@ -2,13 +2,8 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import button
 from esphome.const import (
-    CONF_FACTORY_RESET,
-    CONF_RESTART,
     DEVICE_CLASS_UPDATE,
     ENTITY_CATEGORY_CONFIG,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    ICON_RESTART,
-    ICON_RESTART_ALERT,
 )
 
 from .. import HUB_CHILD_SCHEMA, CONF_DFROBOT_C4001_HUB_ID, dfrobot_c4001_ns

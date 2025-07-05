@@ -3,6 +3,8 @@ import esphome.config_validation as cv
 import esphome.final_validate as fv
 from esphome.components import number
 from esphome.const import (
+    CONF_MAX_RANGE,
+    CONF_MIN_RANGE,
     CONF_MODE,
     DEVICE_CLASS_DISTANCE,
     DEVICE_CLASS_DURATION,
@@ -19,8 +21,6 @@ from .. import HUB_CHILD_SCHEMA, CONF_DFROBOT_C4001_HUB_ID, dfrobot_c4001_ns
 
 DEPENDENCIES = ["dfrobot_c4001"]
 
-CONF_MAX_RANGE = "max_range"
-CONF_MIN_RANGE = "min_range"
 CONF_TRIGGER_RANGE = "trigger_range"
 CONF_HOLD_SENSITIVITY = "hold_sensitivity"
 CONF_TRIGGER_SENSITIVITY = "trigger_sensitivity"
@@ -33,7 +33,9 @@ MaxRangeNumber = dfrobot_c4001_ns.class_("MaxRangeNumber", number.Number)
 MinRangeNumber = dfrobot_c4001_ns.class_("MinRangeNumber", number.Number)
 TriggerRangeNumber = dfrobot_c4001_ns.class_("TriggerRangeNumber", number.Number)
 HoldSensitivityNumber = dfrobot_c4001_ns.class_("HoldSensitivityNumber", number.Number)
-TriggerSensitivityNumber = dfrobot_c4001_ns.class_("TriggerSensitivityNumber", number.Number)
+TriggerSensitivityNumber = dfrobot_c4001_ns.class_(
+    "TriggerSensitivityNumber", number.Number
+)
 OnLatencyNumber = dfrobot_c4001_ns.class_("OnLatencyNumber", number.Number)
 OffLatencyNumber = dfrobot_c4001_ns.class_("OffLatencyNumber", number.Number)
 OffLatencyNumber = dfrobot_c4001_ns.class_("OffLatencyNumber", number.Number)
