@@ -8,7 +8,7 @@ from esphome.const import (
     DEVICE_CLASS_SWITCH,
 )
 
-from .. import HUB_CHILD_SCHEMA, CONF_DFROBOT_C4001_HUB_ID, dfrobot_c4001_ns
+from .. import HUB_CHILD_SCHEMA, CONF_DFROBOT_C4001, dfrobot_c4001_ns
 
 DEPENDENCIES = ["dfrobot_c4001"]
 
@@ -46,7 +46,7 @@ CONFIG_SCHEMA = (
 
 def _final_validate(config):
     full_config = fv.full_config.get()
-    hub_path = full_config.get_path_for_id(config[CONF_DFROBOT_C4001_HUB_ID])[:-1]
+    hub_path = full_config.get_path_for_id(config[CONF_DFROBOT_C4001])[:-1]
     hub_conf = full_config.get_config_for_path(hub_path)
     MODE = hub_conf.get(CONF_MODE)
     if MODE == "PRESENCE":
@@ -60,13 +60,13 @@ FINAL_VALIDATE_SCHEMA = _final_validate
 
 
 async def to_code(config):
-    sens0609_hub = await cg.get_variable(config[CONF_DFROBOT_C4001_HUB_ID])
+    sens0609_hub = await cg.get_variable(config[CONF_DFROBOT_C4001])
 
     if led_enable := config.get(CONF_LED_ENABLE):
         s = await switch.new_switch(led_enable)
-        await cg.register_parented(s, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(s, config[CONF_DFROBOT_C4001])
         cg.add(sens0609_hub.set_led_enable_switch(s))
     if micro_motion_enable := config.get(CONF_MICRO_MOTION_ENABLE):
         s = await switch.new_switch(micro_motion_enable)
-        await cg.register_parented(s, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(s, config[CONF_DFROBOT_C4001])
         cg.add(sens0609_hub.set_micro_motion_enable_switch(s))

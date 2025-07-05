@@ -16,7 +16,7 @@ from esphome.const import (
     ICON_TIMER,
 )
 
-from .. import HUB_CHILD_SCHEMA, CONF_DFROBOT_C4001_HUB_ID, dfrobot_c4001_ns
+from .. import HUB_CHILD_SCHEMA, CONF_DFROBOT_C4001, dfrobot_c4001_ns
 
 
 DEPENDENCIES = ["dfrobot_c4001"]
@@ -114,7 +114,7 @@ CONFIG_SCHEMA = (
 
 def _final_validate(config):
     full_config = fv.full_config.get()
-    hub_path = full_config.get_path_for_id(config[CONF_DFROBOT_C4001_HUB_ID])[:-1]
+    hub_path = full_config.get_path_for_id(config[CONF_DFROBOT_C4001])[:-1]
     hub_conf = full_config.get_config_for_path(hub_path)
     mode = hub_conf.get(CONF_MODE)
     if mode == "PRESENCE":
@@ -163,53 +163,53 @@ FINAL_VALIDATE_SCHEMA = _final_validate
 
 
 async def to_code(config):
-    sens0609_hub = await cg.get_variable(config[CONF_DFROBOT_C4001_HUB_ID])
+    sens0609_hub = await cg.get_variable(config[CONF_DFROBOT_C4001])
 
     if max_range := config.get(CONF_MAX_RANGE):
         n = await number.new_number(max_range, min_value=0.6, max_value=25.0, step=0.1)
-        await cg.register_parented(n, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(n, config[CONF_DFROBOT_C4001])
         cg.add(sens0609_hub.set_max_range_number(n))
     if min_range := config.get(CONF_MIN_RANGE):
         n = await number.new_number(min_range, min_value=0.6, max_value=25.0, step=0.1)
-        await cg.register_parented(n, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(n, config[CONF_DFROBOT_C4001])
         cg.add(sens0609_hub.set_min_range_number(n))
     if trigger_range := config.get(CONF_TRIGGER_RANGE):
         n = await number.new_number(
             trigger_range, min_value=0.6, max_value=25.0, step=0.1
         )
-        await cg.register_parented(n, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(n, config[CONF_DFROBOT_C4001])
         cg.add(sens0609_hub.set_trigger_range_number(n))
     if hold_sensitivity := config.get(CONF_HOLD_SENSITIVITY):
         n = await number.new_number(hold_sensitivity, min_value=0, max_value=9, step=1)
-        await cg.register_parented(n, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(n, config[CONF_DFROBOT_C4001])
         cg.add(sens0609_hub.set_hold_sensitivity_number(n))
     if trigger_sensitivity := config.get(CONF_TRIGGER_SENSITIVITY):
         n = await number.new_number(
             trigger_sensitivity, min_value=0, max_value=9, step=1
         )
-        await cg.register_parented(n, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(n, config[CONF_DFROBOT_C4001])
         cg.add(sens0609_hub.set_trigger_sensitivity_number(n))
     if on_latency := config.get(CONF_ON_LATENCY):
         n = await number.new_number(
             on_latency, min_value=0.0, max_value=100.0, step=0.01
         )
-        await cg.register_parented(n, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(n, config[CONF_DFROBOT_C4001])
         cg.add(sens0609_hub.set_on_latency_number(n))
     if off_latency := config.get(CONF_OFF_LATENCY):
         n = await number.new_number(
             off_latency, min_value=2.0, max_value=1500.0, step=0.5
         )
-        await cg.register_parented(n, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(n, config[CONF_DFROBOT_C4001])
         cg.add(sens0609_hub.set_off_latency_number(n))
     if inhibit_time := config.get(CONF_INHIBIT_TIME):
         n = await number.new_number(
             inhibit_time, min_value=0.1, max_value=255.0, step=0.01
         )
-        await cg.register_parented(n, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(n, config[CONF_DFROBOT_C4001])
         cg.add(sens0609_hub.set_inhibit_time_number(n))
     if threshold_factor := config.get(CONF_THRESHOLD_FACTOR):
         n = await number.new_number(
             threshold_factor, min_value=0, max_value=65535, step=1
         )
-        await cg.register_parented(n, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(n, config[CONF_DFROBOT_C4001])
         cg.add(sens0609_hub.set_threshold_factor_number(n))
