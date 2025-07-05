@@ -265,7 +265,7 @@ void DFRobotC4001Hub::dump_config() {
   ESP_LOGCONFIG(TAG, "DFRobot C4001 mmWave Radar:\n");
                     "  SW Version: %s\n"
                     "  HW Version: %s\n"
-                    "  Mode: %s\n"
+                    "  Mode: %s\n",
                     this->sw_version_.c_str()),
                     this->hw_version_.c_str()),
                     this->mode_ == Mode_Presence ? "PRESENCE" : "SPEED_AND_DISTANCE"));
