@@ -1,14 +1,10 @@
 import esphome.codegen as cg
-import esphome.config_validation as cv
-import esphome.final_validate as fv
 from esphome.components import switch
-from esphome.const import (
-    CONF_MODE,
-    ENTITY_CATEGORY_CONFIG,
-    DEVICE_CLASS_SWITCH,
-)
+import esphome.config_validation as cv
+from esphome.const import CONF_MODE, DEVICE_CLASS_SWITCH, ENTITY_CATEGORY_CONFIG
+import esphome.final_validate as fv
 
-from .. import HUB_CHILD_SCHEMA, CONF_DFROBOT_C4001_ID, dfrobot_c4001_ns
+from .. import CONF_DFROBOT_C4001_ID, HUB_CHILD_SCHEMA, dfrobot_c4001_ns
 
 DEPENDENCIES = ["dfrobot_c4001"]
 

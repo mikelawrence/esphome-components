@@ -1,13 +1,13 @@
 import esphome.codegen as cg
-import esphome.config_validation as cv
 from esphome.components import binary_sensor
+import esphome.config_validation as cv
 from esphome.const import (
     DEVICE_CLASS_OCCUPANCY,
     DEVICE_CLASS_UPDATE,
     ENTITY_CATEGORY_DIAGNOSTIC,
 )
 
-from . import HUB_CHILD_SCHEMA, CONF_DFROBOT_C4001_ID
+from . import CONF_DFROBOT_C4001_ID, HUB_CHILD_SCHEMA
 
 DEPENDENCIES = ["dfrobot_c4001"]
 

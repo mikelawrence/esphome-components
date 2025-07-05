@@ -251,7 +251,7 @@ uint8_t GetSensitivityCommand::on_message(std::string &message) {
   } else if (message == "Done") {
     this->parent_->set_hold_sensitivity(this->hold_sensitivity_, false);
     this->parent_->set_trigger_sensitivity(this->trigger_sensitivity_, false);
-    ESP_LOGV(TAG, "Get Sensitivity complete: Parsed Hold Sensitivity (%.3f) and Trigger Sensitivity (%.3f).",
+    ESP_LOGV(TAG, "Get Sensitivity complete: Parsed Hold Sensitivity (%d) and Trigger Sensitivity (%d).",
              this->hold_sensitivity_, this->trigger_sensitivity_);
     return 1;  // Command done
   } else {

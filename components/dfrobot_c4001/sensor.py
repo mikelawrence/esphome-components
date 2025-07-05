@@ -1,20 +1,20 @@
 import esphome.codegen as cg
-import esphome.config_validation as cv
-import esphome.final_validate as fv
 from esphome.components import sensor
+import esphome.config_validation as cv
 
 # from esphome import core
 from esphome.const import (
     CONF_MODE,
     DEVICE_CLASS_DISTANCE,
-    DEVICE_CLASS_SPEED,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_SPEED,
     STATE_CLASS_MEASUREMENT,
     UNIT_EMPTY,
     UNIT_METER,
 )
+import esphome.final_validate as fv
 
-from . import HUB_CHILD_SCHEMA, CONF_DFROBOT_C4001_ID
+from . import CONF_DFROBOT_C4001_ID, HUB_CHILD_SCHEMA
 
 CONF_TARGET_DISTANCE = "target_distance"
 CONF_TARGET_SPEED = "target_speed"

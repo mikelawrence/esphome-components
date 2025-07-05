@@ -53,7 +53,7 @@ void DFRobotC4001Hub::set_target_energy(float value) {
 }
 
 void DFRobotC4001Hub::set_max_range(float max, bool needs_save) {
-  if (this->mode_ == Mode_Presence) {
+  if (this->mode_ == MODE_PRESENCE) {
 #ifdef USE_NUMBER
     if (this->max_range_number_ != nullptr)
       this->max_range_number_->publish_state(max);
@@ -66,7 +66,7 @@ void DFRobotC4001Hub::set_max_range(float max, bool needs_save) {
 }
 
 void DFRobotC4001Hub::set_min_range(float min, bool needs_save) {
-  if (this->mode_ == Mode_Presence) {
+  if (this->mode_ == MODE_PRESENCE) {
 #ifdef USE_NUMBER
     if (this->min_range_number_ != nullptr) {
       this->min_range_number_->publish_state(min);
@@ -79,7 +79,7 @@ void DFRobotC4001Hub::set_min_range(float min, bool needs_save) {
   }
 }
 void DFRobotC4001Hub::set_trigger_range(float trig, bool needs_save) {
-  if (this->mode_ == Mode_Presence) {
+  if (this->mode_ == MODE_PRESENCE) {
 #ifdef USE_NUMBER
     if (this->trigger_range_number_ != nullptr)
       this->trigger_range_number_->publish_state(trig);
@@ -92,7 +92,7 @@ void DFRobotC4001Hub::set_trigger_range(float trig, bool needs_save) {
 }
 
 void DFRobotC4001Hub::set_hold_sensitivity(float value, bool needs_save) {
-  if (this->mode_ == Mode_Presence) {
+  if (this->mode_ == MODE_PRESENCE) {
     this->hold_sensitivity_ = value;
 #ifdef USE_NUMBER
     if (this->hold_sensitivity_number_ != nullptr)
@@ -105,7 +105,7 @@ void DFRobotC4001Hub::set_hold_sensitivity(float value, bool needs_save) {
 }
 
 void DFRobotC4001Hub::set_trigger_sensitivity(float value, bool needs_save) {
-  if (this->mode_ == Mode_Presence) {
+  if (this->mode_ == MODE_PRESENCE) {
     this->trigger_sensitivity_ = value;
 #ifdef USE_NUMBER
     if (this->trigger_sensitivity_number_ != nullptr)
@@ -118,7 +118,7 @@ void DFRobotC4001Hub::set_trigger_sensitivity(float value, bool needs_save) {
 }
 
 void DFRobotC4001Hub::set_on_latency(float value, bool needs_save) {
-  if (this->mode_ == Mode_Presence) {
+  if (this->mode_ == MODE_PRESENCE) {
     this->on_latency_ = value;
 #ifdef USE_NUMBER
     if (this->on_latency_number_ != nullptr)
@@ -131,7 +131,7 @@ void DFRobotC4001Hub::set_on_latency(float value, bool needs_save) {
 }
 
 void DFRobotC4001Hub::set_off_latency(float value, bool needs_save) {
-  if (this->mode_ == Mode_Presence) {
+  if (this->mode_ == MODE_PRESENCE) {
     this->off_latency_ = value;
 #ifdef USE_NUMBER
     if (this->off_latency_number_ != nullptr)
@@ -144,7 +144,7 @@ void DFRobotC4001Hub::set_off_latency(float value, bool needs_save) {
 }
 
 void DFRobotC4001Hub::set_inhibit_time(float value, bool needs_save) {
-  if (this->mode_ == Mode_Presence) {
+  if (this->mode_ == MODE_PRESENCE) {
     this->inhibit_time_ = value;
 #ifdef USE_NUMBER
     if (this->inhibit_time_number_ != nullptr)
@@ -157,7 +157,7 @@ void DFRobotC4001Hub::set_inhibit_time(float value, bool needs_save) {
 }
 
 void DFRobotC4001Hub::set_threshold_factor(float value, bool needs_save) {
-  if (this->mode_ == Mode_Speed_and_Distance) {
+  if (this->mode_ == MODE_SPEED_AND_DISTANCE) {
     this->threshold_factor_ = value;
 #ifdef USE_NUMBER
     if (this->threshold_factor_number_ != nullptr)
@@ -191,7 +191,7 @@ void DFRobotC4001Hub::flash_led_enable() {
 }
 
 void DFRobotC4001Hub::set_micro_motion_enable(bool enable, bool needs_save) {
-  if (this->mode_ == Mode_Speed_and_Distance) {
+  if (this->mode_ == MODE_SPEED_AND_DISTANCE) {
     this->micro_motion_enable_ = enable;
 #ifdef USE_SWITCH
     if (this->micro_motion_enable_switch_ != nullptr)
@@ -226,7 +226,7 @@ void DFRobotC4001Hub::config_load() {
   cmd_queue_.enqueue(make_unique<GetHWVCommand>());
   cmd_queue_.enqueue(make_unique<GetSWVCommand>());
   // Read current parameters
-  if (this->mode_ == Mode_Presence) {
+  if (this->mode_ == MODE_PRESENCE) {
     cmd_queue_.enqueue(make_unique<GetRangeCommand>());
     cmd_queue_.enqueue(make_unique<GetTrigRangeCommand>());
     cmd_queue_.enqueue(make_unique<GetSensitivityCommand>());
@@ -243,7 +243,7 @@ void DFRobotC4001Hub::config_load() {
 void DFRobotC4001Hub::config_save() {
   if (this->needs_save_) {
     this->enqueue(make_unique<PowerCommand>(false));
-    if (this->mode_ == Mode_Presence) {
+    if (this->mode_ == MODE_PRESENCE) {
       this->enqueue(make_unique<SetRangeCommand>(this->min_range_, max_range_));
       this->enqueue(make_unique<SetTrigRangeCommand>(this->trigger_range_));
       this->enqueue(make_unique<SetSensitivityCommand>(this->hold_sensitivity_, this->trigger_sensitivity_));
@@ -268,7 +268,7 @@ void DFRobotC4001Hub::dump_config() {
                 "  HW Version: %s\n"
                 "  Mode: %s\n",
                 this->sw_version_.c_str(), this->hw_version_.c_str(),
-                this->mode_ == Mode_Presence ? "PRESENCE" : "SPEED_AND_DISTANCE");
+                this->mode_ == MODE_PRESENCE ? "PRESENCE" : "SPEED_AND_DISTANCE");
 #ifdef USE_BUTTON
   LOG_BUTTON("  ", "Config Save Button", this->config_save_button_);
 #endif

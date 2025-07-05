@@ -1,13 +1,9 @@
 import esphome.codegen as cg
-import esphome.config_validation as cv
 from esphome.components import button
-from esphome.const import (
-    DEVICE_CLASS_UPDATE,
-    ENTITY_CATEGORY_CONFIG,
-)
+import esphome.config_validation as cv
+from esphome.const import DEVICE_CLASS_UPDATE, ENTITY_CATEGORY_CONFIG
 
-from .. import HUB_CHILD_SCHEMA, CONF_DFROBOT_C4001_ID, dfrobot_c4001_ns
-
+from .. import CONF_DFROBOT_C4001_ID, HUB_CHILD_SCHEMA, dfrobot_c4001_ns
 
 CONF_CONFIG_SAVE = "config_save"
 

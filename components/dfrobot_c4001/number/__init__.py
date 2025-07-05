@@ -1,23 +1,22 @@
 import esphome.codegen as cg
-import esphome.config_validation as cv
-import esphome.final_validate as fv
 from esphome.components import number
+import esphome.config_validation as cv
 from esphome.const import (
     CONF_MAX_RANGE,
     CONF_MIN_RANGE,
     CONF_MODE,
     DEVICE_CLASS_DISTANCE,
     DEVICE_CLASS_DURATION,
-    UNIT_METER,
-    UNIT_SECOND,
     ENTITY_CATEGORY_CONFIG,
     ICON_ARROW_EXPAND_VERTICAL,
     ICON_SCALE,
     ICON_TIMER,
+    UNIT_METER,
+    UNIT_SECOND,
 )
+import esphome.final_validate as fv
 
-from .. import HUB_CHILD_SCHEMA, CONF_DFROBOT_C4001_ID, dfrobot_c4001_ns
-
+from .. import CONF_DFROBOT_C4001_ID, HUB_CHILD_SCHEMA, dfrobot_c4001_ns
 
 DEPENDENCIES = ["dfrobot_c4001"]
 

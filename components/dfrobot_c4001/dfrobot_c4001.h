@@ -29,9 +29,9 @@ namespace esphome {
 namespace dfrobot_c4001 {
 // Enumeration for RunApp or Sensor Mode
 enum ModeConfig {
-  Mode_Presence,
-  Mode_Speed_and_Distance,
-  Mode_Unknown,
+  MODE_PRESENCE,
+  MODE_SPEED_AND_DISTANCE,
+  MODE_UNKNOWN,
 };
 
 const uint8_t MMWAVE_READ_BUFFER_LENGTH = 255;
@@ -102,9 +102,9 @@ class DFRobotC4001Hub : public uart::UARTDevice, public Component {
   void set_off_latency(float value, bool needs_save = true);
   void set_inhibit_time(float value, bool needs_save = true);
   void set_threshold_factor(float value, bool needs_save = true);
-  void set_led_enable(bool state, bool needs_save = true);
+  void set_led_enable(bool value, bool needs_save = true);
   void flash_led_enable();
-  void set_micro_motion_enable(bool state, bool needs_save = true);
+  void set_micro_motion_enable(bool enable, bool needs_save = true);
   void set_mode(ModeConfig value);
   void set_sw_version(std::string version);
   void set_hw_version(std::string version);
@@ -136,7 +136,7 @@ class DFRobotC4001Hub : public uart::UARTDevice, public Component {
   float target_distance_;
   float target_speed_;
   float target_energy_;
-  ModeConfig mode_{Mode_Presence};
+  ModeConfig mode_{MODE_PRESENCE};
   std::string hw_version_{""};
   std::string sw_version_{""};
 

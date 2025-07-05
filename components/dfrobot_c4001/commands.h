@@ -112,7 +112,7 @@ class GetLatencyCommand : public Command {
 
 class SetLatencyCommand : public Command {
  public:
-  SetLatencyCommand(float hold_sensitivity, float trigger_sensitivity);
+  SetLatencyCommand(float on_latency, float off_latency);
   uint8_t on_message(std::string &message) override;
 
  protected:
@@ -185,7 +185,7 @@ class GetMicroMotionCommand : public Command {
 
 class SetMicroMotionCommand : public Command {
  public:
-  SetMicroMotionCommand(bool micro_motion);
+  SetMicroMotionCommand(bool enable);
   uint8_t on_message(std::string &message) override;
 
  protected:
