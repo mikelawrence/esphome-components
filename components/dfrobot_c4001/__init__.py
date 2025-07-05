@@ -20,8 +20,8 @@ DFRobotC4001Hub = dfrobot_c4001_ns.class_(
 ModeConfig = dfrobot_c4001_ns.enum("ModeConfig")
 
 CONF_MODE_SELECTS = {
-    "PRESENCE": ModeConfig.Mode_Presence,
-    "SPEED_AND_DISTANCE": ModeConfig.Mode_Speed_and_Distance,
+    "PRESENCE": ModeConfig.MODE_PRESENCE,
+    "SPEED_AND_DISTANCE": ModeConfig.MODE_SPEED_AND_DISTANCE,
 }
 
 
