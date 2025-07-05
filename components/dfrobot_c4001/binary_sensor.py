@@ -7,7 +7,7 @@ from esphome.const import (
     ENTITY_CATEGORY_DIAGNOSTIC,
 )
 
-from . import HUB_CHILD_SCHEMA, CONF_DFROBOT_C4001_HUB_ID
+from . import HUB_CHILD_SCHEMA, CONF_DFROBOT_C4001_ID
 
 DEPENDENCIES = ["dfrobot_c4001"]
 
@@ -33,7 +33,7 @@ CONFIG_SCHEMA = (
 
 
 async def to_code(config):
-    sens0609_hub = await cg.get_variable(config[CONF_DFROBOT_C4001_HUB_ID])
+    sens0609_hub = await cg.get_variable(config[CONF_DFROBOT_C4001_ID])
     if occupancy := config.get(CONF_OCCUPANCY):
         bs = await binary_sensor.new_binary_sensor(occupancy)
         cg.add(sens0609_hub.set_occupancy_binary_sensor(bs))
