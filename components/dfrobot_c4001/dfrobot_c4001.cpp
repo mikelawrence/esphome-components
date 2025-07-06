@@ -201,7 +201,7 @@ void DFRobotC4001Hub::set_software_version(std::string version) {
   this->sw_version_ = std::move(version);
 }
 
-void DFRobotC4001Hub::set_hardward_version(std::string version) {
+void DFRobotC4001Hub::set_hardware_version(std::string version) {
 #ifdef USE_TEXT_SENSOR
   if (this->hardware_version_text_sensor_ != nullptr)
     this->hardware_version_text_sensor_->publish_state(version);
@@ -276,13 +276,13 @@ void DFRobotC4001Hub::config_save() {
 
 void DFRobotC4001Hub::factory_reset() {
   this->enqueue(make_unique<PowerCommand>(false));
-  this->enqueue(make_unique<FactoryResetCommand>(false));
+  this->enqueue(make_unique<FactoryResetCommand>());
   this->config_load();
 }
 
 void DFRobotC4001Hub::restart() {
   this->enqueue(make_unique<PowerCommand>(false));
-  this->enqueue(make_unique<FactoryResetCommand>(false));
+  this->enqueue(make_unique<ResetSystemCommand>());
   this->config_load();
 }
 
