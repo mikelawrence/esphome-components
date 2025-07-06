@@ -193,7 +193,7 @@ void DFRobotC4001Hub::set_micro_motion_enable(bool enable, bool needs_save) {
   }
 }
 
-void DFRobotC4001Hub::set_sw_version(std::string version) {
+void DFRobotC4001Hub::set_software_version(std::string version) {
 #ifdef USE_TEXT_SENSOR
   if (this->software_version_text_sensor_ != nullptr)
     this->software_version_text_sensor_->publish_state(version);
@@ -201,7 +201,7 @@ void DFRobotC4001Hub::set_sw_version(std::string version) {
   this->sw_version_ = std::move(version);
 }
 
-void DFRobotC4001Hub::set_hw_version(std::string version) {
+void DFRobotC4001Hub::set_hardward_version(std::string version) {
 #ifdef USE_TEXT_SENSOR
   if (this->hardware_version_text_sensor_ != nullptr)
     this->hardware_version_text_sensor_->publish_state(version);
@@ -296,9 +296,9 @@ void DFRobotC4001Hub::dump_config() {
                 this->mode_ == MODE_PRESENCE ? "PRESENCE" : "SPEED_AND_DISTANCE");
 #ifdef USE_BUTTON
   ESP_LOGCONFIG(TAG, "Buttons:");
-  LOG_BUTTON("  ", "Config Save Button", this->config_save_button_);
-  LOG_BUTTON("  ", "Restart Button", this->restart_button_);
-  LOG_BUTTON("  ", "Factory Reset Button", this->factory_reset_button_);
+  LOG_BUTTON("  ", "Config Save", this->config_save_button_);
+  LOG_BUTTON("  ", "Restart", this->restart_button_);
+  LOG_BUTTON("  ", "Factory Reset", this->factory_reset_button_);
 #endif
 #ifdef USE_BINARY_SENSOR
   ESP_LOGCONFIG(TAG, "Binary Sensors:");
@@ -307,25 +307,25 @@ void DFRobotC4001Hub::dump_config() {
 #endif
 #ifdef USE_NUMBER
   ESP_LOGCONFIG(TAG, "Numbers:");
-  LOG_NUMBER("  ", "Maximum Range Number", this->max_range_number_);
-  LOG_NUMBER("  ", "Minimum Range Number", this->min_range_number_);
-  LOG_NUMBER("  ", "Trigger Range Number", this->trigger_range_number_);
-  LOG_NUMBER("  ", "Hold Sensitivity Number", this->hold_sensitivity_number_);
-  LOG_NUMBER("  ", "Trigger Sensitivity Number", this->trigger_sensitivity_number_);
-  LOG_NUMBER("  ", "On Latency Number", this->on_latency_number_);
-  LOG_NUMBER("  ", "Off Latency Number", this->off_latency_number_);
-  LOG_NUMBER("  ", "Inhibit Time Number", this->inhibit_time_number_);
-  LOG_NUMBER("  ", "Threshold Factor Number", this->threshold_factor_number_);
+  LOG_NUMBER("  ", "Maximum Range", this->max_range_number_);
+  LOG_NUMBER("  ", "Minimum Range", this->min_range_number_);
+  LOG_NUMBER("  ", "Trigger Range", this->trigger_range_number_);
+  LOG_NUMBER("  ", "Hold Sensitivity", this->hold_sensitivity_number_);
+  LOG_NUMBER("  ", "Trigger Sensitivity", this->trigger_sensitivity_number_);
+  LOG_NUMBER("  ", "On Latency", this->on_latency_number_);
+  LOG_NUMBER("  ", "Off Latency", this->off_latency_number_);
+  LOG_NUMBER("  ", "Inhibit Time", this->inhibit_time_number_);
+  LOG_NUMBER("  ", "Threshold Factor", this->threshold_factor_number_);
 #endif
 #ifdef USE_SWITCH
   ESP_LOGCONFIG(TAG, "Switches:");
-  LOG_SWITCH("  ", "Turn on LED Switch", this->led_enable_switch_);
-  LOG_SWITCH("  ", "Micro Motion Enable Switch", this->micro_motion_enable_switch_);
+  LOG_SWITCH("  ", "Turn on LED", this->led_enable_switch_);
+  LOG_SWITCH("  ", "Micro Motion Enable", this->micro_motion_enable_switch_);
 #endif
 #ifdef USE_TEXT_SENSOR
   ESP_LOGCONFIG(TAG, "Text Sensors:");
-  LOG_TEXT_SENSOR("  ", "Turn on LED Switch", this->led_enable_switch_);
-  LOG_SWITCH("  ", "Micro Motion Enable Switch", this->micro_motion_enable_switch_);
+  LOG_TEXT_SENSOR("  ", "Software Version", this->software_version_text_sensor_);
+  LOG_TEXT_SENSOR("  ", "Hardware Version", this->hardware_version_text_sensor_);
 #endif
 }
 

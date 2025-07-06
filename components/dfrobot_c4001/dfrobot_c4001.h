@@ -65,6 +65,7 @@ class DFRobotC4001Hub : public uart::UARTDevice, public Component {
 #ifdef USE_BUTTON
   SUB_BUTTON(config_save)
   SUB_BUTTON(factory_reset)
+  SUB_BUTTON(restart)
 #endif
 
 #ifdef USE_NUMBER
