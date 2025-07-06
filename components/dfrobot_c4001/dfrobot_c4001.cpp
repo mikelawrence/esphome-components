@@ -180,16 +180,6 @@ void DFRobotC4001Hub::set_led_enable(bool value, bool needs_save) {
   }
 }
 
-void DFRobotC4001Hub::flash_led_enable() {
-#ifdef USE_SWITCH
-  // Save LED Enable preferences (to flash storage)
-  if (this->led_enable_switch_ != nullptr) {
-    ESP_LOGV(TAG, "Writing LED Enable setting to flash.");
-    this->pref_.save(&this->led_enable_);
-  }
-#endif
-}
-
 void DFRobotC4001Hub::set_micro_motion_enable(bool enable, bool needs_save) {
   if (this->mode_ == MODE_SPEED_AND_DISTANCE) {
     this->micro_motion_enable_ = enable;
@@ -202,9 +192,32 @@ void DFRobotC4001Hub::set_micro_motion_enable(bool enable, bool needs_save) {
     }
   }
 }
-void DFRobotC4001Hub::set_sw_version(std::string version) { this->sw_version_ = std::move(version); }
 
-void DFRobotC4001Hub::set_hw_version(std::string version) { this->hw_version_ = std::move(version); }
+void DFRobotC4001Hub::set_sw_version(std::string version) {
+#ifdef USE_TEXT_SENSOR
+  if (this->software_version_text_sensor_ != nullptr)
+    this->software_version_text_sensor_->publish_state(version);
+#endif
+  this->sw_version_ = std::move(version);
+}
+
+void DFRobotC4001Hub::set_hw_version(std::string version) {
+#ifdef USE_TEXT_SENSOR
+  if (this->hardware_version_text_sensor_ != nullptr)
+    this->hardware_version_text_sensor_->publish_state(version);
+#endif
+  this->hw_version_ = std::move(version);
+}
+
+void DFRobotC4001Hub::flash_led_enable() {
+#ifdef USE_SWITCH
+  // Save LED Enable preferences (to flash storage)
+  if (this->led_enable_switch_ != nullptr) {
+    ESP_LOGV(TAG, "Writing LED Enable setting to flash.");
+    this->pref_.save(&this->led_enable_);
+  }
+#endif
+}
 
 void DFRobotC4001Hub::set_mode(ModeConfig value) { this->mode_ = value; }
 
@@ -261,6 +274,18 @@ void DFRobotC4001Hub::config_save() {
   }
 }
 
+void DFRobotC4001Hub::factory_reset() {
+  this->enqueue(make_unique<PowerCommand>(false));
+  this->enqueue(make_unique<FactoryResetCommand>(false));
+  this->config_load();
+}
+
+void DFRobotC4001Hub::restart() {
+  this->enqueue(make_unique<PowerCommand>(false));
+  this->enqueue(make_unique<FactoryResetCommand>(false));
+  this->config_load();
+}
+
 void DFRobotC4001Hub::dump_config() {
   ESP_LOGCONFIG(TAG,
                 "DFRobot C4001 mmWave Radar:\n"
@@ -270,13 +295,18 @@ void DFRobotC4001Hub::dump_config() {
                 this->sw_version_.c_str(), this->hw_version_.c_str(),
                 this->mode_ == MODE_PRESENCE ? "PRESENCE" : "SPEED_AND_DISTANCE");
 #ifdef USE_BUTTON
+  ESP_LOGCONFIG(TAG, "Buttons:");
   LOG_BUTTON("  ", "Config Save Button", this->config_save_button_);
+  LOG_BUTTON("  ", "Restart Button", this->restart_button_);
+  LOG_BUTTON("  ", "Factory Reset Button", this->factory_reset_button_);
 #endif
 #ifdef USE_BINARY_SENSOR
+  ESP_LOGCONFIG(TAG, "Binary Sensors:");
   LOG_BINARY_SENSOR("  ", "Occupancy", this->occupancy_binary_sensor_);
   LOG_BINARY_SENSOR("  ", "Config Changed", this->config_changed_binary_sensor_);
 #endif
 #ifdef USE_NUMBER
+  ESP_LOGCONFIG(TAG, "Numbers:");
   LOG_NUMBER("  ", "Maximum Range Number", this->max_range_number_);
   LOG_NUMBER("  ", "Minimum Range Number", this->min_range_number_);
   LOG_NUMBER("  ", "Trigger Range Number", this->trigger_range_number_);
@@ -288,7 +318,13 @@ void DFRobotC4001Hub::dump_config() {
   LOG_NUMBER("  ", "Threshold Factor Number", this->threshold_factor_number_);
 #endif
 #ifdef USE_SWITCH
+  ESP_LOGCONFIG(TAG, "Switches:");
   LOG_SWITCH("  ", "Turn on LED Switch", this->led_enable_switch_);
+  LOG_SWITCH("  ", "Micro Motion Enable Switch", this->micro_motion_enable_switch_);
+#endif
+#ifdef USE_TEXT_SENSOR
+  ESP_LOGCONFIG(TAG, "Text Sensors:");
+  LOG_TEXT_SENSOR("  ", "Turn on LED Switch", this->led_enable_switch_);
   LOG_SWITCH("  ", "Micro Motion Enable Switch", this->micro_motion_enable_switch_);
 #endif
 }

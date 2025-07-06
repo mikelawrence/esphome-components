@@ -415,6 +415,10 @@ SetLedModeCommand::SetLedModeCommand(bool led_mode) : led_enable_(led_mode) {
 };
 
 uint8_t SetLedModeCommand::on_message(std::string &message) {
+  // this command is not in Communication Protocol document
+  // it appears to be a leftover from similar products
+  // this command only controls the green LED which flashes when the sensor is running
+  // the blue LED is always on when powered
   if (message == "sensor is not stopped") {
     ESP_LOGE(TAG, "Sensor is not stopped");
     return 1;  // Command done
@@ -546,8 +550,8 @@ uint8_t GetSWVCommand::on_message(std::string &message) {
     this->version_ = message.substr(16);
     return 0;
   } else if (message == "Done") {
-    this->parent_->set_sw_version(this->version_);
-    ESP_LOGV(TAG, "Get SW Version complete: Parsed Version (%s).", this->version_.c_str());
+    this->parent_->set_software_version(this->version_);
+    ESP_LOGV(TAG, "Get Software Version complete: Parsed Version (%s).", this->version_.c_str());
     return 1;  // Command done
   } else {
     return 0;
@@ -561,8 +565,8 @@ uint8_t GetHWVCommand::on_message(std::string &message) {
     this->version_ = message.substr(16);
     return 0;
   } else if (message == "Done") {
-    this->parent_->set_hw_version(this->version_);
-    ESP_LOGV(TAG, "Get HW Version complete: Parsed Version (%s).", this->version_.c_str());
+    this->parent_->set_hardware_version(this->version_);
+    ESP_LOGV(TAG, "Get Hardware Version complete: Parsed Version (%s).", this->version_.c_str());
     return 1;  // Command done
   } else {
     return 0;
