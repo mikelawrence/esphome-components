@@ -93,7 +93,7 @@ class DFRobotC4001Hub : public uart::UARTDevice, public Component {
 
 #ifdef USE_NUMBER
   SUB_TEXT_SENSOR(software_version)
-  SUB_TEXT_SENSOR(firmware_version)
+  SUB_TEXT_SENSOR(hardware_version)
 #endif
 
  public:
@@ -117,7 +117,7 @@ class DFRobotC4001Hub : public uart::UARTDevice, public Component {
   void flash_led_enable();
   void set_mode(ModeConfig value);
   void set_software_version(std::string version);
-  void set_firmware_version(std::string version);
+  void set_hardware_version(std::string version);
   void set_needs_save(bool needs_save);
   void config_load();
   void config_save();
