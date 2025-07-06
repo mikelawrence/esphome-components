@@ -202,9 +202,9 @@ void DFRobotC4001Hub::set_micro_motion_enable(bool enable, bool needs_save) {
     }
   }
 }
-void DFRobotC4001Hub::set_sw_version(std::string version) { this->sw_version_ = version; }
+void DFRobotC4001Hub::set_sw_version(std::string version) { this->sw_version_ = std::move(version); }
 
-void DFRobotC4001Hub::set_hw_version(std::string version) { this->hw_version_ = version; }
+void DFRobotC4001Hub::set_hw_version(std::string version) { this->hw_version_ = std::move(version); }
 
 void DFRobotC4001Hub::set_mode(ModeConfig value) { this->mode_ = value; }
 
