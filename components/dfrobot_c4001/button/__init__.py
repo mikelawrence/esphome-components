@@ -56,3 +56,7 @@ async def to_code(config):
         b = await button.new_button(factory_reset)
         await cg.register_parented(b, config[CONF_DFROBOT_C4001_ID])
         cg.add(sens0609_hub.set_factory_reset_button(b))
+    if restart := config.get(CONF_RESTART):
+        b = await button.new_button(restart)
+        await cg.register_parented(b, config[CONF_DFROBOT_C4001_ID])
+        cg.add(sens0609_hub.set_restart_button(b))
