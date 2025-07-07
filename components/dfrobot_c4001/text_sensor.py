@@ -11,7 +11,7 @@ from esphome.const import (
 from . import CONF_DFROBOT_C4001_ID, HUB_CHILD_SCHEMA
 
 CONF_SOFTWARE_VERSION = "software_version"
-CONF_FIRMWARE_VERSION = "firmware_version"
+CONF_HARDWARE_VERSION = "hardware_version"
 
 DEPENDENCIES = ["dfrobot_c4001"]
 
@@ -21,7 +21,7 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_SOFTWARE_VERSION): text_sensor.text_sensor_schema(
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC, icon=ICON_CHIP
             ),
-            cv.Optional(CONF_FIRMWARE_VERSION): text_sensor.text_sensor_schema(
+            cv.Optional(CONF_HARDWARE_VERSION): text_sensor.text_sensor_schema(
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC, icon=ICON_CHIP
             ),
         }
@@ -39,4 +39,4 @@ async def to_code(config):
         cg.add(dfrobot_c4001_hub.set_software_version_text_sensor(sens))
     if hardware_version := config.get(CONF_SOFTWARE_VERSION):
         sens = await text_sensor.new_text_sensor(hardware_version)
-        cg.add(dfrobot_c4001_hub.set_software_version_text_sensor(sens))
+        cg.add(dfrobot_c4001_hub.set_hardware_version_text_sensor(sens))
