@@ -278,14 +278,12 @@ void DFRobotC4001Hub::factory_reset() {
   ESP_LOGD(TAG, "Factory Reset Started");
   this->enqueue(make_unique<PowerCommand>(false));
   this->enqueue(make_unique<FactoryResetCommand>());
-  this->config_load();
 }
 
 void DFRobotC4001Hub::restart() {
   ESP_LOGD(TAG, "Restart Started");
   this->enqueue(make_unique<PowerCommand>(false));
   this->enqueue(make_unique<ResetSystemCommand>());
-  this->config_load();
 }
 
 void DFRobotC4001Hub::dump_config() {

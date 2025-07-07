@@ -487,7 +487,7 @@ uint8_t FactoryResetCommand::on_message(std::string &message) {
   if (message == "sensor is not stopped") {
     ESP_LOGE(TAG, "Sensor is not stopped");
     return 1;  // Command done
-  } else if (message == "Done") {
+  } else if (message == "DFRobot:/>") {
     ESP_LOGD(TAG, "Factory Reset complete");
     // reload settings
     this->parent_->set_led_enable(true, false);
@@ -501,8 +501,12 @@ uint8_t FactoryResetCommand::on_message(std::string &message) {
 ResetSystemCommand::ResetSystemCommand() { cmd_ = "resetSystem"; }
 
 uint8_t ResetSystemCommand::on_message(std::string &message) {
-  if (message == "DFRobot:/>") {
+  if (message == "sensor is not stopped") {
+    ESP_LOGE(TAG, "Sensor is not stopped");
+    return 1;  // Command done
+  } else if (message == "DFRobot:/>") {
     ESP_LOGD(TAG, "Restart complete");
+    this->parent_->config_load();
     return 1;  // Command done
   }
   return 0;  // Command not done yet
