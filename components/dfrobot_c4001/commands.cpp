@@ -501,7 +501,7 @@ uint8_t FactoryResetCommand::on_message(std::string &message) {
 ResetSystemCommand::ResetSystemCommand() { cmd_ = "resetSystem"; }
 
 uint8_t ResetSystemCommand::on_message(std::string &message) {
-  if (message == "leapMMW:/>") {
+  if (message == "DFRobot:/>") {
     ESP_LOGD(TAG, "Restart complete");
     return 1;  // Command done
   }
