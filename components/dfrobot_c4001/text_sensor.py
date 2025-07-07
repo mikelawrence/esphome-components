@@ -37,6 +37,6 @@ async def to_code(config):
     if software_version := config.get(CONF_SOFTWARE_VERSION):
         sens = await text_sensor.new_text_sensor(software_version)
         cg.add(dfrobot_c4001_hub.set_software_version_text_sensor(sens))
-    if hardware_version := config.get(CONF_SOFTWARE_VERSION):
+    if hardware_version := config.get(CONF_HARDWARE_VERSION):
         sens = await text_sensor.new_text_sensor(hardware_version)
         cg.add(dfrobot_c4001_hub.set_hardware_version_text_sensor(sens))
