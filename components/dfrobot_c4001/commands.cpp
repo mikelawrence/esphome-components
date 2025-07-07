@@ -21,7 +21,7 @@ uint8_t Command::execute(DFRobotC4001Hub *parent) {
         if (this->retries_left_ > 0) {
           this->retries_left_ -= 1;
           this->cmd_sent_ = false;
-          ESP_LOGD(TAG, "Retrying (%s)...", this->cmd_.c_str());
+          ESP_LOGD(TAG, "Retrying (%s)", this->cmd_.c_str());
           return 0;
         } else {
           this->parent_->find_prompt_();
@@ -42,7 +42,7 @@ uint8_t Command::execute(DFRobotC4001Hub *parent) {
       if (this->retries_left_ > 0) {
         this->retries_left_ -= 1;
         this->cmd_sent_ = false;
-        ESP_LOGD(TAG, "Command timeout, retrying (%s)...", this->cmd_.c_str());
+        ESP_LOGD(TAG, "Command timeout, retrying (%s)", this->cmd_.c_str());
       } else {
         ESP_LOGD(TAG, "Command failed (%s)", this->cmd_.c_str());
         return 1;  // Command done
@@ -182,7 +182,7 @@ uint8_t SetRangeCommand::on_message(std::string &message) {
     ESP_LOGE(TAG, "Sensor is not stopped");
     return 1;  // Command done
   } else if (message == "Done") {
-    ESP_LOGV(TAG, "Set Range complete.");
+    ESP_LOGV(TAG, "Set Range complete");
     return 1;  // Command done
   }
   return 0;  // Command not done yet
@@ -223,7 +223,7 @@ uint8_t SetTrigRangeCommand::on_message(std::string &message) {
     ESP_LOGE(TAG, "Sensor is not stopped");
     return 1;  // Command done
   } else if (message == "Done") {
-    ESP_LOGV(TAG, "Set Trigger Range complete.");
+    ESP_LOGV(TAG, "Set Trigger Range complete");
     return 1;  // Command done
   } else {
     return 0;  // Command not done yet
@@ -251,7 +251,7 @@ uint8_t GetSensitivityCommand::on_message(std::string &message) {
   } else if (message == "Done") {
     this->parent_->set_hold_sensitivity(this->hold_sensitivity_, false);
     this->parent_->set_trigger_sensitivity(this->trigger_sensitivity_, false);
-    ESP_LOGV(TAG, "Get Sensitivity complete: Parsed Hold Sensitivity (%d) and Trigger Sensitivity (%d).",
+    ESP_LOGV(TAG, "Get Sensitivity complete: Parsed Hold Sensitivity (%d) and Trigger Sensitivity (%d)",
              this->hold_sensitivity_, this->trigger_sensitivity_);
     return 1;  // Command done
   } else {
@@ -270,7 +270,7 @@ uint8_t SetSensitivityCommand::on_message(std::string &message) {
     ESP_LOGE(TAG, "Sensor is not stopped");
     return 1;  // Command done
   } else if (message == "Done") {
-    ESP_LOGV(TAG, "Set Sensitivity complete.");
+    ESP_LOGV(TAG, "Set Sensitivity complete");
     return 1;  // Command done
   }
   return 0;  // Command not done yet
@@ -316,7 +316,7 @@ uint8_t SetLatencyCommand::on_message(std::string &message) {
     ESP_LOGE(TAG, "Sensor is not stopped");
     return 1;  // Command done
   } else if (message == "Done") {
-    ESP_LOGV(TAG, "Set Latency complete.");
+    ESP_LOGV(TAG, "Set Latency complete");
     return 1;  // Command done
   }
   return 0;  // Command not done yet
@@ -357,7 +357,7 @@ uint8_t SetInhibitTimeCommand::on_message(std::string &message) {
     ESP_LOGE(TAG, "Sensor is not stopped");
     return 1;  // Command done
   } else if (message == "Done") {
-    ESP_LOGV(TAG, "Set Inhibit Time complete.");
+    ESP_LOGV(TAG, "Set Inhibit Time complete");
     return 1;  // Command done
   } else {
     return 0;  // Command not done yet
@@ -382,7 +382,7 @@ uint8_t GetThrFactorCommand::on_message(std::string &message) {
     }
   } else if (message == "Done") {
     this->parent_->set_threshold_factor(this->threshold_factor_, false);
-    ESP_LOGV(TAG, "Get Threshold Factor complete: Parsed Threshold Factor (%.0f).", this->threshold_factor_);
+    ESP_LOGV(TAG, "Get Threshold Factor complete: Parsed Threshold Factor (%.0f)", this->threshold_factor_);
     return 1;  // Command done
   } else {
     return 0;
@@ -399,7 +399,7 @@ uint8_t SetThrFactorCommand::on_message(std::string &message) {
     ESP_LOGE(TAG, "Sensor is not stopped");
     return 1;  // Command done
   } else if (message == "Done") {
-    ESP_LOGV(TAG, "Set Threshold Factor complete.");
+    ESP_LOGV(TAG, "Set Threshold Factor complete");
     return 1;  // Command done
   } else {
     return 0;  // Command not done yet
@@ -454,7 +454,7 @@ uint8_t GetMicroMotionCommand::on_message(std::string &message) {
     }
   } else if (message == "Done") {
     this->parent_->set_micro_motion_enable(this->micro_motion_, false);
-    ESP_LOGV(TAG, "Get Micro Motion complete: Parsed Micro Motion (%s).", this->micro_motion_ ? "Enabled" : "Disabled");
+    ESP_LOGV(TAG, "Get Micro Motion complete: Parsed Micro Motion (%s)", this->micro_motion_ ? "Enabled" : "Disabled");
     return 1;  // Command done
   } else {
     return 0;
@@ -475,7 +475,7 @@ uint8_t SetMicroMotionCommand::on_message(std::string &message) {
     return 1;  // Command done
   } else if (message == "Done") {
     this->parent_->set_micro_motion_enable(this->micro_motion_, false);
-    ESP_LOGV(TAG, "Set Micro Motion complete.");
+    ESP_LOGV(TAG, "Set Micro Motion complete");
     return 1;  // Command done
   }
   return 0;  // Command not done yet
@@ -488,7 +488,7 @@ uint8_t FactoryResetCommand::on_message(std::string &message) {
     ESP_LOGE(TAG, "Sensor is not stopped");
     return 1;  // Command done
   } else if (message == "Done") {
-    ESP_LOGV(TAG, "Sensor factory reset done.");
+    ESP_LOGD(TAG, "Factory Reset complete");
     // reload settings
     this->parent_->set_led_enable(true, false);
     this->parent_->flash_led_enable();
@@ -502,7 +502,7 @@ ResetSystemCommand::ResetSystemCommand() { cmd_ = "resetSystem"; }
 
 uint8_t ResetSystemCommand::on_message(std::string &message) {
   if (message == "leapMMW:/>") {
-    ESP_LOGV(TAG, "Restarted sensor.");
+    ESP_LOGD(TAG, "Restart complete");
     return 1;  // Command done
   }
   return 0;  // Command not done yet
@@ -512,7 +512,7 @@ SaveCfgCommand::SaveCfgCommand() { cmd_ = "saveConfig"; }
 
 uint8_t SaveCfgCommand::on_message(std::string &message) {
   if (message == "no parameter has changed") {
-    ESP_LOGV(TAG, "Not saving config (no parameter changed).");
+    ESP_LOGV(TAG, "Not saving config (no parameter changed)");
     return 1;  // Command done
   } else if (message == "Done") {
     ESP_LOGV(TAG, "Saved config. Saving a lot may damage the sensor.");
@@ -536,7 +536,7 @@ uint8_t SetRunAppCommand::on_message(std::string &message) {
     ESP_LOGE(TAG, "Sensor is not stopped");
     return 1;  // Command done
   } else if (message == "Done") {
-    ESP_LOGV(TAG, "Set Mode complete.");
+    ESP_LOGV(TAG, "Set Mode complete");
     return 1;  // Command done
   } else {
     return 0;  // Command not done yet
@@ -551,7 +551,7 @@ uint8_t GetSWVCommand::on_message(std::string &message) {
     return 0;
   } else if (message == "Done") {
     this->parent_->set_software_version(this->version_);
-    ESP_LOGV(TAG, "Get Software Version complete: Parsed Version (%s).", this->version_.c_str());
+    ESP_LOGV(TAG, "Get Software Version complete: Parsed Version (%s)", this->version_.c_str());
     return 1;  // Command done
   } else {
     return 0;
@@ -566,7 +566,7 @@ uint8_t GetHWVCommand::on_message(std::string &message) {
     return 0;
   } else if (message == "Done") {
     this->parent_->set_hardware_version(this->version_);
-    ESP_LOGV(TAG, "Get Hardware Version complete: Parsed Version (%s).", this->version_.c_str());
+    ESP_LOGV(TAG, "Get Hardware Version complete: Parsed Version (%s)", this->version_.c_str());
     return 1;  // Command done
   } else {
     return 0;

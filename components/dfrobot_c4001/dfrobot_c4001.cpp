@@ -275,12 +275,14 @@ void DFRobotC4001Hub::config_save() {
 }
 
 void DFRobotC4001Hub::factory_reset() {
+  ESP_LOGD(TAG, "Factory Reset Started");
   this->enqueue(make_unique<PowerCommand>(false));
   this->enqueue(make_unique<FactoryResetCommand>());
   this->config_load();
 }
 
 void DFRobotC4001Hub::restart() {
+  ESP_LOGD(TAG, "Restart Started");
   this->enqueue(make_unique<PowerCommand>(false));
   this->enqueue(make_unique<ResetSystemCommand>());
   this->config_load();
@@ -352,7 +354,7 @@ void DFRobotC4001Hub::loop() {
     // Command queue empty, first time this happens setup is complete
     if (!this->is_setup_) {
       this->is_setup_ = true;
-      ESP_LOGD(TAG, "Setup complete");
+      ESP_LOGV(TAG, "Setup complete");
     }
     // Read sensor state.
     cmd_queue_.enqueue(make_unique<ReadStateCommand>());

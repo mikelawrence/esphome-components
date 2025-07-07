@@ -39,7 +39,7 @@ enum ModeConfig {
 
 const uint8_t MMWAVE_READ_BUFFER_LENGTH = 255;
 
-static const uint8_t COMMAND_QUEUE_SIZE = 20;
+static const uint8_t COMMAND_QUEUE_SIZE = 32;
 
 class CircularCommandQueue {
  public:
