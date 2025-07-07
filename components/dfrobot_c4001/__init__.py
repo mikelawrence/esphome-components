@@ -30,6 +30,9 @@ DFRobotC4001FactoryResetAction = dfrobot_c4001_ns.class_(
     "DFRobotC4001FactoryResetAction", automation.Action
 )
 
+DFRobotC4001RestartAction = dfrobot_c4001_ns.class_(
+    "DFRobotC4001RestartAction", automation.Action
+)
 
 HUB_CHILD_SCHEMA = cv.Schema(
     {
@@ -75,7 +78,22 @@ async def to_code(config):
         }
     ),
 )
-async def dfrobot_c4001_reset_to_code(config, action_id, template_arg, args):
+async def dfrobot_c4001_factory_reset_to_code(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    return var
+
+
+@automation.register_action(
+    "dfrobot_c4001.restart",
+    DFRobotC4001RestartAction,
+    maybe_simple_id(
+        {
+            cv.GenerateID(): cv.use_id(DFRobotC4001Hub),
+        }
+    ),
+)
+async def dfrobot_c4001_restart_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
     return var

@@ -10,8 +10,13 @@ namespace dfrobot_c4001 {
 template<typename... Ts> class DFRobotC4001FactoryResetAction : public Action<Ts...>, public Parented<DFRobotC4001Hub> {
  public:
   void play(Ts... x) {
-    this->parent_->enqueue(make_unique<PowerCommand>(false));
-    this->parent_->enqueue(make_unique<FactoryResetCommand>());
+    this->parent_->factory_reset();
+  }
+};
+template<typename... Ts> class DFRobotC4001RestartAction : public Action<Ts...>, public Parented<DFRobotC4001Hub> {
+ public:
+  void play(Ts... x) {
+    this->parent_->restart();
   }
 };
 }  // namespace dfrobot_c4001
