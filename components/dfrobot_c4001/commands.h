@@ -156,18 +156,18 @@ class SetThrFactorCommand : public Command {
   float threshold_factor_;
 };
 
-// class GetLedModeCommand : public Command {
-//  public:
-//   GetLedModeCommand();
-//   uint8_t on_message(std::string &message) override;
-
-//  protected:
-//   bool led_enable_;
-// };
-
-class SetLedModeCommand : public Command {
+class SetLedModeCommand1 : public Command {
  public:
-  SetLedModeCommand(bool led_mode);
+  SetLedModeCommand1(bool led_mode);
+  uint8_t on_message(std::string &message) override;
+
+ protected:
+  bool led_enable_;
+};
+
+class SetLedModeCommand2 : public Command {
+ public:
+  SetLedModeCommand2(bool led_mode);
   uint8_t on_message(std::string &message) override;
 
  protected:

@@ -262,11 +262,13 @@ void DFRobotC4001Hub::config_save() {
       this->enqueue(make_unique<SetSensitivityCommand>(this->hold_sensitivity_, this->trigger_sensitivity_));
       this->enqueue(make_unique<SetLatencyCommand>(this->on_latency_, this->off_latency_));
       this->enqueue(make_unique<SetInhibitTimeCommand>(this->inhibit_time_));
-      this->enqueue(make_unique<SetLedModeCommand>(this->led_enable_));
+      this->enqueue(make_unique<SetLedModeCommand1>(this->led_enable_));
+      this->enqueue(make_unique<SetLedModeCommand2>(this->led_enable_));
     } else {
       this->enqueue(make_unique<SetThrFactorCommand>(this->threshold_factor_));
       this->enqueue(make_unique<SetMicroMotionCommand>(this->micro_motion_enable_));
-      this->enqueue(make_unique<SetLedModeCommand>(this->led_enable_));
+      this->enqueue(make_unique<SetLedModeCommand1>(this->led_enable_));
+      this->enqueue(make_unique<SetLedModeCommand2>(this->led_enable_));
     }
     this->enqueue(make_unique<SaveCfgCommand>());
     this->enqueue(make_unique<PowerCommand>(true));

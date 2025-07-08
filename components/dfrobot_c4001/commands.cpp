@@ -406,7 +406,7 @@ uint8_t SetThrFactorCommand::on_message(std::string &message) {
   }
 }
 
-SetLedModeCommand::SetLedModeCommand(bool led_mode) : led_enable_(led_mode) {
+SetLedModeCommand1::SetLedModeCommand1(bool led_mode) : led_enable_(led_mode) {
   if (led_mode) {
     cmd_ = "setLedMode 1 0";
   } else {
@@ -414,7 +414,7 @@ SetLedModeCommand::SetLedModeCommand(bool led_mode) : led_enable_(led_mode) {
   }
 };
 
-uint8_t SetLedModeCommand::on_message(std::string &message) {
+uint8_t SetLedModeCommand1::on_message(std::string &message) {
   // this command is not in Communication Protocol document
   // it appears to be a leftover from similar products
   // this command only controls the green LED which flashes when the sensor is running
@@ -428,7 +428,35 @@ uint8_t SetLedModeCommand::on_message(std::string &message) {
     } else {
       this->parent_->set_led_enable(false, false);
     }
-    ESP_LOGV(TAG, "Set LED Mode complete");
+    ESP_LOGV(TAG, "Set LED Mode 1 complete");
+    return 1;  // Command done
+  }
+  return 0;  // Command not done yet
+}
+
+SetLedModeCommand2::SetLedModeCommand2(bool led_mode) : led_enable_(led_mode) {
+  if (led_mode) {
+    cmd_ = "setLedMode 2 0";
+  } else {
+    cmd_ = "setLedMode 2 1";
+  }
+};
+
+uint8_t SetLedModeCommand2::on_message(std::string &message) {
+  // this command is not in Communication Protocol document
+  // it appears to be a leftover from similar products
+  // this command only controls the green LED which flashes when the sensor is running
+  // the blue LED is always on when powered
+  if (message == "sensor is not stopped") {
+    ESP_LOGE(TAG, "Sensor is not stopped");
+    return 1;  // Command done
+  } else if (message == "Done") {
+    if (this->led_enable_) {
+      this->parent_->set_led_enable(true, false);
+    } else {
+      this->parent_->set_led_enable(false, false);
+    }
+    ESP_LOGV(TAG, "Set LED Mode 2 complete");
     // we save the state of LED enable to flash because you cannot read this value from the module
     this->parent_->flash_led_enable();
     return 1;  // Command done
