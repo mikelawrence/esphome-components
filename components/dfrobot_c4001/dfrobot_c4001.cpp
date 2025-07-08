@@ -198,7 +198,7 @@ void DFRobotC4001Hub::set_software_version(std::string version) {
   if (this->software_version_text_sensor_ != nullptr)
     this->software_version_text_sensor_->publish_state(version);
 #endif
-  this->sw_version_ = std::move(version);
+  this->sw_version_ = version;
 }
 
 void DFRobotC4001Hub::set_hardware_version(std::string version) {
@@ -206,7 +206,7 @@ void DFRobotC4001Hub::set_hardware_version(std::string version) {
   if (this->hardware_version_text_sensor_ != nullptr)
     this->hardware_version_text_sensor_->publish_state(version);
 #endif
-  this->hw_version_ = std::move(version);
+  this->hw_version_ = version;
 }
 
 void DFRobotC4001Hub::flash_led_enable() {
