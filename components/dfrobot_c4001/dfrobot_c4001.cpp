@@ -193,7 +193,7 @@ void DFRobotC4001Hub::set_micro_motion_enable(bool enable, bool needs_save) {
   }
 }
 
-void DFRobotC4001Hub::set_software_version(std::string version) {
+void DFRobotC4001Hub::set_software_version(const std::string& version) {
 #ifdef USE_TEXT_SENSOR
   if (this->software_version_text_sensor_ != nullptr)
     this->software_version_text_sensor_->publish_state(version);
@@ -201,7 +201,7 @@ void DFRobotC4001Hub::set_software_version(std::string version) {
   this->sw_version_ = version;
 }
 
-void DFRobotC4001Hub::set_hardware_version(std::string version) {
+void DFRobotC4001Hub::set_hardware_version(const std::string& version) {
 #ifdef USE_TEXT_SENSOR
   if (this->hardware_version_text_sensor_ != nullptr)
     this->hardware_version_text_sensor_->publish_state(version);
