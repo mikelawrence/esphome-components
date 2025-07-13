@@ -37,13 +37,13 @@ class TFminiComponent : public uart::UARTDevice, public Component {
 #endif
 
   void set_model(TFminiModel model) { this->model_ = model; };
-  void set_distance_sensor(sensor::Sensor *distance_sensor) { this->distance_sensor_ = distance_sensor; };
+  // void set_distance_sensor(sensor::Sensor *distance_sensor) { this->distance_sensor_ = distance_sensor; };
   void set_sample_rate(uint32_t rate) { this->sample_rate_ = rate; };
   void set_config_pin(GPIOPin *pin) { this->config_pin_ = pin; }
-  void set_signal_strength_sensor(sensor::Sensor *signal_strength_sensor) {
-    this->signal_strength_sensor_ = signal_strength_sensor;
-  };
-  void set_temperature_sensor(sensor::Sensor *temperature_sensor) { this->temperature_sensor_ = temperature_sensor; };
+  // void set_signal_strength_sensor(sensor::Sensor *signal_strength_sensor) {
+  //   this->signal_strength_sensor_ = signal_strength_sensor;
+  // };
+  // void set_temperature_sensor(sensor::Sensor *temperature_sensor) { this->temperature_sensor_ = temperature_sensor; };
   void set_low_power_mode(uint32_t mode) { this->low_power_ = mode; };
 
   // ========== INTERNAL METHODS ==========

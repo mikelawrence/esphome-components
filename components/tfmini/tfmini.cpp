@@ -88,8 +88,8 @@ void TFminiComponent::dump_config() {
                 "TFmini:"
                 "  Model: %s"
                 "  Firmware Version: %s"
-                "  Sample Rate: %u" LOG_STR_ARG(model_to_str(this->model_)),
-                this->firmware_version_.c_str(), this->sample_rate_);
+                "  Sample Rate: %u",
+                LOG_STR_ARG(model_to_str(this->model_)), this->firmware_version_.c_str(), this->sample_rate_);
   LOG_PIN("  CONFIG Pin: ", this->config_pin_);
   if (this->model_ != TFMINI_MODEL_TFMINI_PLUS)
     ESP_LOGCONFIG(TAG, "  Low Power Mode: %s", this->low_power_ ? "True" : "False");
@@ -172,19 +172,18 @@ void TFminiComponent::process_rx_data() {
 }
 
 void TFminiComponent::process_data_frame() {
-  int16_t distance;
-  uint16_t strength, temperature;
+  float distance;
+  float strength, temperature;
 
   if (this->verify_rx_packet_checksum_()) {
     // checksum is good, grab the three results as little endian 16-bit numbers
-    distance = (this->rx_buffer_[3] << 8) + this->rx_buffer_[2];
-    strength = (this->rx_buffer_[5] << 8) + this->rx_buffer_[4];
-    temperature = (this->rx_buffer_[7] << 8) + this->rx_buffer_[6];
+    distance = static_cast<float>((this->rx_buffer_[3] << 8) + this->rx_buffer_[2]);
+    strength = static_cast<float>((this->rx_buffer_[5] << 8) + this->rx_buffer_[4]);
+    temperature = static_cast<float>((this->rx_buffer_[7] << 8) + this->rx_buffer_[6]);
 
     if (strength < 100) {
       // not enough signal, most likely open air
       distance = NAN;  // out of range
-      // ++badReadings;
     } else if ((strength == 65535) || (distance == -4)) {
       // too much signal
       distance = NAN;  // unable to determine range
