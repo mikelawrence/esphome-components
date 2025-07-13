@@ -267,6 +267,14 @@ switch:
     led_enable:
       name: Enable LED
 
+text_sensor:
+  - platform: dfrobot_c4001
+    dfrobot_c4001_id: mmwave_sensor
+    software_version:
+      name: Software Version
+    hardware_version:
+      name: Hardware Version
+
 ```
 
 ### Configuration Variables
@@ -274,9 +282,11 @@ switch:
 
 ### Buttons
 + **config_save** (*Optional*): When you click this button the current configuration will be saved. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. All Options from [Button Component](https://esphome.io/components/button/index.html#base-button-configuration).
++ **factory_reset** (*Optional*): Clicking this button will perform a factory reset of the module and all configuration values will go back to default. All Options from [Button Component](https://esphome.io/components/button/index.html#base-button-configuration).
++ **restart** (*Optional*): When you click this button the module will restart and all configuration values will remains as previously set. All Options from [Button Component](https://esphome.io/components/button/index.html#base-button-configuration).
 
 ### Binary Sensors
-+ **config_changed** (*Optional*): When ```true`` the current sensor configuration has been changed but not saved to the sensor. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
++ **config_changed** (*Optional*): When ```true``` the current sensor configuration has been changed but not saved to the sensor. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
 + **occupancy** (*Optional*): In ```PRESENCE``` mode this indicates presence. In ```SPEED_AND_DISTANCE``` mode this indicates a target is being tracked. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
 
 ### Numbers
@@ -299,10 +309,15 @@ switch:
 + **led_enable** (*Optional*): When turned on the green LED will flash when the sensor has been started. The blue LED cannot be disabled with this command. All Options from [Switch Component](https://esphome.io/components/switch/index.html#base-switch-configuration).
 + **micro_motion_enable** (*Optional*): Turns on micro motion mode. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Switch Component](https://esphome.io/components/switch/index.html#base-switch-configuration).
 
+### Sensors
++ **target_distance** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates distance to target in meters (m). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration). 
++ **target_speed** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates target speed in meters per second (m/s). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
+
 ### Actions
-+ **dfrobot_c4001.factor_reset** Will perform a factory reset of the module and all configuration values will go back to default. The module will restart with these defaults. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. This is much easier to do with a lambda that accidentally performs a factory reset every second.
++ **dfrobot_c4001.factory_reset** Will perform a factory reset of the module and all configuration values will go back to default. The module will restart with these defaults. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. This is much easier to do with a lambda that accidentally performs a factory reset every second.
 
 Example using automations...
+
 ```yaml
 button:
   - platform: template
@@ -316,6 +331,25 @@ Example in lambdas...
 ```
 - lambda: |-
   id(mmwave_sensor).factory_reset();
+```
+
++ **dfrobot_c4001.restart** Will restart the module and all configuration values will remains as previously set.
+
+Example using automations...
+
+```yaml
+button:
+  - platform: template
+    name: Restart
+    on_press:
+      - dfrobot_c4001.restart: mmwave_sensor
+    entity_category: CONFIG
+
+```
+Example in lambdas...
+```
+- lambda: |-
+  id(mmwave_sensor).restart();
 ```
 
 ## ESPHome LD2450 External Component
