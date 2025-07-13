@@ -110,16 +110,6 @@ namespace esphome
         }
 #endif
       }
-#ifdef USE_TEXT_SENSOR
-      if (this->pd_status_text_sensor_ == nullptr)
-      {
-        ESP_LOGE(TAG, "PD Status Text Sensor is null");
-      }
-      else
-      {
-        ESP_LOGE(TAG, "PD Status Text Sensor is not null");
-      }
-#endif
     }
 
     void STUSB4500Hub::dump_config()
