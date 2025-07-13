@@ -1,26 +1,25 @@
 import esphome.codegen as cg
-import esphome.config_validation as cv
-import esphome.final_validate as fv
 from esphome.components import number
+import esphome.config_validation as cv
 from esphome.const import (
+    CONF_MAX_RANGE,
+    CONF_MIN_RANGE,
     CONF_MODE,
     DEVICE_CLASS_DISTANCE,
     DEVICE_CLASS_DURATION,
-    UNIT_METER,
-    UNIT_SECOND,
     ENTITY_CATEGORY_CONFIG,
     ICON_ARROW_EXPAND_VERTICAL,
     ICON_SCALE,
     ICON_TIMER,
+    UNIT_METER,
+    UNIT_SECOND,
 )
+import esphome.final_validate as fv
 
-from .. import HUB_CHILD_SCHEMA, CONF_DFROBOT_C4001_HUB_ID, dfrobot_c4001_ns
-
+from .. import CONF_DFROBOT_C4001_ID, HUB_CHILD_SCHEMA, dfrobot_c4001_ns
 
 DEPENDENCIES = ["dfrobot_c4001"]
 
-CONF_MAX_RANGE = "max_range"
-CONF_MIN_RANGE = "min_range"
 CONF_TRIGGER_RANGE = "trigger_range"
 CONF_HOLD_SENSITIVITY = "hold_sensitivity"
 CONF_TRIGGER_SENSITIVITY = "trigger_sensitivity"
@@ -33,7 +32,9 @@ MaxRangeNumber = dfrobot_c4001_ns.class_("MaxRangeNumber", number.Number)
 MinRangeNumber = dfrobot_c4001_ns.class_("MinRangeNumber", number.Number)
 TriggerRangeNumber = dfrobot_c4001_ns.class_("TriggerRangeNumber", number.Number)
 HoldSensitivityNumber = dfrobot_c4001_ns.class_("HoldSensitivityNumber", number.Number)
-TriggerSensitivityNumber = dfrobot_c4001_ns.class_("TriggerSensitivityNumber", number.Number)
+TriggerSensitivityNumber = dfrobot_c4001_ns.class_(
+    "TriggerSensitivityNumber", number.Number
+)
 OnLatencyNumber = dfrobot_c4001_ns.class_("OnLatencyNumber", number.Number)
 OffLatencyNumber = dfrobot_c4001_ns.class_("OffLatencyNumber", number.Number)
 OffLatencyNumber = dfrobot_c4001_ns.class_("OffLatencyNumber", number.Number)
@@ -112,7 +113,7 @@ CONFIG_SCHEMA = (
 
 def _final_validate(config):
     full_config = fv.full_config.get()
-    hub_path = full_config.get_path_for_id(config[CONF_DFROBOT_C4001_HUB_ID])[:-1]
+    hub_path = full_config.get_path_for_id(config[CONF_DFROBOT_C4001_ID])[:-1]
     hub_conf = full_config.get_config_for_path(hub_path)
     mode = hub_conf.get(CONF_MODE)
     if mode == "PRESENCE":
@@ -161,53 +162,53 @@ FINAL_VALIDATE_SCHEMA = _final_validate
 
 
 async def to_code(config):
-    sens0609_hub = await cg.get_variable(config[CONF_DFROBOT_C4001_HUB_ID])
+    sens0609_hub = await cg.get_variable(config[CONF_DFROBOT_C4001_ID])
 
     if max_range := config.get(CONF_MAX_RANGE):
         n = await number.new_number(max_range, min_value=0.6, max_value=25.0, step=0.1)
-        await cg.register_parented(n, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(n, config[CONF_DFROBOT_C4001_ID])
         cg.add(sens0609_hub.set_max_range_number(n))
     if min_range := config.get(CONF_MIN_RANGE):
         n = await number.new_number(min_range, min_value=0.6, max_value=25.0, step=0.1)
-        await cg.register_parented(n, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(n, config[CONF_DFROBOT_C4001_ID])
         cg.add(sens0609_hub.set_min_range_number(n))
     if trigger_range := config.get(CONF_TRIGGER_RANGE):
         n = await number.new_number(
             trigger_range, min_value=0.6, max_value=25.0, step=0.1
         )
-        await cg.register_parented(n, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(n, config[CONF_DFROBOT_C4001_ID])
         cg.add(sens0609_hub.set_trigger_range_number(n))
     if hold_sensitivity := config.get(CONF_HOLD_SENSITIVITY):
         n = await number.new_number(hold_sensitivity, min_value=0, max_value=9, step=1)
-        await cg.register_parented(n, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(n, config[CONF_DFROBOT_C4001_ID])
         cg.add(sens0609_hub.set_hold_sensitivity_number(n))
     if trigger_sensitivity := config.get(CONF_TRIGGER_SENSITIVITY):
         n = await number.new_number(
             trigger_sensitivity, min_value=0, max_value=9, step=1
         )
-        await cg.register_parented(n, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(n, config[CONF_DFROBOT_C4001_ID])
         cg.add(sens0609_hub.set_trigger_sensitivity_number(n))
     if on_latency := config.get(CONF_ON_LATENCY):
         n = await number.new_number(
             on_latency, min_value=0.0, max_value=100.0, step=0.01
         )
-        await cg.register_parented(n, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(n, config[CONF_DFROBOT_C4001_ID])
         cg.add(sens0609_hub.set_on_latency_number(n))
     if off_latency := config.get(CONF_OFF_LATENCY):
         n = await number.new_number(
             off_latency, min_value=2.0, max_value=1500.0, step=0.5
         )
-        await cg.register_parented(n, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(n, config[CONF_DFROBOT_C4001_ID])
         cg.add(sens0609_hub.set_off_latency_number(n))
     if inhibit_time := config.get(CONF_INHIBIT_TIME):
         n = await number.new_number(
             inhibit_time, min_value=0.1, max_value=255.0, step=0.01
         )
-        await cg.register_parented(n, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(n, config[CONF_DFROBOT_C4001_ID])
         cg.add(sens0609_hub.set_inhibit_time_number(n))
     if threshold_factor := config.get(CONF_THRESHOLD_FACTOR):
         n = await number.new_number(
             threshold_factor, min_value=0, max_value=65535, step=1
         )
-        await cg.register_parented(n, config[CONF_DFROBOT_C4001_HUB_ID])
+        await cg.register_parented(n, config[CONF_DFROBOT_C4001_ID])
         cg.add(sens0609_hub.set_threshold_factor_number(n))

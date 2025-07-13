@@ -188,10 +188,14 @@ Using the STUSB4500 ESPHome component requires the following steps:
    [00:00:19][C][stusb4500:116]:   NVM matches settings
    [00:00:19][C][stusb4500:130]:   PDO3 negotiated 12.00V @ 3.00A, 36.00W
    ```
-4. The STUSB4500 comonent does check that the NVM is indeed different before flashing it but it is prudent to remove the ```flash_nvm: true``` after it is clear the STUSB4500 is working as configured.
+4. The STUSB4500 component does check that the NVM is indeed different before flashing it but it is prudent to remove the ```flash_nvm: true``` after it is clear the STUSB4500 is working as configured.
 
 
 ## ESPHome C4001 External Component
+
+> [!NOTE]
+> This component is in the process of being added to ESPHome. ESPHome [PR#9327](https://github.com/esphome/esphome/pull/9327).
+
 
 The DFRobot C4001 (SEN0609 or SEN0610) is a millimeter-wave presence detector. The C4001 millimeter-wave presence sensor has the advantage of being able to detect both static and moving objects. It also has a relatively strong anti-interference ability, making it less susceptible to factors such as temperature changes, variations in ambient light, and environmental noise. Whether a person is sitting, sleeping, or in motion, the sensor can quickly detect their presence.
 
@@ -267,6 +271,14 @@ switch:
     led_enable:
       name: Enable LED
 
+text_sensor:
+  - platform: dfrobot_c4001
+    dfrobot_c4001_id: mmwave_sensor
+    software_version:
+      name: Software Version
+    hardware_version:
+      name: Hardware Version
+
 ```
 
 ### Configuration Variables
@@ -274,9 +286,11 @@ switch:
 
 ### Buttons
 + **config_save** (*Optional*): When you click this button the current configuration will be saved. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. All Options from [Button Component](https://esphome.io/components/button/index.html#base-button-configuration).
++ **factory_reset** (*Optional*): Clicking this button will perform a factory reset of the module and all configuration values will go back to default. All Options from [Button Component](https://esphome.io/components/button/index.html#base-button-configuration).
++ **restart** (*Optional*): When you click this button the module will restart and all configuration values will remains as previously set. All Options from [Button Component](https://esphome.io/components/button/index.html#base-button-configuration).
 
 ### Binary Sensors
-+ **config_changed** (*Optional*): When ```true`` the current sensor configuration has been changed but not saved to the sensor. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
++ **config_changed** (*Optional*): When ```true``` the current sensor configuration has been changed but not saved to the sensor. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
 + **occupancy** (*Optional*): In ```PRESENCE``` mode this indicates presence. In ```SPEED_AND_DISTANCE``` mode this indicates a target is being tracked. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
 
 ### Numbers
@@ -299,10 +313,15 @@ switch:
 + **led_enable** (*Optional*): When turned on the green LED will flash when the sensor has been started. The blue LED cannot be disabled with this command. All Options from [Switch Component](https://esphome.io/components/switch/index.html#base-switch-configuration).
 + **micro_motion_enable** (*Optional*): Turns on micro motion mode. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Switch Component](https://esphome.io/components/switch/index.html#base-switch-configuration).
 
+### Sensors
++ **target_distance** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates distance to target in meters (m). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration). 
++ **target_speed** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates target speed in meters per second (m/s). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
+
 ### Actions
-+ **dfrobot_c4001.factor_reset** Will perform a factory reset of the module and all configuration values will go back to default. The module will restart with these defaults. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. This is much easier to do with a lambda that accidentally performs a factory reset every second.
++ **dfrobot_c4001.factory_reset** Will perform a factory reset of the module and all configuration values will go back to default. The module will restart with these defaults. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. This is much easier to do with a lambda that accidentally performs a factory reset every second.
 
 Example using automations...
+
 ```yaml
 button:
   - platform: template
@@ -316,6 +335,25 @@ Example in lambdas...
 ```
 - lambda: |-
   id(mmwave_sensor).factory_reset();
+```
+
++ **dfrobot_c4001.restart** Will restart the module and all configuration values will remains as previously set.
+
+Example using automations...
+
+```yaml
+button:
+  - platform: template
+    name: Restart
+    on_press:
+      - dfrobot_c4001.restart: mmwave_sensor
+    entity_category: CONFIG
+
+```
+Example in lambdas...
+```
+- lambda: |-
+  id(mmwave_sensor).restart();
 ```
 
 ## ESPHome LD2450 External Component
@@ -348,6 +386,11 @@ number:
 + **installation_angle** (*Optional*): Allows you to change the installation angle in °. Makes it easy to use when installed in a corner. Default is 0° with a range of ±45°. All Options from [Number](https://esphome.io/components/sensor/#config-number).
 
 ## SEN5X External Component
+
+
+> [!NOTE]
+> A Pull Request to change the sen5x component in ESPHome is in progress. ESPHome [PR#9254](https://github.com/esphome/esphome/pull/9254).
+
 
 This external component adds SEN60, SEN63C, SEN65, SEN66 and SEN68 support to the built-in sen5x component. This component extends [PR #8318](https://github.com/esphome/esphome/pull/8318). Only the differences from sen5x component are listed below.
 

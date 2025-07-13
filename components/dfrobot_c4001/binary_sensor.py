@@ -1,15 +1,13 @@
 import esphome.codegen as cg
-import esphome.config_validation as cv
 from esphome.components import binary_sensor
+import esphome.config_validation as cv
 from esphome.const import (
-    DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OCCUPANCY,
     DEVICE_CLASS_UPDATE,
-    ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
 )
 
-from . import HUB_CHILD_SCHEMA, CONF_DFROBOT_C4001_HUB_ID
+from . import CONF_DFROBOT_C4001_ID, HUB_CHILD_SCHEMA
 
 DEPENDENCIES = ["dfrobot_c4001"]
 
@@ -35,7 +33,7 @@ CONFIG_SCHEMA = (
 
 
 async def to_code(config):
-    sens0609_hub = await cg.get_variable(config[CONF_DFROBOT_C4001_HUB_ID])
+    sens0609_hub = await cg.get_variable(config[CONF_DFROBOT_C4001_ID])
     if occupancy := config.get(CONF_OCCUPANCY):
         bs = await binary_sensor.new_binary_sensor(occupancy)
         cg.add(sens0609_hub.set_occupancy_binary_sensor(bs))

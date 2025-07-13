@@ -1,20 +1,20 @@
 import esphome.codegen as cg
-import esphome.config_validation as cv
-import esphome.final_validate as fv
 from esphome.components import sensor
+import esphome.config_validation as cv
 
 # from esphome import core
 from esphome.const import (
     CONF_MODE,
     DEVICE_CLASS_DISTANCE,
-    DEVICE_CLASS_SPEED,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_SPEED,
     STATE_CLASS_MEASUREMENT,
     UNIT_EMPTY,
     UNIT_METER,
 )
+import esphome.final_validate as fv
 
-from . import HUB_CHILD_SCHEMA, CONF_DFROBOT_C4001_HUB_ID
+from . import CONF_DFROBOT_C4001_ID, HUB_CHILD_SCHEMA
 
 CONF_TARGET_DISTANCE = "target_distance"
 CONF_TARGET_SPEED = "target_speed"
@@ -58,7 +58,7 @@ CONFIG_SCHEMA = (
 
 def _final_validate(config):
     full_config = fv.full_config.get()
-    hub_path = full_config.get_path_for_id(config[CONF_DFROBOT_C4001_HUB_ID])[:-1]
+    hub_path = full_config.get_path_for_id(config[CONF_DFROBOT_C4001_ID])[:-1]
     hub_conf = full_config.get_config_for_path(hub_path)
     MODE = hub_conf.get(CONF_MODE)
     if MODE == "PRESENCE":
@@ -80,7 +80,7 @@ FINAL_VALIDATE_SCHEMA = _final_validate
 
 
 async def to_code(config):
-    dfrobot_c4001_hub = await cg.get_variable(config[CONF_DFROBOT_C4001_HUB_ID])
+    dfrobot_c4001_hub = await cg.get_variable(config[CONF_DFROBOT_C4001_ID])
 
     if target_distance := config.get(CONF_TARGET_DISTANCE):
         sens = await sensor.new_sensor(target_distance)
