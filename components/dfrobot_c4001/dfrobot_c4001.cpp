@@ -13,43 +13,39 @@ const char ASCII_CR = 0x0D;
 const char ASCII_LF = 0x0A;
 
 void DFRobotC4001Hub::set_occupancy(bool occupancy) {
-  if (this->occupancy_ != occupancy) {
-    this->occupancy_ = occupancy;
+  this->occupancy_ = occupancy;
 #ifdef USE_BINARY_SENSOR
-    if (this->occupancy_binary_sensor_ != nullptr)
-      this->occupancy_binary_sensor_->publish_state(occupancy);
-#endif
+  if (this->occupancy_binary_sensor_ != nullptr) {
+    this->occupancy_binary_sensor_->publish_state(occupancy);
   }
+#endif
 }
 
 void DFRobotC4001Hub::set_target_distance(float value) {
-  if (this->target_distance_ != value) {
-    this->target_distance_ = value;
+  this->target_distance_ = value;
 #ifdef USE_SENSOR
-    if (this->target_distance_sensor_ != nullptr)
-      this->target_distance_sensor_->publish_state(value);
-#endif
+  if (this->target_distance_sensor_ != nullptr) {
+    this->target_distance_sensor_->publish_state(value);
   }
+#endif
 }
 
 void DFRobotC4001Hub::set_target_speed(float value) {
-  if (this->target_speed_ != value) {
-    this->target_speed_ = value;
+  this->target_speed_ = value;
 #ifdef USE_SENSOR
-    if (this->target_speed_sensor_ != nullptr)
-      this->target_speed_sensor_->publish_state(value);
-#endif
+  if (this->target_speed_sensor_ != nullptr) {
+    this->target_speed_sensor_->publish_state(value);
   }
+#endif
 }
 
 void DFRobotC4001Hub::set_target_energy(float value) {
-  if (this->target_energy_ != value) {
-    this->target_energy_ = value;
+  this->target_energy_ = value;
 #ifdef USE_SENSOR
-    if (this->target_energy_sensor_ != nullptr)
-      this->target_energy_sensor_->publish_state(value);
-#endif
+  if (this->target_energy_sensor_ != nullptr) {
+    this->target_energy_sensor_->publish_state(value);
   }
+#endif
 }
 
 void DFRobotC4001Hub::set_max_range(float max, bool needs_save) {
@@ -255,6 +251,7 @@ void DFRobotC4001Hub::config_load() {
 
 void DFRobotC4001Hub::config_save() {
   if (this->needs_save_) {
+    this->flash_led_enable();
     this->enqueue(make_unique<PowerCommand>(false));
     if (this->mode_ == MODE_PRESENCE) {
       this->enqueue(make_unique<SetRangeCommand>(this->min_range_, max_range_));

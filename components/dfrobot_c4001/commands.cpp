@@ -61,12 +61,12 @@ uint8_t ReadStateCommand::execute(DFRobotC4001Hub *parent) {
     if (message.rfind("$DFHPD,0, , , *") != std::string::npos) {
       this->parent_->set_occupancy(false);
       this->parent_->set_enable(true);
-      ESP_LOGV(TAG, "Recv Rpt: Occupancy Detected");
+      ESP_LOGV(TAG, "Recv Rpt: Occupancy Clear");
       return 1;  // Command done
     } else if (message.rfind("$DFHPD,1, , , *") != std::string::npos) {
       this->parent_->set_occupancy(true);
       this->parent_->set_enable(true);
-      ESP_LOGV(TAG, "Recv Rpt: Occupancy Clear");
+      ESP_LOGV(TAG, "Recv Rpt: Occupancy Detected");
       return 1;  // Command done
     } else if (message.starts_with("$DFDMD")) {
       std::string str1, str2, str3, str4, str5;

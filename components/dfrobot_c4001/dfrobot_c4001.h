@@ -58,7 +58,6 @@ class CircularCommandQueue {
 class DFRobotC4001Hub : public uart::UARTDevice, public Component {
 #ifdef USE_BINARY_SENSOR
   SUB_BINARY_SENSOR(occupancy)
-  SUB_BINARY_SENSOR(motion)
   SUB_BINARY_SENSOR(config_changed)
 #endif
 
@@ -91,7 +90,7 @@ class DFRobotC4001Hub : public uart::UARTDevice, public Component {
   SUB_SWITCH(micro_motion_enable)
 #endif
 
-#ifdef USE_NUMBER
+#ifdef USE_TEXT_SENSOR
   SUB_TEXT_SENSOR(software_version)
   SUB_TEXT_SENSOR(hardware_version)
 #endif
