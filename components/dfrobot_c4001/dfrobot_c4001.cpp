@@ -230,7 +230,6 @@ void DFRobotC4001Hub::config_load() {
   // set dfrobot_c4001 hub configuration
   cmd_queue_.enqueue(make_unique<PowerCommand>(false));
   cmd_queue_.enqueue(make_unique<SetUartOutputCommand>());
-  cmd_queue_.enqueue(make_unique<GetLedModeCommand1>());
   // have to be in the right mode to read that mode's parameters
   cmd_queue_.enqueue(make_unique<SetRunAppCommand>(this->mode_));
   cmd_queue_.enqueue(make_unique<PowerCommand>(true));
@@ -283,8 +282,9 @@ void DFRobotC4001Hub::factory_reset() {
 
 void DFRobotC4001Hub::restart() {
   ESP_LOGD(TAG, "Restart Started");
-  this->enqueue(make_unique<PowerCommand>(false));
-  this->enqueue(make_unique<ResetSystemCommand>());
+  // this->enqueue(make_unique<PowerCommand>(false));
+  // this->enqueue(make_unique<ResetSystemCommand>());
+  cmd_queue_.enqueue(make_unique<GetLedModeCommand1>());
 }
 
 void DFRobotC4001Hub::dump_config() {
