@@ -229,6 +229,7 @@ void DFRobotC4001Hub::set_needs_save(bool needs_save) {
 void DFRobotC4001Hub::config_load() {
   // set dfrobot_c4001 hub configuration
   cmd_queue_.enqueue(make_unique<PowerCommand>(false));
+  cmd_queue_.enqueue(make_unique<SetUartOutputCommand>());
   // have to be in the right mode to read that mode's parameters
   cmd_queue_.enqueue(make_unique<SetRunAppCommand>(this->mode_));
   cmd_queue_.enqueue(make_unique<PowerCommand>(true));
@@ -343,20 +344,39 @@ void DFRobotC4001Hub::setup() {
     this->set_led_enable(value, false);
   }
 #endif
-  this->config_load();
+  ESP_LOGCONFIG(TAG, "Running setup");
 }
 
 void DFRobotC4001Hub::loop() {
+  static uint64_t start_time = millis();
+  static bool prompt = false;
+
+  if (this->is_failed()) {
+    return;
+  }
+  if (!prompt) {
+    // still waiting to module to come alive and send a prompt
+    if (!this->find_prompt_()) {
+      if (millis() - start_time > 4000) {
+        this->mark_failed("Module not responding");
+        return;
+      }
+    } else {
+      ESP_LOGCONFIG(TAG, "Recv Prompt (%ldms)", millis() - start_time);
+      this->config_load();
+      prompt = true;
+    }
+    return;
+  }
   if (cmd_queue_.is_empty()) {
     // Command queue empty, first time this happens setup is complete
     if (!this->is_setup_) {
       this->is_setup_ = true;
-      ESP_LOGV(TAG, "Setup complete");
+      ESP_LOGCONFIG(TAG, "Setup complete");
     }
     // Read sensor state.
     cmd_queue_.enqueue(make_unique<ReadStateCommand>());
   }
-
   // Commands are non-blocking and need to be called repeatedly.
   if (cmd_queue_.process(this)) {
     // Dequeue if command is done
@@ -402,7 +422,7 @@ uint8_t DFRobotC4001Hub::read_message_() {
 uint8_t DFRobotC4001Hub::find_prompt_() {
   if (this->read_message_()) {
     std::string message(this->read_buffer_);
-    if (message.rfind("leapMMW:/>") != std::string::npos) {
+    if (message.rfind("DFRobot:/>") != std::string::npos) {
       return 1;  // Prompt found
     }
   }

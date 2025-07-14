@@ -122,14 +122,6 @@ def _final_validate(config):
                 f"When 'mode' is set to {mode}, {CONF_THRESHOLD_FACTOR} number is not allowed."
             )
     else:
-        if CONF_MIN_RANGE in config:
-            raise cv.Invalid(
-                f"When 'mode' is set to {mode}, {CONF_MIN_RANGE} number is not allowed."
-            )
-        if CONF_MAX_RANGE in config:
-            raise cv.Invalid(
-                f"When 'mode' is set to {mode}, {CONF_MAX_RANGE} number is not allowed."
-            )
         if CONF_TRIGGER_RANGE in config:
             raise cv.Invalid(
                 f"When 'mode' is set to {mode}, {CONF_TRIGGER_RANGE} number is not allowed."

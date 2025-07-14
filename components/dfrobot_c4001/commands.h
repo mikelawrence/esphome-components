@@ -1,9 +1,7 @@
 #pragma once
 
-#include <cstdint>
-#include <string>
-
 #include "esphome/core/helpers.h"
+#include "esphome/core/log.h"
 
 namespace esphome {
 namespace dfrobot_c4001 {
@@ -40,6 +38,12 @@ class PowerCommand : public Command {
 
  protected:
   bool power_on_;
+};
+
+class SetUartOutputCommand : public Command {
+ public:
+  SetUartOutputCommand();
+  uint8_t on_message(std::string &message) override;
 };
 
 class GetRangeCommand : public Command {
