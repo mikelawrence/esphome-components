@@ -148,6 +148,7 @@ uint8_t PowerCommand::on_message(std::string &message) {
   }
   return 0;  // Command not done yet.
 }
+
 SetUartOutputCommand::SetUartOutputCommand() { cmd_ = "setUartOutput 1 1"; };
 
 uint8_t SetUartOutputCommand::on_message(std::string &message) {
@@ -423,31 +424,6 @@ uint8_t SetThrFactorCommand::on_message(std::string &message) {
   }
 }
 
-GetLedModeCommand1::GetLedModeCommand1() { cmd_ = "getLedMode 1 0"; }
-
-uint8_t GetLedModeCommand1::on_message(std::string &message) {
-  std::string str1;
-  std::stringstream s(message);
-
-  if (message.rfind("Response") != std::string::npos) {
-    s >> str1 >> str1;
-    auto led = parse_number<uint8_t>(str1);
-    if (led.has_value()) {
-      this->led_enable_ = led.value();
-      return 0;
-    } else {
-      ESP_LOGE(TAG, "Failed to parse response");
-      return 1;  // Command done
-    }
-  } else if (message == "Done") {
-    // this->parent_->set_led_mode_1_enable(this->led_enable_, false);
-    ESP_LOGE(TAG, "Get LED Mode 1 complete: Parsed Led Mode 1 (%s)", this->led_enable_ ? "Enabled" : "Disabled");
-    return 1;  // Command done
-  } else {
-    return 0;
-  }
-}
-
 SetLedModeCommand1::SetLedModeCommand1(bool led_mode) : led_enable_(led_mode) {
   if (led_mode) {
     cmd_ = "setLedMode 1 0";
@@ -465,12 +441,10 @@ uint8_t SetLedModeCommand1::on_message(std::string &message) {
     ESP_LOGE(TAG, "Sensor is not stopped");
     return 1;  // Command done
   } else if (message == "Done") {
-    if (this->led_enable_) {
-      this->parent_->set_led_enable(true, false);
-    } else {
-      this->parent_->set_led_enable(false, false);
-    }
-    ESP_LOGV(TAG, "Set LED Mode 1 complete");
+    this->parent_->set_led_enable(this->led_enable_, false);
+    // we save the state of LED enable to flash because you cannot read this value from the module
+    this->parent_->flash_led_enable();
+    ESP_LOGV(TAG, "Set LED Mode 1 complete (%s)", this->led_enable_ ? "Enabled" : "Disabled");
     return 1;  // Command done
   }
   return 0;  // Command not done yet
@@ -493,14 +467,7 @@ uint8_t SetLedModeCommand2::on_message(std::string &message) {
     ESP_LOGE(TAG, "Sensor is not stopped");
     return 1;  // Command done
   } else if (message == "Done") {
-    if (this->led_enable_) {
-      this->parent_->set_led_enable(true, false);
-    } else {
-      this->parent_->set_led_enable(false, false);
-    }
-    ESP_LOGV(TAG, "Set LED Mode 2 complete");
-    // we save the state of LED enable to flash because you cannot read this value from the module
-    this->parent_->flash_led_enable();
+    ESP_LOGV(TAG, "Set LED Mode 2 complete (%s)", this->led_enable_ ? "Enabled" : "Disabled");
     return 1;  // Command done
   }
   return 0;  // Command not done yet
