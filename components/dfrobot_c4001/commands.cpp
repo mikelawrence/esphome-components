@@ -423,6 +423,31 @@ uint8_t SetThrFactorCommand::on_message(std::string &message) {
   }
 }
 
+GetLedModeCommand1::GetLedModeCommand1() { cmd_ = "getLedMode 1 0"; }
+
+uint8_t GetLedModeCommand1::on_message(std::string &message) {
+  std::string str1;
+  std::stringstream s(message);
+
+  if (message.rfind("Response") != std::string::npos) {
+    s >> str1 >> str1;
+    auto led = parse_number<uint8_t>(str1);
+    if (led.has_value()) {
+      this->micro_motion_ = led.value();
+      return 0;
+    } else {
+      ESP_LOGE(TAG, "Failed to parse response");
+      return 1;  // Command done
+    }
+  } else if (message == "Done") {
+    // this->parent_->set_led_mode_1_enable(this->micro_motion_, false);
+    ESP_LOGE(TAG, "Get LED Mode 1 complete: Parsed Led Mode 1 (%s)", this->micro_motion_ ? "Enabled" : "Disabled");
+    return 1;  // Command done
+  } else {
+    return 0;
+  }
+}
+
 SetLedModeCommand1::SetLedModeCommand1(bool led_mode) : led_enable_(led_mode) {
   if (led_mode) {
     cmd_ = "setLedMode 1 0";

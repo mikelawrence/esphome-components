@@ -160,6 +160,15 @@ class SetThrFactorCommand : public Command {
   float threshold_factor_;
 };
 
+class GetLedModeCommand1 : public Command {
+ public:
+  GetMicroMotionCommand();
+  uint8_t on_message(std::string &message) override;
+
+ protected:
+  bool led_enable_;
+};
+
 class SetLedModeCommand1 : public Command {
  public:
   SetLedModeCommand1(bool led_mode);

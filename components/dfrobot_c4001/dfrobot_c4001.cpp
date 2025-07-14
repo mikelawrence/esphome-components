@@ -230,6 +230,7 @@ void DFRobotC4001Hub::config_load() {
   // set dfrobot_c4001 hub configuration
   cmd_queue_.enqueue(make_unique<PowerCommand>(false));
   cmd_queue_.enqueue(make_unique<SetUartOutputCommand>());
+  cmd_queue_.enqueue(make_unique<GetLedModeCommand1>());
   // have to be in the right mode to read that mode's parameters
   cmd_queue_.enqueue(make_unique<SetRunAppCommand>(this->mode_));
   cmd_queue_.enqueue(make_unique<PowerCommand>(true));
