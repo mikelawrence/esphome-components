@@ -162,7 +162,7 @@ class SetThrFactorCommand : public Command {
 
 class GetLedModeCommand1 : public Command {
  public:
-  GetMicroMotionCommand();
+  GetLedModeCommand1();
   uint8_t on_message(std::string &message) override;
 
  protected:

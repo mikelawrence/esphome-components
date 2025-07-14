@@ -433,15 +433,15 @@ uint8_t GetLedModeCommand1::on_message(std::string &message) {
     s >> str1 >> str1;
     auto led = parse_number<uint8_t>(str1);
     if (led.has_value()) {
-      this->micro_motion_ = led.value();
+      this->led_enable_ = led.value();
       return 0;
     } else {
       ESP_LOGE(TAG, "Failed to parse response");
       return 1;  // Command done
     }
   } else if (message == "Done") {
-    // this->parent_->set_led_mode_1_enable(this->micro_motion_, false);
-    ESP_LOGE(TAG, "Get LED Mode 1 complete: Parsed Led Mode 1 (%s)", this->micro_motion_ ? "Enabled" : "Disabled");
+    // this->parent_->set_led_mode_1_enable(this->led_enable_, false);
+    ESP_LOGE(TAG, "Get LED Mode 1 complete: Parsed Led Mode 1 (%s)", this->led_enable_ ? "Enabled" : "Disabled");
     return 1;  // Command done
   } else {
     return 0;
