@@ -32,7 +32,7 @@ namespace esphome {
 namespace dfrobot_c4001 {
 // Enumeration for RunApp or Sensor Mode
 enum ModeConfig {
-  MODE_PRESENCE,
+  MODE_PRESENCE = 0,
   MODE_SPEED_AND_DISTANCE,
   MODE_UNKNOWN,
 };
@@ -47,7 +47,7 @@ class CircularCommandQueue {
   std::unique_ptr<Command> dequeue();
   bool is_empty();
   bool is_full();
-  uint8_t process(DFRobotC4001Hub *parent);
+  int8_t process(DFRobotC4001Hub *parent);
 
  protected:
   int front_{-1};
@@ -114,7 +114,7 @@ class DFRobotC4001Hub : public uart::UARTDevice, public Component {
   void set_led_enable(bool value, bool needs_save = true);
   void set_micro_motion_enable(bool enable, bool needs_save = true);
   void flash_led_enable();
-  void set_mode(ModeConfig value);
+  void set_mode(uint8_t value);
   void set_software_version(const std::string &version);
   void set_hardware_version(const std::string &version);
   void set_needs_save(bool needs_save);
@@ -147,7 +147,7 @@ class DFRobotC4001Hub : public uart::UARTDevice, public Component {
   float target_distance_;
   float target_speed_;
   float target_energy_;
-  ModeConfig mode_{MODE_PRESENCE};
+  uint8_t mode_{MODE_PRESENCE};
   std::string hw_version_{""};
   std::string sw_version_{""};
 
@@ -155,11 +155,11 @@ class DFRobotC4001Hub : public uart::UARTDevice, public Component {
   size_t read_pos_{0};
   CircularCommandQueue cmd_queue_;
   uint32_t ts_last_cmd_sent_{0};
+  int32_t ts_cmd_error_cnt_{0};
 
   ESPPreferenceObject pref_;
 
   uint8_t read_message_();
-  uint8_t find_prompt_();
   uint8_t send_cmd_(const char *cmd, uint32_t duration);
 
   friend class Command;

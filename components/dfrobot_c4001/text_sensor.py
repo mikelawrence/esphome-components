@@ -3,10 +3,7 @@ from esphome.components import text_sensor
 import esphome.config_validation as cv
 
 # from esphome import core
-from esphome.const import (
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    ICON_CHIP,
-)
+from esphome.const import ENTITY_CATEGORY_DIAGNOSTIC, ICON_CHIP
 
 from . import CONF_DFROBOT_C4001_ID, HUB_CHILD_SCHEMA
 

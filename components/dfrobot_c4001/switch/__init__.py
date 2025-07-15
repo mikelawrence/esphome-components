@@ -1,7 +1,12 @@
 import esphome.codegen as cg
 from esphome.components import switch
 import esphome.config_validation as cv
-from esphome.const import CONF_MODE, DEVICE_CLASS_SWITCH, ENTITY_CATEGORY_CONFIG
+from esphome.const import (
+    CONF_MODE,
+    DEVICE_CLASS_SWITCH,
+    ENTITY_CATEGORY_CONFIG,
+    ICON_VIBRATE,
+)
 import esphome.final_validate as fv
 
 from .. import CONF_DFROBOT_C4001_ID, HUB_CHILD_SCHEMA, dfrobot_c4001_ns
@@ -13,7 +18,6 @@ CONF_LED_ENABLE = "led_enable"
 CONF_MICRO_MOTION_ENABLE = "micro_motion_enable"
 ICON_LED = "mdi:led-off"
 ICON_MICROSCOPE = "mdi:microscope"
-
 
 LedSwitch = dfrobot_c4001_ns.class_("LedSwitch", switch.Switch)
 MicroMotionSwitch = dfrobot_c4001_ns.class_("MicroMotionSwitch", switch.Switch)
@@ -31,8 +35,7 @@ CONFIG_SCHEMA = (
                 MicroMotionSwitch,
                 device_class=DEVICE_CLASS_SWITCH,
                 entity_category=ENTITY_CATEGORY_CONFIG,
-                icon=ICON_LED,
-                default_restore_mode="RESTORE_DEFAULT_OFF",
+                icon=ICON_VIBRATE,
             ),
         }
     )
@@ -45,11 +48,11 @@ def _final_validate(config):
     full_config = fv.full_config.get()
     hub_path = full_config.get_path_for_id(config[CONF_DFROBOT_C4001_ID])[:-1]
     hub_conf = full_config.get_config_for_path(hub_path)
-    MODE = hub_conf.get(CONF_MODE)
-    if MODE == "PRESENCE":
+    mode = hub_conf.get(CONF_MODE)
+    if mode == "PRESENCE":
         if CONF_MICRO_MOTION_ENABLE in config:
             raise cv.Invalid(
-                f"When 'mode' is set to {MODE}, {CONF_MICRO_MOTION_ENABLE} number is not allowed."
+                f"When 'mode' is set to {mode}, {CONF_MICRO_MOTION_ENABLE} switch is not allowed."
             )
 
 

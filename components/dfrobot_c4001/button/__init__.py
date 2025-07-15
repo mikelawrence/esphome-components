@@ -4,8 +4,8 @@ import esphome.config_validation as cv
 from esphome.const import (
     CONF_FACTORY_RESET,
     CONF_RESTART,
-    DEVICE_CLASS_UPDATE,
     DEVICE_CLASS_RESTART,
+    DEVICE_CLASS_UPDATE,
     ENTITY_CATEGORY_CONFIG,
     ICON_RESTART,
     ICON_RESTART_ALERT,

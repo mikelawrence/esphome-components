@@ -6,6 +6,14 @@
 namespace esphome {
 namespace dfrobot_c4001 {
 class DFRobotC4001Hub;
+// Enumeration for Command States
+enum CommandState {
+  STATE_CMD_SEND = 0,  // command needs to be sent
+  STATE_WAIT_ECHO,     // command was sent, now waiting for command echo
+  STATE_PROCESS,       // command in process
+  STATE_WAIT_PROMPT,   // waiting for prompt, teminates this transaction
+  STATE_DONE,
+};
 
 // Use command queue and time stamps to avoid blocking.
 // When component has run time, check if minimum time (1s) between
@@ -14,13 +22,16 @@ class Command {
  public:
   virtual ~Command() = default;
   virtual uint8_t execute(DFRobotC4001Hub *parent);
-  virtual uint8_t on_message(std::string &message) = 0;
+  virtual void on_message(std::string &message) = 0;
 
  protected:
   DFRobotC4001Hub *parent_{nullptr};
+  uint8_t state_{STATE_CMD_SEND};
+  uint8_t done_{false};
+  uint8_t error_{false};
   std::string cmd_;
-  bool cmd_sent_{false};
-  int8_t retries_left_{2};
+  int8_t error_count_{0};
+  int8_t retries_left_{4};
   uint32_t cmd_duration_ms_{10};
   uint32_t timeout_ms_{1500};
 };
@@ -28,28 +39,22 @@ class Command {
 class ReadStateCommand : public Command {
  public:
   uint8_t execute(DFRobotC4001Hub *parent) override;
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 };
 
 class PowerCommand : public Command {
  public:
   PowerCommand(bool power_on);
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   bool power_on_;
 };
 
-class SetUartOutputCommand : public Command {
- public:
-  SetUartOutputCommand();
-  uint8_t on_message(std::string &message) override;
-};
-
 class GetRangeCommand : public Command {
  public:
   GetRangeCommand();
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   float min_range_;
@@ -59,7 +64,7 @@ class GetRangeCommand : public Command {
 class SetRangeCommand : public Command {
  public:
   SetRangeCommand(float min_range, float max_range);
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   float min_range_;
@@ -69,7 +74,7 @@ class SetRangeCommand : public Command {
 class GetTrigRangeCommand : public Command {
  public:
   GetTrigRangeCommand();
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   float trigger_range_;
@@ -78,7 +83,7 @@ class GetTrigRangeCommand : public Command {
 class SetTrigRangeCommand : public Command {
  public:
   SetTrigRangeCommand(float trigger_range);
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   float trigger_range_;
@@ -87,7 +92,7 @@ class SetTrigRangeCommand : public Command {
 class GetSensitivityCommand : public Command {
  public:
   GetSensitivityCommand();
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   uint16_t hold_sensitivity_;
@@ -97,7 +102,7 @@ class GetSensitivityCommand : public Command {
 class SetSensitivityCommand : public Command {
  public:
   SetSensitivityCommand(uint16_t hold_sensitivity, uint16_t trigger_sensitivity);
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   uint16_t hold_sensitivity_;
@@ -107,7 +112,7 @@ class SetSensitivityCommand : public Command {
 class GetLatencyCommand : public Command {
  public:
   GetLatencyCommand();
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   float on_latency_;
@@ -117,7 +122,7 @@ class GetLatencyCommand : public Command {
 class SetLatencyCommand : public Command {
  public:
   SetLatencyCommand(float on_latency, float off_latency);
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   float on_latency_;
@@ -127,7 +132,7 @@ class SetLatencyCommand : public Command {
 class GetInhibitTimeCommand : public Command {
  public:
   GetInhibitTimeCommand();
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   float inhibit_time_;
@@ -136,7 +141,7 @@ class GetInhibitTimeCommand : public Command {
 class SetInhibitTimeCommand : public Command {
  public:
   SetInhibitTimeCommand(float inhibit_time);
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   float inhibit_time_;
@@ -145,7 +150,7 @@ class SetInhibitTimeCommand : public Command {
 class GetThrFactorCommand : public Command {
  public:
   GetThrFactorCommand();
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   float threshold_factor_;
@@ -154,16 +159,34 @@ class GetThrFactorCommand : public Command {
 class SetThrFactorCommand : public Command {
  public:
   SetThrFactorCommand(float threshold_factor);
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   float threshold_factor_;
 };
 
+class GetUartOutputCommand : public Command {
+ public:
+  GetUartOutputCommand();
+  void on_message(std::string &message) override;
+
+ protected:
+  bool uart_output_enable_;
+};
+
+class SetUartOutputCommand : public Command {
+ public:
+  SetUartOutputCommand(bool uart_output_enable);
+  void on_message(std::string &message) override;
+
+ protected:
+  bool uart_output_enable_;
+};
+
 class SetLedModeCommand1 : public Command {
  public:
   SetLedModeCommand1(bool led_mode);
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   bool led_enable_;
@@ -172,7 +195,7 @@ class SetLedModeCommand1 : public Command {
 class SetLedModeCommand2 : public Command {
  public:
   SetLedModeCommand2(bool led_mode);
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   bool led_enable_;
@@ -181,7 +204,7 @@ class SetLedModeCommand2 : public Command {
 class GetMicroMotionCommand : public Command {
  public:
   GetMicroMotionCommand();
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   bool micro_motion_;
@@ -190,7 +213,7 @@ class GetMicroMotionCommand : public Command {
 class SetMicroMotionCommand : public Command {
  public:
   SetMicroMotionCommand(bool enable);
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   bool micro_motion_;
@@ -199,34 +222,34 @@ class SetMicroMotionCommand : public Command {
 class FactoryResetCommand : public Command {
  public:
   FactoryResetCommand();
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 };
 
 class ResetSystemCommand : public Command {
  public:
   ResetSystemCommand();
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 };
 
 class SaveCfgCommand : public Command {
  public:
   SaveCfgCommand();
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 };
 
 class SetRunAppCommand : public Command {
  public:
   SetRunAppCommand(uint8_t mode);
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
-  bool mode_;
+  uint8_t mode_;
 };
 
 class GetHWVCommand : public Command {
  public:
   GetHWVCommand();
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   std::string version_;
@@ -235,7 +258,7 @@ class GetHWVCommand : public Command {
 class GetSWVCommand : public Command {
  public:
   GetSWVCommand();
-  uint8_t on_message(std::string &message) override;
+  void on_message(std::string &message) override;
 
  protected:
   std::string version_;
