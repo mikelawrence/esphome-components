@@ -31,7 +31,7 @@ class Command {
   uint8_t error_{false};
   std::string cmd_;
   int8_t error_count_{0};
-  int8_t retries_left_{4};
+  int8_t retries_left_{2};
   uint32_t cmd_duration_ms_{10};
   uint32_t timeout_ms_{1500};
 };

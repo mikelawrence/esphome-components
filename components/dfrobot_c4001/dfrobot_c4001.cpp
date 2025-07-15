@@ -387,7 +387,7 @@ void DFRobotC4001Hub::loop() {
     if (!this->is_setup_) {
       this->is_setup_ = true;
       ESP_LOGCONFIG(TAG, "Setup complete");
-      if (this->ts_cmd_error_cnt_ > 10) {
+      if (this->ts_cmd_error_cnt_ > 7) {
         this->mark_failed("Too many errors");
       }
     }

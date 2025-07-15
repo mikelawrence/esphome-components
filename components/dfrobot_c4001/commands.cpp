@@ -87,24 +87,24 @@ uint8_t Command::execute(DFRobotC4001Hub *parent) {
           return true;
         }
     }
-    // check for timeout
-    if (millis() - this->parent_->ts_last_cmd_sent_ > this->timeout_ms_) {
-      if (this->retries_left_ > 0) {
-        this->retries_left_ -= 1;
-        ESP_LOGE(TAG, "Command Retrying");
-        this->state_ = STATE_CMD_SEND;
-        this->error_count_ -= 1;
-        return false;  // command not done
+  }
+  // check for timeout
+  if (millis() - this->parent_->ts_last_cmd_sent_ > this->timeout_ms_) {
+    if (this->retries_left_ > 0) {
+      this->retries_left_ -= 1;
+      ESP_LOGE(TAG, "Command Retrying");
+      this->state_ = STATE_CMD_SEND;
+      this->error_count_ -= 1;
+      return false;  // command not done
+    } else {
+      ESP_LOGE(TAG, "Command Failure: %s", this->cmd_.c_str());
+      this->state_ = STATE_DONE;
+      this->error_count_ -= 1;
+      // Command done
+      if (this->error_count_ < 0) {
+        return this->error_count_;
       } else {
-        ESP_LOGE(TAG, "Command Failure: %s", this->cmd_.c_str());
-        this->state_ = STATE_DONE;
-        this->error_count_ -= 1;
-        // Command done
-        if (this->error_count_ < 0) {
-          return this->error_count_;
-        } else {
-          return true;
-        }
+        return true;
       }
     }
   }
