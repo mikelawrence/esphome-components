@@ -151,6 +151,8 @@ class DFRobotC4001Hub : public uart::UARTDevice, public Component {
   std::string hw_version_{""};
   std::string sw_version_{""};
 
+  uint64_t loop_time_{0};
+  uint8_t detected_{false};
   char read_buffer_[MMWAVE_READ_BUFFER_LENGTH];
   size_t read_pos_{0};
   CircularCommandQueue cmd_queue_;

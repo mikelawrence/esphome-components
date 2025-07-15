@@ -354,28 +354,26 @@ void DFRobotC4001Hub::setup() {
     ESP_LOGCONFIG(TAG, "Load flash settings");
   }
   this->set_led_enable(value, false);
+  this->loop_time_ = millis();
 }
 
 void DFRobotC4001Hub::loop() {
-  static uint64_t start_time = millis();
-  static bool prompt = false;
-
   if (this->is_failed()) {
     return;
   }
 
   // wait for prompt but not too long
-  if (!prompt) {
-    if (millis() - start_time > 500) {
+  if (!this->detected_) {
+    if (millis() - this->loop_time_ > 500) {
       ESP_LOGCONFIG(TAG, "Running setup");
       this->config_load();
-      prompt = true;
+      this->detected_ = true;
     } else {
       if (this->read_message_()) {
         std::string message(this->read_buffer_);
         if (message.rfind("DFRobot:/>") != std::string::npos) {
           this->config_load();
-          prompt = true;
+          this->detected_ = true;
         }
       }
     }
