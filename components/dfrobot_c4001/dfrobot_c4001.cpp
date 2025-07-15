@@ -345,8 +345,9 @@ void DFRobotC4001Hub::dump_config() {
 void DFRobotC4001Hub::setup() {
   bool value;
 
+#ifdef USE_SWITCH
   // Restore LED Enable preferences (from flash storage)
-  this->pref_ = global_preferences->make_preference<bool>(fnv1_hash(esphome::get_mac_address() + "led_enable"));
+  this->pref_ = global_preferences->make_preference<bool>(this->led_enable_switch_->get_object_id_hash());
   if (!this->pref_.load(&value)) {
     ESP_LOGCONFIG(TAG, "Defaulting flash settings");
     value = false;
@@ -354,6 +355,7 @@ void DFRobotC4001Hub::setup() {
     ESP_LOGCONFIG(TAG, "Load flash settings");
   }
   this->set_led_enable(value, false);
+#endif
   this->loop_time_ = millis();
 }
 
@@ -363,17 +365,17 @@ void DFRobotC4001Hub::loop() {
   }
 
   // wait for prompt but not too long
-  if (!this->detected_) {
+  if (!this->module_present_) {
     if (millis() - this->loop_time_ > 500) {
       ESP_LOGCONFIG(TAG, "Running setup");
       this->config_load();
-      this->detected_ = true;
+      this->module_present_ = true;
     } else {
       if (this->read_message_()) {
         std::string message(this->read_buffer_);
         if (message.rfind("DFRobot:/>") != std::string::npos) {
           this->config_load();
-          this->detected_ = true;
+          this->module_present_ = true;
         }
       }
     }

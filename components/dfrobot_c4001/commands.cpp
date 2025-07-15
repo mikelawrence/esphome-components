@@ -62,30 +62,18 @@ uint8_t Command::execute(DFRobotC4001Hub *parent) {
               this->state_ = STATE_DONE;
               this->error_count_ -= 1;
               // Command done
-              if (this->error_count_ < 0) {
-                return this->error_count_;
-              } else {
-                return true;
-              }
+              return this->error_count_ < 0 ? this->error_count_ : true;
             }
           } else {
             ESP_LOGV(TAG, "Send Cmd: Complete");
             // Command done
-            if (this->error_count_ < 0) {
-              return this->error_count_;
-            } else {
-              return true;
-            }
+            return this->error_count_ < 0 ? this->error_count_ : true;
           }
         }
         break;
       default:  // STATE_DONE
         // Command done
-        if (this->error_count_ < 0) {
-          return this->error_count_;
-        } else {
-          return true;
-        }
+        return this->error_count_ < 0 ? this->error_count_ : true;
     }
   }
   // check for timeout
@@ -101,11 +89,7 @@ uint8_t Command::execute(DFRobotC4001Hub *parent) {
       this->state_ = STATE_DONE;
       this->error_count_ -= 1;
       // Command done
-      if (this->error_count_ < 0) {
-        return this->error_count_;
-      } else {
-        return true;
-      }
+      return this->error_count_ < 0 ? this->error_count_ : true;
     }
   }
   return false;
