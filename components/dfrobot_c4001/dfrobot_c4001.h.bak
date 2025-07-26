@@ -23,6 +23,7 @@
 #endif
 
 #include "esphome/components/uart/uart.h"
+#include "esphome/core/automation.h"
 #include "esphome/core/helpers.h"
 
 #include "commands.h"
@@ -30,27 +31,20 @@
 namespace esphome {
 namespace dfrobot_c4001 {
 // Enumeration for RunApp or Sensor Mode
-enum DFRobotMode : uint8_t {
+enum ModeConfig {
   MODE_PRESENCE = 0,
   MODE_SPEED_AND_DISTANCE,
   MODE_UNKNOWN,
 };
 
-enum DFRobotModel : uint8_t {
-  MODEL_SEN0609 = 0,
-  MODEL_SEN0610,
-  MODEL_UNKNOWN,
-};
-
-const uint8_t MMWAVE_READ_BUFFER_LENGTH = 64;
+const uint8_t MMWAVE_READ_BUFFER_LENGTH = 255;
 
 static const uint8_t COMMAND_QUEUE_SIZE = 32;
 
 class CircularCommandQueue {
  public:
-  int8_t enqueue(std::unique_ptr<Command> cmd, bool first = false);
+  int8_t enqueue(std::unique_ptr<Command> cmd);
   std::unique_ptr<Command> dequeue();
-  bool is_retry_power_stop();
   bool is_empty();
   bool is_full();
   int8_t process(DFRobotC4001Hub *parent);
@@ -106,6 +100,8 @@ class DFRobotC4001Hub : public uart::UARTDevice, public Component {
   void setup() override;
   void loop() override;
 
+  void set_enable(bool enabled) { enabled_ = enabled; };
+  bool is_enabled() { return enabled_; }
   void set_min_range(float min, bool needs_save = true);
   void set_max_range(float max, bool needs_save = true);
   void set_trigger_range(float trig, bool needs_save = true);
@@ -118,12 +114,10 @@ class DFRobotC4001Hub : public uart::UARTDevice, public Component {
   void set_led_enable(bool value, bool needs_save = true);
   void set_micro_motion_enable(bool enable, bool needs_save = true);
   void flash_led_enable();
-  void set_mode(DFRobotMode value);
-  void set_model(DFRobotModel value);
-  void set_software_version(char *version);
-  void set_hardware_version(char *version);
+  void set_mode(uint8_t value);
+  void set_software_version(const std::string &version);
+  void set_hardware_version(const std::string &version);
   void set_needs_save(bool needs_save);
-  void setup_module();
   void config_load();
   void config_save();
   void factory_reset();
@@ -132,10 +126,11 @@ class DFRobotC4001Hub : public uart::UARTDevice, public Component {
   void set_target_distance(float value);
   void set_target_speed(float value);
   void set_target_energy(float value);
-  int8_t enqueue(std::unique_ptr<Command> cmd, bool first = false);
+  int8_t enqueue(std::unique_ptr<Command> cmd);
 
  protected:
   bool is_setup_{false};
+  bool enabled_{false};
   float min_range_{0.6};
   float max_range_{25.0};
   float trigger_range_{6.0};
@@ -152,21 +147,19 @@ class DFRobotC4001Hub : public uart::UARTDevice, public Component {
   float target_distance_;
   float target_speed_;
   float target_energy_;
-  DFRobotMode mode_{MODE_PRESENCE};
-  DFRobotModel model_{MODEL_UNKNOWN};
-  DFRobotModel hw_model_{MODEL_UNKNOWN};
-  std::string hw_version_;
-  std::string sw_version_;
+  uint8_t mode_{MODE_PRESENCE};
+  std::string hw_version_{""};
+  std::string sw_version_{""};
 
-#ifdef USE_SWITCH
-  ESPPreferenceObject pref_;
-#endif
-
+  uint64_t loop_time_{0};
+  uint8_t module_present_{false};
   char read_buffer_[MMWAVE_READ_BUFFER_LENGTH];
   size_t read_pos_{0};
   CircularCommandQueue cmd_queue_;
   uint32_t ts_last_cmd_sent_{0};
   int32_t ts_cmd_error_cnt_{0};
+
+  ESPPreferenceObject pref_;
 
   uint8_t read_message_();
   uint8_t send_cmd_(const char *cmd, uint32_t duration);

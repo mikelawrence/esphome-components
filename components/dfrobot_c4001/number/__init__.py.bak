@@ -41,21 +41,20 @@ OffLatencyNumber = dfrobot_c4001_ns.class_("OffLatencyNumber", number.Number)
 InhibitTimeNumber = dfrobot_c4001_ns.class_("InhibitTimeNumber", number.Number)
 ThresholdFactorNumber = dfrobot_c4001_ns.class_("ThresholdFactorNumber", number.Number)
 
-GROUP_RANGE = "Range Group: 'min_range' and 'max_range'"
-GROUP_SENSITIVITY = "Sensitivity Group: 'hold_sensitivity' and 'trigger_sensitivity'"
-GROUP_LATENCY = "Latency Group: 'on_latency' and 'off_latency'"
+# DETECTION_RANGE_GROUP = "range"
+# SENSITIVITY_GROUP = "sensitivity"
 
 CONFIG_SCHEMA = (
     cv.Schema(
         {
-            cv.Inclusive(CONF_MAX_RANGE, GROUP_RANGE): number.number_schema(
+            cv.Optional(CONF_MAX_RANGE): number.number_schema(
                 MaxRangeNumber,
                 unit_of_measurement=UNIT_METER,
                 device_class=DEVICE_CLASS_DISTANCE,
                 entity_category=ENTITY_CATEGORY_CONFIG,
                 icon=ICON_ARROW_EXPAND_VERTICAL,
             ),
-            cv.Inclusive(CONF_MIN_RANGE, GROUP_RANGE): number.number_schema(
+            cv.Optional(CONF_MIN_RANGE): number.number_schema(
                 MinRangeNumber,
                 unit_of_measurement=UNIT_METER,
                 device_class=DEVICE_CLASS_DISTANCE,
@@ -69,28 +68,24 @@ CONFIG_SCHEMA = (
                 entity_category=ENTITY_CATEGORY_CONFIG,
                 icon=ICON_ARROW_EXPAND_VERTICAL,
             ),
-            cv.Inclusive(
-                CONF_HOLD_SENSITIVITY, GROUP_SENSITIVITY
-            ): number.number_schema(
+            cv.Optional(CONF_HOLD_SENSITIVITY): number.number_schema(
                 HoldSensitivityNumber,
                 entity_category=ENTITY_CATEGORY_CONFIG,
                 icon=ICON_SCALE,
             ),
-            cv.Inclusive(
-                CONF_TRIGGER_SENSITIVITY, GROUP_SENSITIVITY
-            ): number.number_schema(
+            cv.Optional(CONF_TRIGGER_SENSITIVITY): number.number_schema(
                 TriggerSensitivityNumber,
                 entity_category=ENTITY_CATEGORY_CONFIG,
                 icon=ICON_SCALE,
             ),
-            cv.Inclusive(CONF_ON_LATENCY, GROUP_LATENCY): number.number_schema(
+            cv.Optional(CONF_ON_LATENCY): number.number_schema(
                 OnLatencyNumber,
                 unit_of_measurement=UNIT_SECOND,
                 entity_category=ENTITY_CATEGORY_CONFIG,
                 device_class=DEVICE_CLASS_DURATION,
                 icon=ICON_TIMER,
             ),
-            cv.Inclusive(CONF_OFF_LATENCY, GROUP_LATENCY): number.number_schema(
+            cv.Optional(CONF_OFF_LATENCY): number.number_schema(
                 OffLatencyNumber,
                 unit_of_measurement=UNIT_SECOND,
                 entity_category=ENTITY_CATEGORY_CONFIG,
@@ -151,11 +146,6 @@ def _final_validate(config):
             raise cv.Invalid(
                 f"When 'mode' is set to {mode}, {CONF_INHIBIT_TIME} number is not allowed."
             )
-    if CONF_TRIGGER_RANGE in config and CONF_MIN_RANGE not in config:
-        raise cv.Invalid(
-            "some but not all values in the same group of inclusion 'Trigger Range Group: "
-            "'min_range', 'max_range' and 'trigger_range''."
-        )
 
     return config
 
@@ -204,7 +194,7 @@ async def to_code(config):
         cg.add(sens0609_hub.set_off_latency_number(n))
     if inhibit_time := config.get(CONF_INHIBIT_TIME):
         n = await number.new_number(
-            inhibit_time, min_value=0.1, max_value=60.0, step=0.01
+            inhibit_time, min_value=0.1, max_value=255.0, step=0.01
         )
         await cg.register_parented(n, config[CONF_DFROBOT_C4001_ID])
         cg.add(sens0609_hub.set_inhibit_time_number(n))
