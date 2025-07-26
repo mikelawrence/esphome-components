@@ -53,7 +53,7 @@ static const int8_t SEN5X_INDEX_SCALE_FACTOR = 10;                            //
 static const int8_t SEN5X_MIN_INDEX_VALUE = 1 * SEN5X_INDEX_SCALE_FACTOR;     // must be adjusted by the scale factor
 static const int16_t SEN5X_MAX_INDEX_VALUE = 500 * SEN5X_INDEX_SCALE_FACTOR;  // must be adjusted by the scale factor
 
-static inline const char *model_to_str_(Sen5xType model) {
+static inline const char *model_to_str(Sen5xType model) {
   switch (model) {
     case SEN50:
       return "SEN50";
@@ -76,7 +76,7 @@ static inline const char *model_to_str_(Sen5xType model) {
   }
 }
 
-static inline Sen5xType str_to_model_(std::string product_name) {
+static inline Sen5xType str_to_model(const std::string &product_name) {
   if (product_name == "SEN50") {
     return SEN50;
   } else if (product_name == "SEN54") {
@@ -98,7 +98,7 @@ static inline Sen5xType str_to_model_(std::string product_name) {
   }
 }
 
-static inline std::string convert_to_string_(uint16_t array[], uint8_t length) {
+static inline std::string convert_to_string(uint16_t array[], uint8_t length) {
   for (int i = 0; i < length; i++) {
     array[i] = convert_big_endian(array[i]);
   }
@@ -161,7 +161,7 @@ void SEN5XComponent::internal_setup_(SetupStates state) {
         this->mark_failed();
         return;
       }
-      this->serial_number_ = convert_to_string_(string_number, 16);
+      this->serial_number_ = convert_to_string(string_number, 16);
       ESP_LOGV(TAG, "Serial number %s", this->serial_number_.c_str());
       this->set_timeout(20, [this]() { this->internal_setup_(SM_GET_PN); });
       break;
@@ -172,7 +172,7 @@ void SEN5XComponent::internal_setup_(SetupStates state) {
         this->mark_failed();
         return;
       }
-      this->product_name_ = convert_to_string_(string_number, 16);
+      this->product_name_ = convert_to_string(string_number, 16);
       if (this->product_name_.empty()) {
         // If blank the user must set the model parameter in the configuration
         // original PR indicated the SEN66 did not report Product Name, mine do
@@ -184,11 +184,11 @@ void SEN5XComponent::internal_setup_(SetupStates state) {
           return;
         } else {
           // update blank product name from model parameter
-          this->product_name_ = model_to_str_(this->model_.value());
+          this->product_name_ = model_to_str(this->model_.value());
         }
       } else if (!this->model_.has_value()) {
         // model is not defined, get it from product name
-        this->model_.value() = str_to_model_(this->product_name_);
+        this->model_.value() = str_to_model(this->product_name_);
         if (this->model_.value() == UNKNOWN_MODEL) {
           ESP_LOGE(TAG, "Product Name failed");
           this->error_code_ = PRODUCT_NAME_FAILED;
@@ -197,7 +197,7 @@ void SEN5XComponent::internal_setup_(SetupStates state) {
         }
       } else {
         // product name and model specified in config, they must match
-        if (this->product_name_ != model_to_str_(this->model_.value())) {
+        if (this->product_name_ != model_to_str(this->model_.value())) {
           ESP_LOGE(TAG, "Product Name failed");
           this->error_code_ = PRODUCT_NAME_FAILED;
           this->mark_failed();
@@ -410,8 +410,8 @@ void SEN5XComponent::dump_config() {
                 "  Model: %s\n"
                 "  Product Name: %s\n"
                 "  Serial number: %s\n",
-                this->address_, this->update_interval_, model_to_str_(this->model_.value()),
-                this->product_name_.c_str(), this->serial_number_.c_str());
+                this->address_, this->update_interval_, model_to_str(this->model_.value()), this->product_name_.c_str(),
+                this->serial_number_.c_str());
 
   if (this->is_sen6x_()) {
     ESP_LOGCONFIG(TAG, "  Firmware version: %u.%u", this->firmware_major_, this->firmware_minor_);
@@ -447,7 +447,7 @@ void SEN5XComponent::dump_config() {
   LOG_SENSOR("  ", "NOx", this->nox_sensor_);
   LOG_SENSOR("  ", "CO₂", this->co2_sensor_);
   if (this->co2_sensor_ != nullptr) {
-    ESP_LOGCONFIG(TAG, "    Automatic self calibration: %s", this->co2_auto_calibrate_.value() ? "On" : "Off");
+    ESP_LOGCONFIG(TAG, "    Automatic self calibration: %s", ONOFF(this->co2_auto_calibrate_.value()));
     if (this->co2_ambient_pressure_source_ != nullptr) {
       ESP_LOGCONFIG(TAG, "    Dynamic ambient pressure compensation using sensor '%s'",
                     this->co2_ambient_pressure_source_->get_name().c_str());
@@ -496,6 +496,18 @@ void SEN5XComponent::update() {
   uint16_t cmd;
   uint8_t length;
   switch (this->model_.value()) {
+    case SEN50:
+      cmd = SEN5X_CMD_READ_MEASUREMENT;
+      length = 4;
+      break;
+    case SEN54:
+      cmd = SEN5X_CMD_READ_MEASUREMENT;
+      length = 7;
+      break;
+    case SEN55:
+      cmd = SEN5X_CMD_READ_MEASUREMENT;
+      length = 8;
+      break;
     case SEN60:
       cmd = SEN60_CMD_READ_MEASUREMENT;
       length = 4;
@@ -517,9 +529,9 @@ void SEN5XComponent::update() {
       length = 9;
       break;
     default:
-      cmd = SEN5X_CMD_READ_MEASUREMENT;
-      length = 9;
-      break;
+      ESP_LOGE(TAG, "Unsupported model");
+      this->status_set_warning();
+      return;
   }
 
   if (!this->write_command(cmd)) {
@@ -532,6 +544,7 @@ void SEN5XComponent::update() {
     uint16_t measurements[9];
 
     if (!this->read_data(measurements, length)) {
+      ESP_LOGV(TAG, "Read measurement error");
       this->status_set_warning();
       return;
     }
