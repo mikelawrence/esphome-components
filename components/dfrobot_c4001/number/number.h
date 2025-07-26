@@ -10,42 +10,34 @@ class MaxRangeNumber : public number::Number, public Parented<DFRobotC4001Hub> {
  protected:
   void control(float value) override;
 };
-
 class MinRangeNumber : public number::Number, public Parented<DFRobotC4001Hub> {
  protected:
   void control(float value) override;
 };
-
 class TriggerRangeNumber : public number::Number, public Parented<DFRobotC4001Hub> {
  protected:
   void control(float value) override;
 };
-
 class HoldSensitivityNumber : public number::Number, public Parented<DFRobotC4001Hub> {
  protected:
   void control(float value) override;
 };
-
 class TriggerSensitivityNumber : public number::Number, public Parented<DFRobotC4001Hub> {
  protected:
   void control(float value) override;
 };
-
 class OnLatencyNumber : public number::Number, public Parented<DFRobotC4001Hub> {
  protected:
   void control(float value) override;
 };
-
 class OffLatencyNumber : public number::Number, public Parented<DFRobotC4001Hub> {
  protected:
   void control(float value) override;
 };
-
 class InhibitTimeNumber : public number::Number, public Parented<DFRobotC4001Hub> {
  protected:
   void control(float value) override;
 };
-
 class ThresholdFactorNumber : public number::Number, public Parented<DFRobotC4001Hub> {
  protected:
   void control(float value) override;

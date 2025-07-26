@@ -1,84 +1,143 @@
-#include "commands.h"
-
-#include <cmath>
-#include <sstream>
-
-#include "esphome/core/log.h"
-
 #include "dfrobot_c4001.h"
+#include "commands.h"
 
 namespace esphome {
 namespace dfrobot_c4001 {
 static const char *const TAG = "dfrobot_c4001.commands";
 
+// returns
+//  negative number: failed, abs(return value) is the number of errors that occurred
+//  1: success
+//  0: not done yet
+// if this->retry_power_stop = true then command reported "sensor not stopped", need to send sensorStop command
 uint8_t Command::execute(DFRobotC4001Hub *parent) {
   this->parent_ = parent;
-  if (this->cmd_sent_) {
-    if (this->parent_->read_message_()) {
-      std::string message(this->parent_->read_buffer_);
-      if (message.rfind("Error") != std::string::npos) {
-        ESP_LOGD(TAG, "Command not recognized");
-        if (this->retries_left_ > 0) {
-          this->retries_left_ -= 1;
-          this->cmd_sent_ = false;
-          ESP_LOGD(TAG, "Retrying (%s)", this->cmd_.c_str());
-          return 0;
-        } else {
-          this->parent_->find_prompt_();
-          return 1;  // Command done
-        }
-      }
-      uint8_t rc = on_message(message);
-      if (rc == 0) {
-        // command is not done yet
-        return 0;
-      } else {
-        // command is done
-        this->parent_->find_prompt_();
-        return 1;
-      }
+  // send command is separate from the rest of the state machine
+  if (this->state_ == STATE_CMD_SEND) {
+    this->done_ = false;
+    this->error_ = false;
+    this->retry_power_stop = false;
+    if (this->parent_->send_cmd_(this->cmd_.c_str(), this->cmd_duration_ms_)) {
+      this->state_ = STATE_WAIT_ECHO;
     }
-    if (millis() - this->parent_->ts_last_cmd_sent_ > this->timeout_ms_) {
-      if (this->retries_left_ > 0) {
-        this->retries_left_ -= 1;
-        this->cmd_sent_ = false;
-        ESP_LOGD(TAG, "Command timeout, retrying (%s)", this->cmd_.c_str());
-      } else {
-        ESP_LOGD(TAG, "Command failed (%s)", this->cmd_.c_str());
-        return 1;  // Command done
-      }
+    if (this->cmd_ == "resetSystem") {
+      // resetSystem command only returns prompt, bypass central part of state machine
+      on_message();
+      ESP_LOGV(TAG, "Send Cmd: Shortcutting Reset System Command");
+      this->state_ = STATE_WAIT_PROMPT;
     }
-  } else if (this->parent_->send_cmd_(this->cmd_.c_str(), this->cmd_duration_ms_)) {
-    this->cmd_sent_ = true;
+    return 0;
   }
-  return 0;  // Command not done yet
+  // surround state machine with a successful read message
+  if (this->parent_->read_message_()) {
+    this->read_buffer_ = this->parent_->read_buffer_;
+    switch (this->state_) {
+      case STATE_WAIT_ECHO:
+        if (strstr(this->read_buffer_, this->cmd_.c_str())) {
+          this->state_ = STATE_PROCESS;
+        }
+        break;
+      case STATE_PROCESS:
+        if (strstr(this->read_buffer_, "Error")) {
+          this->error_ = true;
+          this->state_ = STATE_WAIT_PROMPT;
+          break;
+        }
+        if (strstr(this->read_buffer_, "sensor is not stopped")) {
+          // Let queue know we need to stop the sensor and then retry this command
+          this->retry_power_stop = true;
+          break;
+        }
+        // process message
+        on_message();
+        if (this->done_) {
+          this->state_ = STATE_WAIT_PROMPT;
+        }
+        break;
+      case STATE_WAIT_PROMPT:
+        if (strstr(this->read_buffer_, "DFRobot:/>")) {
+          if (this->error_ || this->retry_power_stop) {
+            if (this->retries_left_ > 0) {
+              this->retries_left_ -= 1;
+              this->error_count_ -= 1;
+              if (this->retry_power_stop) {
+                ESP_LOGD(TAG, "Command Retry: Sensor not stopped");
+                // allow command to be used again
+                this->state_ = STATE_CMD_SEND;
+                // this command is done, but the queue needs to send a commandStop first
+                return this->error_count_ < 0 ? this->error_count_ : 1;
+              } else {
+                ESP_LOGD(TAG, "Command Retry");
+                // reset state to send command again
+                this->state_ = STATE_CMD_SEND;
+                return 0;  // command not done
+              }
+            } else {
+              ESP_LOGE(TAG, "Command Failure");
+              this->error_count_ -= 1;
+            }
+          } else {
+            ESP_LOGV(TAG, "Send Cmd: Complete: %s", this->cmd_.c_str());
+          }
+          // Command done
+          this->state_ = STATE_DONE;
+          return this->error_count_ < 0 ? this->error_count_ : 1;
+        }
+        break;
+      default:  // STATE_DONE
+        // Command done
+        return this->error_count_ < 0 ? this->error_count_ : 1;
+    }
+  }
+  // check for timeout
+  if (millis() - this->parent_->ts_last_cmd_sent_ > this->timeout_ms_) {
+    if (this->retries_left_ > 0) {
+      this->retries_left_ -= 1;
+      ESP_LOGD(TAG, "Command timeout: Retrying");
+      this->state_ = STATE_CMD_SEND;
+      this->error_count_ -= 1;
+      return 0;  // command not done
+    } else {
+      ESP_LOGE(TAG, "Command Failure: %s", this->cmd_.c_str());
+      this->state_ = STATE_DONE;
+      this->error_count_ -= 1;
+      // Command done
+      return this->error_count_ < 0 ? this->error_count_ : 1;
+    }
+  }
+  return 0;
+}
+
+void Command::on_message() {
+  if (strstr(this->parent_->read_buffer_, "Done"))
+    this->done_ = true;
 }
 
 uint8_t ReadStateCommand::execute(DFRobotC4001Hub *parent) {
+  char *token;
+
   this->parent_ = parent;
   if (this->parent_->read_message_()) {
-    std::string message(this->parent_->read_buffer_);
-    if (message.rfind("$DFHPD,0, , , *") != std::string::npos) {
+    if (strstr(this->parent_->read_buffer_, "$DFHPD,0, , , *")) {
       this->parent_->set_occupancy(false);
-      this->parent_->set_enable(true);
       ESP_LOGV(TAG, "Recv Rpt: Occupancy Clear");
-      return 1;  // Command done
-    } else if (message.rfind("$DFHPD,1, , , *") != std::string::npos) {
+      return true;  // Command done
+    } else if (strstr(this->parent_->read_buffer_, "$DFHPD,1, , , *")) {
       this->parent_->set_occupancy(true);
-      this->parent_->set_enable(true);
       ESP_LOGV(TAG, "Recv Rpt: Occupancy Detected");
-      return 1;  // Command done
-    } else if (message.starts_with("$DFDMD")) {
-      std::string str1, str2, str3, str4, str5;
-      std::replace(message.begin(), message.end(), ',', ' ');
-      std::stringstream s(message);
-
-      s >> str1 >> str1 >> str2 >> str3 >> str4 >> str5;
-      auto target = parse_number<int>(str1);
-      auto target_distance = parse_number<float>(str3);
-      auto target_speed = parse_number<float>(str4);
-      auto target_energy = parse_number<float>(str5);
-      if (target.has_value() && target == 1) {
+      return true;  // Command done
+    } else if (strstr(this->parent_->read_buffer_, "$DFDMD")) {
+      strtok(this->parent_->read_buffer_, ",");
+      token = strtok(NULL, ",");
+      auto target = parse_number<uint8_t>(token);
+      strtok(NULL, ",");
+      token = strtok(NULL, ",");
+      auto target_distance = parse_number<float>(token);
+      token = strtok(NULL, ",");
+      auto target_speed = parse_number<float>(token);
+      token = strtok(NULL, ",");
+      auto target_energy = parse_number<float>(token);
+      if (target.has_value() && target.value() == 1) {
         // one target is detected
         if (target_distance.has_value() && target_speed.has_value() && target_energy.has_value()) {
           // 1 target is detected, that is all this sensor can do
@@ -86,13 +145,12 @@ uint8_t ReadStateCommand::execute(DFRobotC4001Hub *parent) {
           this->parent_->set_target_speed(target_speed.value());
           this->parent_->set_target_energy(target_energy.value());
           this->parent_->set_occupancy(true);
-          this->parent_->set_enable(true);
           ESP_LOGV(TAG, "Recv Rpt: Target Detected, Dist=%.3f, Speed=%.3f, Energy=%d", target_distance.value(),
                    target_speed.value(), (uint) target_energy.value());
-          return 1;  // command completed successfully
+          return true;  // command completed successfully
         } else {
-          ESP_LOGE(TAG, "Error parsing Distance and Speed Detection Output");
-          return 1;  // command done with error
+          ESP_LOGD(TAG, "Error parsing Distance and Speed Detection Output");
+          return true;  // command done with error
         }
       } else if (target.has_value() && target == 0) {
         // no target is detected
@@ -100,76 +158,37 @@ uint8_t ReadStateCommand::execute(DFRobotC4001Hub *parent) {
         this->parent_->set_target_speed(0.0);
         this->parent_->set_target_energy(0.0);
         this->parent_->set_occupancy(false);
-        this->parent_->set_enable(true);
         ESP_LOGV(TAG, "Recv Rpt: No Target");
-        return 1;  // command completed successfully
+        return true;  // command completed successfully
       }
     }
   }
   if (millis() - this->parent_->ts_last_cmd_sent_ > this->timeout_ms_) {
-    return 1;  // Command done, timeout
+    return true;  // Command done, timeout
   }
-  return 0;  // Command not done yet.
+  return false;  // Command not done yet.
 }
 
-uint8_t ReadStateCommand::on_message(std::string &message) { return 1; }
+GetRangeCommand::GetRangeCommand() { this->cmd_ = "getRange"; }
 
-PowerCommand::PowerCommand(bool power_on) : power_on_(power_on) {
-  if (power_on) {
-    cmd_ = "sensorStart";
-  } else {
-    cmd_ = "sensorStop";
-  }
-};
+void GetRangeCommand::on_message() {
+  char *token;
 
-uint8_t PowerCommand::on_message(std::string &message) {
-  if (message == "sensor stopped already") {
-    this->parent_->set_enable(false);
-    ESP_LOGV(TAG, "Stopped sensor");
-    return 1;  // Command done
-  } else if (message == "sensor started already") {
-    this->parent_->set_enable(true);
-    ESP_LOGV(TAG, "Started sensor");
-    return 1;  // Command done
-  } else if (message == "Done") {
-    if (this->power_on_) {
-      this->parent_->set_enable(true);
-      ESP_LOGV(TAG, "Started sensor");
+  token = strtok(this->read_buffer_, " ");
+  if (strcmp(token, "Done") == 0) {
+    if (!this->min_range_.has_value() || !this->max_range_.has_value()) {
+      ESP_LOGD(TAG, "Failed to parse response");
+      this->error_ = true;  // command is done
     } else {
-      this->parent_->set_enable(false);
-      ESP_LOGV(TAG, "Stopped sensor");
+      this->parent_->set_min_range(this->min_range_.value(), false);
+      this->parent_->set_max_range(this->max_range_.value(), false);
+      this->done_ = true;  // command is done
     }
-    return 1;  // Command done
-  }
-  return 0;  // Command not done yet.
-}
-
-GetRangeCommand::GetRangeCommand() { cmd_ = "getRange"; }
-
-uint8_t GetRangeCommand::on_message(std::string &message) {
-  std::string str1, str2;
-  std::stringstream s(message);
-
-  if (message.starts_with("Response")) {
-    s >> str1 >> str1 >> str2;
-    auto min = parse_number<float>(str1);
-    auto max = parse_number<float>(str2);
-    if (min.has_value() && max.has_value()) {
-      this->min_range_ = round(min.value() * 100.0) / 100.0;
-      this->max_range_ = round(max.value() * 100.0) / 100.0;
-      return 0;
-    } else {
-      ESP_LOGE(TAG, "Failed to parse response");
-      return 1;  // Command done
-    }
-  } else if (message == "Done") {
-    this->parent_->set_min_range(this->min_range_, false);
-    this->parent_->set_max_range(this->max_range_, false);
-    ESP_LOGV(TAG, "Get Range complete: Parsed Min Range (%.3f) and Max Range (%.3f)", this->min_range_,
-             this->max_range_);
-    return 1;  // Command done
-  } else {
-    return 0;
+  } else if (strcmp(token, "Response") == 0) {
+    token = strtok(NULL, " ");
+    this->min_range_ = parse_number<float>(token);
+    token = strtok(NULL, " ");
+    this->max_range_ = parse_number<float>(token);
   }
 }
 
@@ -177,431 +196,269 @@ SetRangeCommand::SetRangeCommand(float min_range, float max_range) {
   this->cmd_ = str_sprintf("setRange %.3f %.3f", min_range, max_range);
 };
 
-uint8_t SetRangeCommand::on_message(std::string &message) {
-  if (message == "sensor is not stopped") {
-    ESP_LOGE(TAG, "Sensor is not stopped");
-    return 1;  // Command done
-  } else if (message == "Done") {
-    ESP_LOGV(TAG, "Set Range complete");
-    return 1;  // Command done
-  }
-  return 0;  // Command not done yet
-}
+GetTrigRangeCommand::GetTrigRangeCommand() { this->cmd_ = "getTrigRange"; }
 
-GetTrigRangeCommand::GetTrigRangeCommand() { cmd_ = "getTrigRange"; }
+void GetTrigRangeCommand::on_message() {
+  char *token;
 
-uint8_t GetTrigRangeCommand::on_message(std::string &message) {
-  std::string str1;
-  std::stringstream s(message);
-
-  if (message.starts_with("Response")) {
-    s >> str1 >> str1;
-    auto trig = parse_number<float>(str1);
-    if (trig.has_value()) {
-      this->trigger_range_ = round(trig.value() * 100.0) / 100.0;
-      return 0;
+  token = strtok(this->read_buffer_, " ");
+  if (strcmp(token, "Done") == 0) {
+    if (!this->trigger_range_.has_value()) {
+      ESP_LOGD(TAG, "Failed to parse response");
+      this->error_ = true;  // command is done
     } else {
-      ESP_LOGE(TAG, "Failed to parse response");
-      return 1;  // Command done
+      this->parent_->set_trigger_range(this->trigger_range_.value(), false);
+      this->done_ = true;  // command is done
     }
-  } else if (message == "Done") {
-    this->parent_->set_trigger_range(this->trigger_range_, false);
-    ESP_LOGV(TAG, "Get Trigger Range complete: Parsed Trigger Range Range (%.3f)", this->trigger_range_);
-    return 1;  // Command done
-  } else {
-    return 0;
+  } else if (strcmp(token, "Response") == 0) {
+    token = strtok(NULL, " ");
+    this->trigger_range_ = parse_number<float>(token);
   }
 }
 
 SetTrigRangeCommand::SetTrigRangeCommand(float trigger_range) {
-  this->trigger_range_ = clamp(trigger_range, 0.6f, 25.0f);
-  this->cmd_ = str_sprintf("setTrigRange %.3f", this->trigger_range_);
+  this->cmd_ = str_sprintf("setTrigRange %.3f", trigger_range);
 };
 
-uint8_t SetTrigRangeCommand::on_message(std::string &message) {
-  if (message == "sensor is not stopped") {
-    ESP_LOGE(TAG, "Sensor is not stopped");
-    return 1;  // Command done
-  } else if (message == "Done") {
-    ESP_LOGV(TAG, "Set Trigger Range complete");
-    return 1;  // Command done
-  } else {
-    return 0;  // Command not done yet
-  }
-}
+GetSensitivityCommand::GetSensitivityCommand() { this->cmd_ = "getSensitivity"; }
 
-GetSensitivityCommand::GetSensitivityCommand() { cmd_ = "getSensitivity"; }
+void GetSensitivityCommand::on_message() {
+  char *token;
 
-uint8_t GetSensitivityCommand::on_message(std::string &message) {
-  std::string str1, str2;
-  std::stringstream s(message);
-
-  if (message.starts_with("Response")) {
-    s >> str1 >> str1 >> str2;
-    auto hold = parse_number<uint16_t>(str1);
-    auto trig = parse_number<uint16_t>(str2);
-    if (hold.has_value() && trig.has_value()) {
-      this->hold_sensitivity_ = hold.value();
-      this->trigger_sensitivity_ = trig.value();
-      return 0;
+  token = strtok(this->read_buffer_, " ");
+  if (strcmp(token, "Done") == 0) {
+    if (!this->hold_sensitivity_.has_value() || !this->trigger_sensitivity_.has_value()) {
+      ESP_LOGD(TAG, "Failed to parse response");
+      this->error_ = true;  // command is done
     } else {
-      ESP_LOGE(TAG, "Failed to parse response");
-      return 1;  // Command done
+      this->parent_->set_hold_sensitivity(this->hold_sensitivity_.value(), false);
+      this->parent_->set_trigger_sensitivity(this->trigger_sensitivity_.value(), false);
+      this->done_ = true;  // command is done
     }
-  } else if (message == "Done") {
-    this->parent_->set_hold_sensitivity(this->hold_sensitivity_, false);
-    this->parent_->set_trigger_sensitivity(this->trigger_sensitivity_, false);
-    ESP_LOGV(TAG, "Get Sensitivity complete: Parsed Hold Sensitivity (%d) and Trigger Sensitivity (%d)",
-             this->hold_sensitivity_, this->trigger_sensitivity_);
-    return 1;  // Command done
-  } else {
-    return 0;
+  } else if (strcmp(token, "Response") == 0) {
+    token = strtok(NULL, " ");
+    this->hold_sensitivity_ = parse_number<float>(token);
+    token = strtok(NULL, " ");
+    this->trigger_sensitivity_ = parse_number<float>(token);
   }
 }
 
-SetSensitivityCommand::SetSensitivityCommand(uint16_t hold_sensitivity, uint16_t trigger_sensitivity) {
-  this->hold_sensitivity_ = clamp(hold_sensitivity, uint16_t(0), uint16_t(9));
-  this->trigger_sensitivity_ = clamp(trigger_sensitivity, uint16_t(0), uint16_t(9));
-  this->cmd_ = str_sprintf("setSensitivity %d %d", this->hold_sensitivity_, this->trigger_sensitivity_);
+SetSensitivityCommand::SetSensitivityCommand(float hold_sensitivity, float trigger_sensitivity) {
+  this->cmd_ = str_sprintf("setSensitivity %.0f %.0f", round(hold_sensitivity), round(trigger_sensitivity));
 };
 
-uint8_t SetSensitivityCommand::on_message(std::string &message) {
-  if (message == "sensor is not stopped") {
-    ESP_LOGE(TAG, "Sensor is not stopped");
-    return 1;  // Command done
-  } else if (message == "Done") {
-    ESP_LOGV(TAG, "Set Sensitivity complete");
-    return 1;  // Command done
-  }
-  return 0;  // Command not done yet
-}
+GetLatencyCommand::GetLatencyCommand() { this->cmd_ = "getLatency"; }
 
-GetLatencyCommand::GetLatencyCommand() { cmd_ = "getLatency"; }
+void GetLatencyCommand::on_message() {
+  char *token;
 
-uint8_t GetLatencyCommand::on_message(std::string &message) {
-  std::string str1, str2;
-  std::stringstream s(message);
-
-  if (message.starts_with("Response")) {
-    s >> str1 >> str1 >> str2;
-    auto on = parse_number<float>(str1);
-    auto off = parse_number<float>(str2);
-    if (on.has_value() && off.has_value()) {
-      this->on_latency_ = round(on.value() * 100.0) / 100.0;
-      this->off_latency_ = round(off.value() * 100.0) / 100.0;
-      return 0;
+  token = strtok(this->read_buffer_, " ");
+  if (strcmp(token, "Done") == 0) {
+    if (!this->on_latency_.has_value() || !this->off_latency_.has_value()) {
+      ESP_LOGD(TAG, "Failed to parse response");
+      this->error_ = true;  // command is done
     } else {
-      ESP_LOGE(TAG, "Failed to parse response");
-      return 1;  // Command done
+      this->parent_->set_on_latency(this->on_latency_.value(), false);
+      this->parent_->set_off_latency(this->off_latency_.value(), false);
+      this->done_ = true;  // command is done
     }
-  } else if (message == "Done") {
-    this->parent_->set_on_latency(this->on_latency_, false);
-    this->parent_->set_off_latency(this->off_latency_, false);
-    ESP_LOGV(TAG, "Get Latency complete: Parsed On Latency (%.3f) and Off Latency (%.3f)", this->on_latency_,
-             this->off_latency_);
-    return 1;  // Command done
-  } else {
-    return 0;
+  } else if (strcmp(token, "Response") == 0) {
+    token = strtok(NULL, " ");
+    this->on_latency_ = parse_number<float>(token);
+    token = strtok(NULL, " ");
+    this->off_latency_ = parse_number<float>(token);
   }
 }
 
 SetLatencyCommand::SetLatencyCommand(float on_latency, float off_latency) {
-  this->on_latency_ = clamp(on_latency, 0.0f, 100.0f);
-  this->off_latency_ = clamp(off_latency, 0.5f, 1500.0f);
-  this->cmd_ = str_sprintf("setLatency %.3f %.3f", this->on_latency_, this->off_latency_);
+  this->cmd_ = str_sprintf("setLatency %.3f %.3f", on_latency, off_latency);
 };
 
-uint8_t SetLatencyCommand::on_message(std::string &message) {
-  if (message == "sensor is not stopped") {
-    ESP_LOGE(TAG, "Sensor is not stopped");
-    return 1;  // Command done
-  } else if (message == "Done") {
-    ESP_LOGV(TAG, "Set Latency complete");
-    return 1;  // Command done
-  }
-  return 0;  // Command not done yet
-}
+GetInhibitTimeCommand::GetInhibitTimeCommand() { this->cmd_ = "getInhibit"; }
 
-GetInhibitTimeCommand::GetInhibitTimeCommand() { cmd_ = "getInhibit"; }
+void GetInhibitTimeCommand::on_message() {
+  char *token;
 
-uint8_t GetInhibitTimeCommand::on_message(std::string &message) {
-  std::string str1;
-  std::stringstream s(message);
-
-  if (message.starts_with("Response")) {
-    s >> str1 >> str1;
-    auto inhibit = parse_number<float>(str1);
-    if (inhibit.has_value()) {
-      this->inhibit_time_ = round(inhibit.value() * 100.0) / 100.0;
-      return 0;
+  token = strtok(this->read_buffer_, " ");
+  if (strcmp(token, "Done") == 0) {
+    if (!this->inhibit_time_.has_value()) {
+      ESP_LOGD(TAG, "Failed to parse response");
+      this->error_ = true;  // command is done
     } else {
-      ESP_LOGE(TAG, "Failed to parse response");
-      return 1;  // Command done
+      // The module tends to add 0.001 when this value is set, remove it here
+      this->inhibit_time_.value() = floor(this->inhibit_time_.value() * 500.0) / 500.0;
+      this->parent_->set_inhibit_time(this->inhibit_time_.value(), false);
+      this->done_ = true;  // command is done
     }
-  } else if (message == "Done") {
-    this->parent_->set_inhibit_time(this->inhibit_time_, false);
-    ESP_LOGV(TAG, "Get Inhibit Time complete: Parsed Inhibit Time (%.3f)", this->inhibit_time_);
-    return 1;  // Command done
-  } else {
-    return 0;
+  } else if (strcmp(token, "Response") == 0) {
+    token = strtok(NULL, " ");
+    this->inhibit_time_ = parse_number<float>(token);
   }
 }
 
-SetInhibitTimeCommand::SetInhibitTimeCommand(float inhibit) {
-  this->inhibit_time_ = clamp(inhibit, 0.6f, 25.0f);
-  this->cmd_ = str_sprintf("setInhibit %.3f", this->inhibit_time_);
-};
+SetInhibitTimeCommand::SetInhibitTimeCommand(float inhibit) { this->cmd_ = str_sprintf("setInhibit %.3f", inhibit); };
 
-uint8_t SetInhibitTimeCommand::on_message(std::string &message) {
-  if (message == "sensor is not stopped") {
-    ESP_LOGE(TAG, "Sensor is not stopped");
-    return 1;  // Command done
-  } else if (message == "Done") {
-    ESP_LOGV(TAG, "Set Inhibit Time complete");
-    return 1;  // Command done
-  } else {
-    return 0;  // Command not done yet
-  }
-}
+GetThrFactorCommand::GetThrFactorCommand() { this->cmd_ = "getThrFactor"; }
 
-GetThrFactorCommand::GetThrFactorCommand() { cmd_ = "getThrFactor"; }
+void GetThrFactorCommand::on_message() {
+  char *token;
 
-uint8_t GetThrFactorCommand::on_message(std::string &message) {
-  std::string str1;
-  std::stringstream s(message);
-
-  if (message.starts_with("Response")) {
-    s >> str1 >> str1;
-    auto thr = parse_number<float>(str1);
-    if (thr.has_value()) {
-      this->threshold_factor_ = round(thr.value());
-      return 0;
+  token = strtok(this->read_buffer_, " ");
+  if (strcmp(token, "Done") == 0) {
+    if (!this->threshold_factor_.has_value()) {
+      ESP_LOGD(TAG, "Failed to parse response");
+      this->error_ = true;  // command is done
     } else {
-      ESP_LOGE(TAG, "Failed to parse response");
-      return 1;  // Command done
+      this->parent_->set_threshold_factor(this->threshold_factor_.value(), false);
+      this->done_ = true;  // command is done
     }
-  } else if (message == "Done") {
-    this->parent_->set_threshold_factor(this->threshold_factor_, false);
-    ESP_LOGV(TAG, "Get Threshold Factor complete: Parsed Threshold Factor (%.0f)", this->threshold_factor_);
-    return 1;  // Command done
-  } else {
-    return 0;
+  } else if (strcmp(token, "Response") == 0) {
+    token = strtok(NULL, " ");
+    this->threshold_factor_ = parse_number<float>(token);
   }
 }
 
 SetThrFactorCommand::SetThrFactorCommand(float threshold_factor) {
-  this->threshold_factor_ = threshold_factor;
-  this->cmd_ = str_sprintf("setThrFactor %.0f", this->threshold_factor_);
+  this->cmd_ = str_sprintf("setThrFactor %.3f", threshold_factor);
 };
 
-uint8_t SetThrFactorCommand::on_message(std::string &message) {
-  if (message == "sensor is not stopped") {
-    ESP_LOGE(TAG, "Sensor is not stopped");
-    return 1;  // Command done
-  } else if (message == "Done") {
-    ESP_LOGV(TAG, "Set Threshold Factor complete");
-    return 1;  // Command done
-  } else {
-    return 0;  // Command not done yet
+SetLedModeCommand1::SetLedModeCommand1(bool led_mode) {
+  this->led_enable_ = led_mode;
+  this->cmd_ = led_mode ? "setLedMode 1 0" : "setLedMode 1 1";
+};
+
+void SetLedModeCommand1::on_message() {
+  // this command is not in Communication Protocol document it appears to be a leftover from similar products
+  // this command only controls the green LED which flashes when the sensor is running the blue LED is always on when
+  // powered
+  if (strcmp(this->read_buffer_, "Done") == 0) {
+    this->parent_->set_led_enable(this->led_enable_, false);
+    this->done_ = true;  // command is done
   }
 }
 
-SetLedModeCommand1::SetLedModeCommand1(bool led_mode) : led_enable_(led_mode) {
-  if (led_mode) {
-    cmd_ = "setLedMode 1 0";
-  } else {
-    cmd_ = "setLedMode 1 1";
-  }
-};
+SetLedModeCommand2::SetLedModeCommand2(bool led_mode) { this->cmd_ = led_mode ? "setLedMode 2 0" : "setLedMode 2 1"; };
 
-uint8_t SetLedModeCommand1::on_message(std::string &message) {
-  // this command is not in Communication Protocol document
-  // it appears to be a leftover from similar products
-  // this command only controls the green LED which flashes when the sensor is running
-  // the blue LED is always on when powered
-  if (message == "sensor is not stopped") {
-    ESP_LOGE(TAG, "Sensor is not stopped");
-    return 1;  // Command done
-  } else if (message == "Done") {
-    if (this->led_enable_) {
-      this->parent_->set_led_enable(true, false);
-    } else {
-      this->parent_->set_led_enable(false, false);
-    }
-    ESP_LOGV(TAG, "Set LED Mode 1 complete");
-    return 1;  // Command done
+void SetLedModeCommand2::on_message() {
+  // this command is not in Communication Protocol document it appears to be a leftover from similar products
+  // this command only controls the green LED which flashes when the sensor is running the blue LED is always on when
+  // powered
+  if (strcmp(this->read_buffer_, "Done") == 0) {
+    this->done_ = true;  // command is done
   }
-  return 0;  // Command not done yet
 }
 
-SetLedModeCommand2::SetLedModeCommand2(bool led_mode) : led_enable_(led_mode) {
-  if (led_mode) {
-    cmd_ = "setLedMode 2 0";
-  } else {
-    cmd_ = "setLedMode 2 1";
-  }
-};
+GetMicroMotionCommand::GetMicroMotionCommand() { this->cmd_ = "getMicroMotion"; }
 
-uint8_t SetLedModeCommand2::on_message(std::string &message) {
-  // this command is not in Communication Protocol document
-  // it appears to be a leftover from similar products
-  // this command only controls the green LED which flashes when the sensor is running
-  // the blue LED is always on when powered
-  if (message == "sensor is not stopped") {
-    ESP_LOGE(TAG, "Sensor is not stopped");
-    return 1;  // Command done
-  } else if (message == "Done") {
-    if (this->led_enable_) {
-      this->parent_->set_led_enable(true, false);
+void GetMicroMotionCommand::on_message() {
+  char *token;
+
+  token = strtok(this->read_buffer_, " ");
+  if (strcmp(token, "Done") == 0) {
+    if (!this->micro_motion_.has_value()) {
+      ESP_LOGD(TAG, "Failed to parse response");
+      this->error_ = true;  // command is done
     } else {
-      this->parent_->set_led_enable(false, false);
+      this->parent_->set_micro_motion_enable(this->micro_motion_.value(), false);
+      this->done_ = true;  // command is done
     }
-    ESP_LOGV(TAG, "Set LED Mode 2 complete");
-    // we save the state of LED enable to flash because you cannot read this value from the module
-    this->parent_->flash_led_enable();
-    return 1;  // Command done
+  } else if (strcmp(token, "Response") == 0) {
+    token = strtok(NULL, " ");
+    this->micro_motion_ = parse_number<bool>(token);
   }
-  return 0;  // Command not done yet
 }
 
-GetMicroMotionCommand::GetMicroMotionCommand() { cmd_ = "getMicroMotion"; }
+SetMicroMotionCommand::SetMicroMotionCommand(bool enable) {
+  this->micro_motion_ = enable;
+  this->cmd_ = enable ? "setMicroMotion 1" : "setMicroMotion 0";
+};
 
-uint8_t GetMicroMotionCommand::on_message(std::string &message) {
-  std::string str1;
-  std::stringstream s(message);
-
-  if (message.starts_with("Response")) {
-    s >> str1 >> str1;
-    auto led = parse_number<uint8_t>(str1);
-    if (led.has_value()) {
-      this->micro_motion_ = led.value();
-      return 0;
-    } else {
-      ESP_LOGE(TAG, "Failed to parse response");
-      return 1;  // Command done
-    }
-  } else if (message == "Done") {
+void SetMicroMotionCommand::on_message() {
+  if (strcmp(this->read_buffer_, "Done") == 0) {
     this->parent_->set_micro_motion_enable(this->micro_motion_, false);
-    ESP_LOGV(TAG, "Get Micro Motion complete: Parsed Micro Motion (%s)", this->micro_motion_ ? "Enabled" : "Disabled");
-    return 1;  // Command done
-  } else {
-    return 0;
+    this->done_ = true;  // command is done
   }
 }
 
-SetMicroMotionCommand::SetMicroMotionCommand(bool enable) : micro_motion_(enable) {
-  if (enable) {
-    cmd_ = "setMicroMotion 1";
-  } else {
-    cmd_ = "setMicroMotion 0";
-  }
-};
+FactoryResetCommand::FactoryResetCommand() { this->cmd_ = "resetCfg"; }
 
-uint8_t SetMicroMotionCommand::on_message(std::string &message) {
-  if (message == "sensor is not stopped") {
-    ESP_LOGE(TAG, "Sensor is not stopped");
-    return 1;  // Command done
-  } else if (message == "Done") {
-    this->parent_->set_micro_motion_enable(this->micro_motion_, false);
-    ESP_LOGV(TAG, "Set Micro Motion complete");
-    return 1;  // Command done
-  }
-  return 0;  // Command not done yet
-}
-
-FactoryResetCommand::FactoryResetCommand() { cmd_ = "resetCfg"; }
-
-uint8_t FactoryResetCommand::on_message(std::string &message) {
-  if (message == "sensor is not stopped") {
-    ESP_LOGE(TAG, "Sensor is not stopped");
-    return 1;  // Command done
-  } else if (message == "DFRobot:/>") {
-    ESP_LOGD(TAG, "Factory Reset complete");
+void FactoryResetCommand::on_message() {
+  if (strstr(this->read_buffer_, "Done")) {
     // reload settings
-    this->parent_->set_led_enable(true, false);
     this->parent_->flash_led_enable();
+    this->parent_->setup_module();
     this->parent_->config_load();
-    return 1;  // Command done
+    this->done_ = true;  // command is done
   }
-  return 0;  // Command not done yet
 }
 
-ResetSystemCommand::ResetSystemCommand() { cmd_ = "resetSystem"; }
+ResetSystemCommand::ResetSystemCommand(bool read_config) {
+  this->read_config_ = read_config;
+  this->cmd_ = "resetSystem";
+}
 
-uint8_t ResetSystemCommand::on_message(std::string &message) {
-  if (message == "sensor is not stopped") {
-    ESP_LOGE(TAG, "Sensor is not stopped");
-    return 1;  // Command done
-  } else if (message == "DFRobot:/>") {
-    ESP_LOGD(TAG, "Restart complete");
+void ResetSystemCommand::on_message() {
+  // this command responds with nothing, not even a command echo
+  if (this->read_config_) {
     this->parent_->config_load();
-    return 1;  // Command done
   }
-  return 0;  // Command not done yet
+  this->done_ = true;  // command is done
 }
 
-SaveCfgCommand::SaveCfgCommand() { cmd_ = "saveConfig"; }
+SaveCfgCommand::SaveCfgCommand() { this->cmd_ = "saveConfig"; }
 
-uint8_t SaveCfgCommand::on_message(std::string &message) {
-  if (message == "no parameter has changed") {
-    ESP_LOGV(TAG, "Not saving config (no parameter changed)");
-    return 1;  // Command done
-  } else if (message == "Done") {
-    ESP_LOGV(TAG, "Saved config. Saving a lot may damage the sensor.");
-    // reload settings because they might have changed
+void SaveCfgCommand::on_message() {
+  if (strstr(this->read_buffer_, "no parameter has changed")) {
+    ESP_LOGV(TAG, "Send Cmd: Nothing Changed");
+  } else if (strstr(this->read_buffer_, "Done")) {
     this->parent_->config_load();
-    return 1;  // Command done
-  }
-  return 0;  // Command not done yet
-}
-
-SetRunAppCommand::SetRunAppCommand(uint8_t mode) : mode_(mode) {
-  if (mode == 0) {
-    cmd_ = "setRunApp 0";
-  } else {
-    cmd_ = "setRunApp 1";
+    this->done_ = true;  // command is done
   }
 }
 
-uint8_t SetRunAppCommand::on_message(std::string &message) {
-  if (message == "sensor is not stopped") {
-    ESP_LOGE(TAG, "Sensor is not stopped");
-    return 1;  // Command done
-  } else if (message == "Done") {
-    ESP_LOGV(TAG, "Set Mode complete");
-    return 1;  // Command done
-  } else {
-    return 0;  // Command not done yet
+PowerCommand::PowerCommand(bool power_on) { this->cmd_ = power_on ? "sensorStart" : "sensorStop"; };
+
+SetUartOutputCommand::SetUartOutputCommand(bool enable) {
+  this->cmd_ = enable ? "setUartOutput 1 1 1 1.0" : "setUartOutput 1 0 1 1.0";
+};
+
+SetRunAppCommand::SetRunAppCommand(uint8_t mode) { this->cmd_ = mode == MODE_PRESENCE ? "setRunApp 0" : "setRunApp 1"; }
+
+GetSWVCommand::GetSWVCommand() { this->cmd_ = "getSWV"; }
+
+void GetSWVCommand::on_message() {
+  char *token;
+
+  token = strtok(this->read_buffer_, ":");
+  if (strcmp(token, "Done") == 0) {
+    this->done_ = true;  // command is done
+  } else if (strcmp(token, "SoftwareVersion") == 0) {
+    token = strtok(NULL, ":");
+    if (token != nullptr) {
+      this->parent_->set_software_version(token);
+    } else {
+      ESP_LOGD(TAG, "Failed to parse response");
+      this->error_ = true;  // command is done
+    }
   }
 }
 
-GetSWVCommand::GetSWVCommand() { cmd_ = "getSWV"; }
+GetHWVCommand::GetHWVCommand() { this->cmd_ = "getHWV"; }
 
-uint8_t GetSWVCommand::on_message(std::string &message) {
-  if (message.starts_with("SoftwareVersion:")) {
-    this->version_ = message.substr(16);
-    return 0;
-  } else if (message == "Done") {
-    this->parent_->set_software_version(this->version_);
-    ESP_LOGV(TAG, "Get Software Version complete: Parsed Version (%s)", this->version_.c_str());
-    return 1;  // Command done
-  } else {
-    return 0;
-  }
-}
+void GetHWVCommand::on_message() {
+  char *token;
 
-GetHWVCommand::GetHWVCommand() { cmd_ = "getHWV"; }
-
-uint8_t GetHWVCommand::on_message(std::string &message) {
-  if (message.starts_with("HardwareVersion:")) {
-    this->version_ = message.substr(16);
-    return 0;
-  } else if (message == "Done") {
-    this->parent_->set_hardware_version(this->version_);
-    ESP_LOGV(TAG, "Get Hardware Version complete: Parsed Version (%s)", this->version_.c_str());
-    return 1;  // Command done
-  } else {
-    return 0;
+  token = strtok(this->read_buffer_, ":");
+  if (strcmp(token, "Done") == 0) {
+    this->done_ = true;  // command is done
+  } else if (strcmp(token, "HardwareVersion") == 0) {
+    token = strtok(NULL, ":");
+    if (token != nullptr) {
+      this->parent_->set_hardware_version(token);
+    } else {
+      ESP_LOGD(TAG, "Failed to parse response");
+      this->error_ = true;  // command is done
+    }
   }
 }
 

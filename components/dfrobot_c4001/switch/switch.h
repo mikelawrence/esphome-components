@@ -11,7 +11,6 @@ class LedSwitch : public switch_::Switch, public Component, public Parented<DFRo
  public:
   void write_state(bool state) override;
 };
-
 class MicroMotionSwitch : public switch_::Switch, public Component, public Parented<DFRobotC4001Hub> {
  public:
   void write_state(bool state) override;
