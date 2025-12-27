@@ -41,9 +41,9 @@ sensor:
     model: TFMINI_PLUS
     sample_rate: 10
     low_power: true
-    signal_strength:
-      id: tfmini_signal_strength
-      name: "Signal"
+    temperature:
+      id: tfmini_temperature
+      name: "Temperature"
     distance:
       id: tfmini_distance
       internal: true
