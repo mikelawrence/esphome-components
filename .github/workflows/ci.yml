@@ -64,6 +64,8 @@ jobs:
           else
             echo "This is a commit, always run tests."
           fi
+          echo "run_test=${run_test}" >> $GITHUB_OUTPUT
+          echo "commit=${commit}" >> $GITHUB_OUTPUT
           
       - name: Update reference
         if: steps.esphome-release.outputs.tag != steps.test-release.outputs.tag
