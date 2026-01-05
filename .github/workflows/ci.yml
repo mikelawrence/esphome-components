@@ -48,12 +48,23 @@ jobs:
       - name: Update version
         uses: fjogeleit/yaml-update-action@v0.16.1
         with:
-          valueFile: 'test/*.yaml'
-          propertyPath: 'external_components.source.ref'
-          value: '${{ github.ref }}'
-          commitChange: true
           message: "Update version"
           branch: '${{ github.ref }}'
+          changes: |
+            {
+              "test/test-stusb4500-esp32-s3-idf.yaml": {
+                "external_components.source.re": "${{ github.ref }}"
+              },
+              "test/test-tfmini-esp32-s3-idf.yaml": {
+                "external_components.source.re": "${{ github.ref }}"
+              },
+              "test/test-stusb4500-esp32-s3-ard.yaml": {
+                "external_components.source.re": "${{ github.ref }}"
+              },
+              "test/test-tfmini-esp32-s3-ard.yaml": {
+                "external_components.source.re": "${{ github.ref }}"
+              }
+            }
 
       - name: ESPHome ${{ matrix.esphome-version }}
         if: steps.esphome-release.outputs.tag != steps.test-release.outputs.tag
