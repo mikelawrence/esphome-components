@@ -52,13 +52,13 @@ jobs:
           commit=0
           if [[ "${{ github.event_name }}" == "schedule" ]]; then
             echo "This is a scheduled CI"
-            echo "Latest ESPHome Release ${{ steps.esphome-release.outputs.tag }}." >>  $GITHUB_OUTPUT
-            echo "Last tested ESPHome Release ${{ steps.test-release.outputs.tag }}." >>  $GITHUB_OUTPUT
+            echo "Latest ESPHome Release ${{ steps.esphome-release.outputs.tag }}."
+            echo "Last tested ESPHome Release ${{ steps.test-release.outputs.tag }}."
             if [[ "${{ steps.esphome-release.outputs.tag }}" == "${{ steps.test-release.outputs.tag }}" ]]; then
               run_test=0
               echo "No change in version. There is no reason to test again."
             else
-              echo "We should test again."
+              echo "We should test again." 
               commit=1
             fi
           else
@@ -90,10 +90,10 @@ jobs:
 
       - name: Display data
         run: |
-          echo "Latest ESPHome Release ${{ steps.esphome-release.outputs.tag }}." >>  $GITHUB_OUTPUT
-          echo "Last tested ESPHome Release ${{ steps.test-release.outputs.tag }}." >>  $GITHUB_OUTPUT
-          echo "Run Test ${{ steps.test-conditions.outputs.run_test }}." >>  $GITHUB_OUTPUT
-          echo "Commit ${{ steps.test-conditions.outputs.commit }}." >>  $GITHUB_OUTPUT
+          echo "Latest ESPHome Release ${{ steps.esphome-release.outputs.tag }}."
+          echo "Last tested ESPHome Release ${{ steps.test-release.outputs.tag }}." 
+          echo "Run Test ${{ steps.test-conditions.outputs.run_test }}."
+          echo "Commit ${{ steps.test-conditions.outputs.commit }}."
 
       - name: ESPHome ${{ matrix.esphome-version }}
         if: steps.test-conditions.outputs.run_test != 0
