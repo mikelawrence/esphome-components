@@ -88,6 +88,13 @@ jobs:
               }
             }
 
+      - name: Display data
+        run: |
+          echo "Latest ESPHome Release ${{ steps.esphome-release.outputs.tag }}." >>  $GITHUB_OUTPUT
+          echo "Last tested ESPHome Release ${{ steps.test-release.outputs.tag }}." >>  $GITHUB_OUTPUT
+          echo "Run Test ${{ steps.test-conditions.outputs.run_test }}." >>  $GITHUB_OUTPUT
+          echo "Commit ${{ steps.test-conditions.outputs.commit }}." >>  $GITHUB_OUTPUT
+
       - name: ESPHome ${{ matrix.esphome-version }}
         if: steps.test-conditions.outputs.run_test != 0
         uses: esphome/build-action@v7
