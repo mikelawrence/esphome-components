@@ -50,11 +50,11 @@ jobs:
         run: |
           run_test=1
           commit=0
-          if [ "${{ github.event_name }}" == "schedule"]; then
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
             echo "This is a scheduled CI"
             echo "Latest ESPHome Release ${{ steps.esphome-release.outputs.tag }}." >>  $GITHUB_OUTPUT
             echo "Last tested ESPHome Release ${{ steps.test-release.outputs.tag }}." >>  $GITHUB_OUTPUT
-            if [ "${{ steps.esphome-release.outputs.tag }}" == "${{ steps.test-release.outputs.tag }}" ]; then
+            if [[ "${{ steps.esphome-release.outputs.tag }}" == "${{ steps.test-release.outputs.tag }}" ]]; then
               run_test=0
               echo "No change in version. There is no reason to test again."
             else
