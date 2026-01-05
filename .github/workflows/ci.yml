@@ -48,6 +48,7 @@ jobs:
       - name: Update version
         uses: fjogeleit/yaml-update-action@v0.16.1
         with:
+          commitChange: false
           message: "Update version"
           branch: '${{ github.ref }}'
           changes: |
