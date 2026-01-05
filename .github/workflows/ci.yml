@@ -21,8 +21,8 @@ jobs:
       matrix:
         #### Modify below here to match your project ####
         file:
-          - test-stusb4500-esp32-s3-idf
-          - test-tfmini-esp32-s3-idf
+          - test/test-stusb4500-esp32-s3-idf
+          - test/test-tfmini-esp32-s3-idf
         #### Modify above here to match your project ####
         esphome-version:
           - stable
@@ -44,26 +44,29 @@ jobs:
         id: test-release
         run: |
           tag=$(jq -r '.last_tested_tag' test/.test-data.json)
+          echo "Latest ESPHome Release $${{ steps.esphome-release.outputs.tag }}" >>  $GITHUB_OUTPUT
+          echo "Last tested ESPHome Release $tag" >>  $GITHUB_OUTPUT
 
-      - name: Update version
+      - name: Update reference
+        if: steps.esphome-release.outputs.tag != steps.test-release.outputs.tag
         uses: fjogeleit/yaml-update-action@v0.16.1
         with:
           commitChange: false
-          message: "Update version"
+          message: "Update reference"
           branch: '${{ github.ref }}'
           changes: |
             {
               "test/test-stusb4500-esp32-s3-idf.yaml": {
-                "external_components.source.re": "${{ github.ref }}"
+                "external_components.source.ref": "${{ github.ref }}"
               },
               "test/test-tfmini-esp32-s3-idf.yaml": {
-                "external_components.source.re": "${{ github.ref }}"
+                "external_components.source.ref": "${{ github.ref }}"
               },
               "test/test-stusb4500-esp32-s3-ard.yaml": {
-                "external_components.source.re": "${{ github.ref }}"
+                "external_components.source.ref": "${{ github.ref }}"
               },
               "test/test-tfmini-esp32-s3-ard.yaml": {
-                "external_components.source.re": "${{ github.ref }}"
+                "external_components.source.ref": "${{ github.ref }}"
               }
             }
 
