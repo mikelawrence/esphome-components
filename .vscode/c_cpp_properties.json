@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "includePath": [
+                "${workspaceFolder}/../esphome"
+            ],
+            "intelliSenseMode": "windows-msvc-x64",
+            "compilerPath": "C:\\Program Files\\LLVM\\bin\\clang.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++14"
+        }
+    ],
+    "version": 4
+}
