@@ -15,7 +15,7 @@ external_components:
     type: git
     url: https://github.com/mikelawrence/esphome-components
     ref: dev
-  components: [ stusb4500 ]
+  components: [ tfmini ]
 
 i2c:
   - id: i2c1_bus
