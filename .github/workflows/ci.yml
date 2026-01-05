@@ -50,8 +50,8 @@ jobs:
         run: |
           run_test=1
           commit=0
-          event_name=${{ github.event_name }}
-          esphome_release=${{ steps.esphome-release.outputs.tag }}
+          event_name="${{ github.event_name }}"
+          esphome_release="${{ steps.esphome-release.outputs.tag }}"
           if [$event_name == "schedule"]; then
             echo "This is a scheduled CI"
             echo "Latest ESPHome Release ${{ steps.esphome-release.outputs.tag }}." >>  $GITHUB_OUTPUT
