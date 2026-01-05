@@ -3,6 +3,8 @@ name: CI
 on:
   push:
 
+  pull_request:
+
   workflow_dispatch:
 
   schedule:
@@ -22,7 +24,9 @@ jobs:
         #### Modify below here to match your project ####
         file:
           - test/test-stusb4500-esp32-s3-idf
+          - test/test-stusb4500-esp32-s3-ard
           - test/test-tfmini-esp32-s3-idf
+          - test/test-tfmini-esp32-s3-ard
         #### Modify above here to match your project ####
         esphome-version:
           - stable
@@ -44,9 +48,27 @@ jobs:
         id: test-release
         run: |
           tag=$(jq -r '.last_tested_tag' test/.test-data.json)
-          echo "Latest ESPHome Release $${{ steps.esphome-release.outputs.tag }}" >>  $GITHUB_OUTPUT
-          echo "Last tested ESPHome Release $tag" >>  $GITHUB_OUTPUT
 
+      - name: Should we test? Commit?
+        id: releases_same
+        run: |
+          run_test="true"
+          commit="false"
+          if ["${{ github.event_name }}" == "schedule"]; then
+            echo "This is a scheduled CI"
+            echo "Latest ESPHome Release ${{ steps.esphome-release.outputs.tag }}." >>  $GITHUB_OUTPUT
+            echo "Last tested ESPHome Release ${{ steps.test-release.outputs.tag }}." >>  $GITHUB_OUTPUT
+            if ["${{ steps.esphome-release.outputs.tag }}" == "${{ steps.test-release.outputs.tag }}"]; then
+              run_test="false"
+              commit="true"
+              echo "No change in version. There is no reason to test again."
+            else
+              echo "We should test again."
+            fi
+          else
+            echo "This is a commit, always run tests."
+          fi
+          
       - name: Update reference
         if: steps.esphome-release.outputs.tag != steps.test-release.outputs.tag
         uses: fjogeleit/yaml-update-action@v0.16.1
@@ -71,14 +93,14 @@ jobs:
             }
 
       - name: ESPHome ${{ matrix.esphome-version }}
-        if: steps.esphome-release.outputs.tag != steps.test-release.outputs.tag
+        if: ${{ steps.test-release.outputs.run_test == 'true' }}
         uses: esphome/build-action@v7
         with:
           yaml-file: ${{ matrix.file }}.yaml
           version: ${{ matrix.esphome-version }}
 
       - name: Commit and push json changes
-        if: success() && steps.esphome-release.outputs.tag != steps.test-release.outputs.tag
+        if: ${{ success() && steps.test-release.outputs.commit == 'true' }}
         uses: devops-infra/action-commit-push@v1.0.3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
