@@ -28,7 +28,6 @@ sensor:
   - platform: tfmini
     model: TFMINI_PLUS
     sample_rate: 10
-    low_power: true
     temperature:
       id: tfmini_temperature
       name: "Temperature"
