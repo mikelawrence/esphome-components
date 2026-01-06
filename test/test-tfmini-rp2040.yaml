@@ -17,8 +17,8 @@ external_components:
 
 uart:
   - id: tfmini_uart
-    tx_pin: GPIO48
-    rx_pin: GPIO47
+    tx_pin: GPIO25
+    rx_pin: GPIO24
     baud_rate: 115200
     data_bits: 8
     parity: NONE
