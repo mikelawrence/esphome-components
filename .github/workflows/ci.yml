@@ -118,10 +118,12 @@ jobs:
 
       - name: ESPHome ${{ matrix.esphome-version }}
         if: steps.test-conditions.outputs.run_test != 0
-        uses: esphome/build-action@v7
+        uses: mikelawrence/esphome-build-action@add-compile-args
+        # uses: esphome/build-action@v7
         with:
           # add substitution ref -> github.ref_name
-          yaml-file: ${{ matrix.file }}.yaml --substitution ref ${{ github.ref_name }}
+          build-args: -s ref ${{ github.ref_name }} 
+          yaml-file: ${{ matrix.file }}.yaml
           version: ${{ matrix.esphome-version }}
 
   commit:
