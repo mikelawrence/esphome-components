@@ -120,8 +120,8 @@ jobs:
         if: steps.test-conditions.outputs.run_test != 0
         uses: esphome/build-action@v7
         with:
-          # add substitution ref -> current ref
-          yaml-file: ${{ matrix.file }}.yaml -s ref ${{ github.ref_name }}
+          # add substitution ref -> github.ref_name
+          yaml-file: ${{ matrix.file }}.yaml --substitution ref ${{ github.ref_name }}
           version: ${{ matrix.esphome-version }}
 
   commit:
