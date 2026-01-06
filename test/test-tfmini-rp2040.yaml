@@ -21,22 +21,21 @@ uart:
     parity: NONE
     stop_bits: 1
 
-stusb4500:
-  alert_pin: GPIO8
-  snk_pdo_numb: 3
-  v_snk_pdo2: 9.00V
-  i_snk_pdo2: 3.00A
-  v_snk_pdo3: 12.00V
-  i_snk_pdo3: 3.00A
-  power_only_above_5v: true
-  usb_comms_capable: true
-
 sensor:
-  - platform: stusb4500
-    pd_state:
-      name: "PD State"
-
-text_sensor:
-  - platform: stusb4500
-    pd_status:
-      name: "PD Status"
+  - platform: tfmini
+    model: TFMINI_PLUS
+    sample_rate: 10
+    low_power: true
+    temperature:
+      id: tfmini_temperature
+      name: "Temperature"
+    distance:
+      id: tfmini_distance
+      internal: true
+      name: "TFMini Distance"
+      accuracy_decimals: 1
+    signal_strength:
+      id: tfmini_signal_strength
+      name: "TFMini Signal Strength"
+      filters:
+        - throttle: 1s
