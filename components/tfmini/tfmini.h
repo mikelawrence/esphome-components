@@ -52,8 +52,8 @@ class TFminiComponent : public uart::UARTDevice, public Component {
   TFminiModel model_;
   GPIOPin *config_pin_{nullptr};
   std::string firmware_version_{"Unknown"};
-  StaticVector<uint8_t, 10> rx_buffer_;
-  StaticVector<uint8_t, 10> tx_buffer_;
+  FixedVector<uint8_t> rx_buffer_;
+  FixedVector<uint8_t> tx_buffer_;
 };
 
 }  // namespace tfmini

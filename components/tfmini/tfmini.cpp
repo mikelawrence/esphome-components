@@ -33,6 +33,8 @@ static const char *model_to_str(TFminiModel model) {
 }
 
 void TFminiComponent::setup() {
+  this->rx_buffer_.init(10);
+  this->tx_buffer_.init(10);
   // CONFIG must be high for UART comms and low for I2C comms, TF Luna model only
   if (this->config_pin_ != nullptr) {
     this->config_pin_->setup();
@@ -44,7 +46,7 @@ void TFminiComponent::setup() {
 void TFminiComponent::internal_setup_(SetupStates state) {
   switch (state) {
     case TFMINI_SM_START:
-      this->cmd_attempts = 0;
+      this->cmd_attempts_ = 0;
       if (this->low_power_) {
         this->send_command_(CMD_LOW_POWER);  // send first Low Power Command
         this->set_timeout(100, [this]() { this->internal_setup_(TFMINI_SM_LOW_POWER); });
@@ -56,7 +58,7 @@ void TFminiComponent::internal_setup_(SetupStates state) {
     case TFMINI_SM_LOW_POWER:
       if (!this->low_power_received_) {
         if (++this->cmd_attempts_ < 5) {
-          this->cmd_attempts++;
+          this->cmd_attempts_++;
           this->send_command_(CMD_LOW_POWER);  // resend Low Power Command
           ESP_LOGW(TAG, "Resending Low Power Command");
           this->set_timeout(100, [this]() { this->internal_setup_(TFMINI_SM_LOW_POWER); });
@@ -67,7 +69,7 @@ void TFminiComponent::internal_setup_(SetupStates state) {
           break;
         }
       } else {
-        this->cmd_attempts = 0;
+        this->cmd_attempts_ = 0;
         this->send_command_(CMD_SAMPLE_RATE);  // send first Set Sample Rate Command
         this->set_timeout(100, [this]() { this->internal_setup_(TFMINI_SM_SAMPLE_RATE); });
       }
@@ -75,7 +77,7 @@ void TFminiComponent::internal_setup_(SetupStates state) {
     case TFMINI_SM_SAMPLE_RATE:
       if (!this->sample_rate_received_) {
         if (++this->cmd_attempts_ < 5) {
-          this->cmd_attempts++;
+          this->cmd_attempts_++;
           this->send_command_(CMD_SAMPLE_RATE);  // resend Sample Rate Command
           ESP_LOGW(TAG, "Resending Sample Rate Command");
           this->set_timeout(100, [this]() { this->internal_setup_(TFMINI_SM_SAMPLE_RATE); });
@@ -86,7 +88,7 @@ void TFminiComponent::internal_setup_(SetupStates state) {
           break;
         }
       } else {
-        this->cmd_attempts = 0;
+        this->cmd_attempts_ = 0;
         this->send_command_(CMD_FW_VERSION);  // send First Get Firmware Version Command
         this->set_timeout(100, [this]() { this->internal_setup_(TFMINI_SM_FW_VERSION); });
       }
@@ -94,7 +96,7 @@ void TFminiComponent::internal_setup_(SetupStates state) {
     case TFMINI_SM_FW_VERSION:
       if (!this->version_received_) {
         if (++this->cmd_attempts_ < 5) {
-          this->cmd_attempts++;
+          this->cmd_attempts_++;
           this->send_command_(CMD_FW_VERSION);  // resend Get Firmware Command
           ESP_LOGW(TAG, "Resending Sample Rate Command");
           this->set_timeout(100, [this]() { this->internal_setup_(TFMINI_SM_FW_VERSION); });
@@ -105,7 +107,7 @@ void TFminiComponent::internal_setup_(SetupStates state) {
           break;
         }
       } else {
-        this->cmd_attempts = 0;
+        this->cmd_attempts_ = 0;
         this->send_command_(CMD_FW_VERSION);  // send First Get Firmware Version Command
         this->set_timeout(100, [this]() { this->internal_setup_(TFMINI_SM_FW_VERSION); });
       }
