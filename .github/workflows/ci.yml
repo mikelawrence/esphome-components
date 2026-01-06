@@ -121,7 +121,7 @@ jobs:
         uses: esphome/build-action@v7
         with:
           # add substitution ref -> current ref
-          yaml-file: ${{ matrix.file }}.yaml -s ref "${{ github.ref_name }}"
+          yaml-file: ${{ matrix.file }}.yaml -s ref ${{ github.ref_name }}
           version: ${{ matrix.esphome-version }}
 
   commit:
