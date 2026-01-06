@@ -61,5 +61,4 @@ sensor:
       store_baseline: true
     hcho:
       name: "Formaldehyde"
-      automatic_self_calibration: false
       accuracy_decimals: 0
