@@ -16,11 +16,14 @@ external_components:
     ref: main
   components: [ tfmini ]
 
-i2c:
-  - id: i2c1_bus
-    sda: GPIO48
-    scl: GPIO47
-    scan: true
+uart:
+  - id: tfmini_uart
+    tx_pin: GPIO25
+    rx_pin: GPIO24
+    baud_rate: 115200
+    data_bits: 8
+    parity: NONE
+    stop_bits: 1
 
 sensor:
   - platform: tfmini
