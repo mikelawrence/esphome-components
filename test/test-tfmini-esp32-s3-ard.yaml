@@ -1,3 +1,6 @@
+substitutions:
+  ref: main
+
 esphome:
   name: test-tfmini-esp32-s3-idf
   friendly_name: Test TFMini Component with ESP32-S3 and Arduino Framework
@@ -13,7 +16,7 @@ external_components:
   source:
     type: git
     url: https://github.com/mikelawrence/esphome-components
-    ref: main
+    ref: ${ref}
   components: [ tfmini ]
 
 uart:

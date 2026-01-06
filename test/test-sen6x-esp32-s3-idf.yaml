@@ -1,3 +1,6 @@
+substitutions:
+  ref: main
+
 esphome:
   name: test-sen6x-esp32-s3-idf
   friendly_name: Test SEN6X Component with ESP32-S3 and ESP-IDF Framework
@@ -13,7 +16,7 @@ external_components:
   source:
     type: git
     url: https://github.com/mikelawrence/esphome-components
-    ref: main
+    ref: ${ref}
   components: [ sen6x ]
 
 i2c:

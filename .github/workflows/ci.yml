@@ -81,31 +81,31 @@ jobs:
       #     changes: |
       #       {
       #         "test/test-sen6x-esp32-s3-idf.yaml": {
-      #           "external_components.source.ref": "${{ github.ref_name }}"
+      #           "substitutions.ref": "${{ github.ref_name }}"
       #         },
       #         "test/test-sen6x-esp32-s3-ard.yaml": {
-      #           "external_components.source.ref": "${{ github.ref_name }}"
+      #           "substitutions.ref": "${{ github.ref_name }}"
       #         },
       #         "test/test-sen6x-rp2040.yaml": {
-      #           "external_components.source.ref": "${{ github.ref_name }}"
+      #           "substitutions.ref": "${{ github.ref_name }}"
       #         }
       #         "test/test-stusb4500-esp32-s3-idf.yaml": {
-      #           "external_components.source.ref": "${{ github.ref_name }}"
+      #           "substitutions.ref": "${{ github.ref_name }}"
       #         },
       #         "test/test-stusb4500-esp32-s3-ard.yaml": {
-      #           "external_components.source.ref": "${{ github.ref_name }}"
+      #           "substitutions.ref": "${{ github.ref_name }}"
       #         },
       #         "test/test-stusb4500-rp2040.yaml": {
-      #           "external_components.source.ref": "${{ github.ref_name }}"
+      #           "substitutions.ref": "${{ github.ref_name }}"
       #         },
       #         "test/test-tfmini-esp32-s3-idf.yaml": {
-      #           "external_components.source.ref": "${{ github.ref_name }}"
+      #           "substitutions.ref": "${{ github.ref_name }}"
       #         },
       #         "test/test-tfmini-esp32-s3-ard.yaml": {
-      #           "external_components.source.ref": "${{ github.ref_name }}"
+      #           "substitutions.ref": "${{ github.ref_name }}"
       #         },
       #         "test/test-tfmini-rp2040.yaml": {
-      #           "external_components.source.ref": "${{ github.ref_name }}"
+      #           "substitutions.ref": "${{ github.ref_name }}"
       #         }
       #       }
 
@@ -120,7 +120,8 @@ jobs:
         if: steps.test-conditions.outputs.run_test != 0
         uses: esphome/build-action@v7
         with:
-          yaml-file: ${{ matrix.file }}.yaml
+          # add substitution ref -> current ref
+          yaml-file: ${{ matrix.file }}.yaml -s ref "${{ github.ref_name }}"
           version: ${{ matrix.esphome-version }}
 
   commit:
