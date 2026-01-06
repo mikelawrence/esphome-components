@@ -71,22 +71,22 @@ static inline std::string convert_to_string(uint16_t array[], uint8_t length) {
 }
 
 void Sen6xComponent::setup() {
-  this->set_timeout(100, [this]() { this->internal_setup_(SM_START); });
+  this->set_timeout(100, [this]() { this->internal_setup_(SEN6X_SM_START); });
 }
 
 void Sen6xComponent::internal_setup_(SetupStates state) {
   uint16_t string_number[16] = {0};
   switch (state) {
-    case SM_START:
+    case SEN6X_SM_START:
       // Check if measurement is ready before reading the value
       if (!this->write_command(CMD_GET_DATA_READY_STATUS)) {
         ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
         this->mark_failed(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
         return;
       }
-      this->set_timeout(20, [this]() { this->internal_setup_(SM_START_1); });
+      this->set_timeout(20, [this]() { this->internal_setup_(SEN6X_SM_START_1); });
       break;
-    case SM_START_1:
+    case SEN6X_SM_START_1:
       uint16_t raw_read_status;
       if (!this->read_data(raw_read_status)) {
         ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
@@ -101,21 +101,21 @@ void Sen6xComponent::internal_setup_(SetupStates state) {
           this->mark_failed(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
           return;
         }
-        this->set_timeout(1000, [this]() { this->internal_setup_(SM_GET_SN); });
+        this->set_timeout(1000, [this]() { this->internal_setup_(SEN6X_SM_GET_SN); });
       } else {
-        this->internal_setup_(SM_GET_SN);
+        this->internal_setup_(SEN6X_SM_GET_SN);
       }
       break;
-    case SM_GET_SN:
+    case SEN6X_SM_GET_SN:
       if (!this->get_register(CMD_GET_SERIAL_NUMBER, string_number, 16, 20)) {
         ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
         this->mark_failed(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
         return;
       }
       this->serial_number_ = convert_to_string(string_number, 16);
-      this->set_timeout(20, [this]() { this->internal_setup_(SM_GET_PN); });
+      this->set_timeout(20, [this]() { this->internal_setup_(SEN6X_SM_GET_PN); });
       break;
-    case SM_GET_PN:
+    case SEN6X_SM_GET_PN:
       if (!this->get_register(CMD_GET_PRODUCT_NAME, string_number, 16, 20)) {
         ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
         this->mark_failed(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
@@ -128,9 +128,9 @@ void Sen6xComponent::internal_setup_(SetupStates state) {
         return;
       }
       ESP_LOGV(TAG, "Product Name %s", this->product_name_.c_str());
-      this->set_timeout(20, [this]() { this->internal_setup_(SM_GET_FW); });
+      this->set_timeout(20, [this]() { this->internal_setup_(SEN6X_SM_GET_FW); });
       break;
-    case SM_GET_FW:
+    case SEN6X_SM_GET_FW:
       uint16_t firmware;
       if (!this->get_register(CMD_GET_FIRMWARE_VERSION, &firmware, 1, 20)) {
         ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
@@ -139,9 +139,9 @@ void Sen6xComponent::internal_setup_(SetupStates state) {
       }
       this->firmware_minor_ = firmware & 0xFF;
       this->firmware_major_ = firmware >> 8;
-      this->set_timeout(20, [this]() { this->internal_setup_(SM_SET_VOCB); });
+      this->set_timeout(20, [this]() { this->internal_setup_(SEN6X_SM_SET_VOCB); });
       break;
-    case SM_SET_VOCB:
+    case SEN6X_SM_SET_VOCB:
       if (this->voc_sensor_ && this->store_voc_baseline_) {
         // Hash with config hash, version, and serial number, ensures the baseline storage is cleared after OTA
         // Serial numbers are unique to each sensor, so multiple sensors can be used without conflict
@@ -171,86 +171,86 @@ void Sen6xComponent::internal_setup_(SetupStates state) {
           }
         }
       }
-      this->set_timeout(20, [this]() { this->internal_setup_(SM_SET_VOCT); });
+      this->set_timeout(20, [this]() { this->internal_setup_(SEN6X_SM_SET_VOCT); });
       break;
-    case SM_SET_VOCT:
+    case SEN6X_SM_SET_VOCT:
       if (this->voc_tuning_params_.has_value()) {
         if (!this->write_tuning_parameters_(CMD_VOC_ALGORITHM_TUNING, this->voc_tuning_params_.value())) {
           ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
           this->mark_failed(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
           return;
         }
-        this->set_timeout(20, [this]() { this->internal_setup_(SM_SET_NOXT); });
+        this->set_timeout(20, [this]() { this->internal_setup_(SEN6X_SM_SET_NOXT); });
       } else {
-        this->internal_setup_(SM_SET_NOXT);
+        this->internal_setup_(SEN6X_SM_SET_NOXT);
       }
       break;
-    case SM_SET_NOXT:
+    case SEN6X_SM_SET_NOXT:
       if (this->nox_tuning_params_.has_value()) {
         if (!this->write_tuning_parameters_(CMD_NOX_ALGORITHM_TUNING, this->nox_tuning_params_.value())) {
           ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
           this->mark_failed(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
           return;
         }
-        this->set_timeout(20, [this]() { this->internal_setup_(SM_SET_TP); });
+        this->set_timeout(20, [this]() { this->internal_setup_(SEN6X_SM_SET_TP); });
       } else {
-        this->internal_setup_(SM_SET_TP);
+        this->internal_setup_(SEN6X_SM_SET_TP);
       }
       break;
-    case SM_SET_TP:
+    case SEN6X_SM_SET_TP:
       if (this->temperature_compensation_.has_value()) {
         if (!this->write_temperature_compensation_(this->temperature_compensation_.value())) {
           ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
           this->mark_failed(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
           return;
         }
-        this->set_timeout(20, [this]() { this->internal_setup_(SM_SET_CO2ASC); });
+        this->set_timeout(20, [this]() { this->internal_setup_(SEN6X_SM_SET_CO2ASC); });
       } else {
-        this->internal_setup_(SM_SET_CO2ASC);
+        this->internal_setup_(SEN6X_SM_SET_CO2ASC);
       }
       break;
-    case SM_SET_CO2ASC:
+    case SEN6X_SM_SET_CO2ASC:
       if (this->co2_auto_calibrate_.has_value()) {
         if (!this->write_command(CMD_CO2_SENSOR_AUTO_SELF_CAL, this->co2_auto_calibrate_.value() ? 0x01 : 0x00)) {
           ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
           this->mark_failed(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
           return;
         }
-        this->set_timeout(20, [this]() { this->internal_setup_(SM_SET_CO2AC); });
+        this->set_timeout(20, [this]() { this->internal_setup_(SEN6X_SM_SET_CO2AC); });
       } else {
-        this->internal_setup_(SM_SET_CO2AC);
+        this->internal_setup_(SEN6X_SM_SET_CO2AC);
       }
       break;
-    case SM_SET_CO2AC:
+    case SEN6X_SM_SET_CO2AC:
       if (this->co2_altitude_compensation_.has_value()) {
         if (!this->write_command(CMD_SENSOR_ALTITUDE, this->co2_altitude_compensation_.value())) {
           ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
           this->mark_failed(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
           return;
         }
-        this->set_timeout(20, [this]() { this->internal_setup_(SM_SENSOR_CHECK); });
+        this->set_timeout(20, [this]() { this->internal_setup_(SEN6X_SM_SENSOR_CHECK); });
       } else {
-        this->internal_setup_(SM_SENSOR_CHECK);
+        this->internal_setup_(SEN6X_SM_SENSOR_CHECK);
       }
       break;
-    case SM_SENSOR_CHECK:
+    case SEN6X_SM_SENSOR_CHECK:
       if (this->co2_ambient_pressure_source_ == nullptr) {
         // if ambient pressure was updated then send it to the sensor
         if (this->co2_ambient_pressure_ != 0) {
           this->update_co2_ambient_pressure_compensation_(this->co2_ambient_pressure_);
         }
       }
-      this->set_timeout(2000, [this]() { this->internal_setup_(SM_START_MEAS); });
+      this->set_timeout(2000, [this]() { this->internal_setup_(SEN6X_SM_START_MEAS); });
       break;
-    case SM_START_MEAS:
+    case SEN6X_SM_START_MEAS:
       if (!this->start_measurements_()) {
         ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
         this->mark_failed(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
         return;
       }
-      this->set_timeout(20, [this]() { this->internal_setup_(SM_DONE); });
+      this->set_timeout(20, [this]() { this->internal_setup_(SEN6X_SM_DONE); });
       break;
-    case SM_DONE:
+    case SEN6X_SM_DONE:
       this->initialized_ = true;
       ESP_LOGD(TAG, "Initialized");
       break;
@@ -368,46 +368,46 @@ void Sen6xComponent::update() {
     }
     if (this->pm_1_0_sensor_ != nullptr) {
       ESP_LOGV(TAG, "pm_1_0 = 0x%.4x", measurements[0]);
-      float pm_1_0 = measurements[0] == UINT16_MAX ? NAN : measurements[0] / 10.0f;
+      float pm_1_0 = measurements[0] == UINT16_MAX ? NAN : static_cast<float>(measurements[0]) / 10.0f;
       this->pm_1_0_sensor_->publish_state(pm_1_0);
     }
     if (this->pm_2_5_sensor_ != nullptr) {
       ESP_LOGV(TAG, "pm_2_5 = 0x%.4x", measurements[1]);
-      float pm_2_5 = measurements[1] == UINT16_MAX ? NAN : measurements[1] / 10.0f;
+      float pm_2_5 = measurements[1] == UINT16_MAX ? NAN : static_cast<float>(measurements[1]) / 10.0f;
       this->pm_2_5_sensor_->publish_state(pm_2_5);
     }
     if (this->pm_4_0_sensor_ != nullptr) {
       ESP_LOGV(TAG, "pm_4_0 = 0x%.4x", measurements[2]);
-      float pm_4_0 = measurements[2] == UINT16_MAX ? NAN : measurements[2] / 10.0f;
+      float pm_4_0 = measurements[2] == UINT16_MAX ? NAN : static_cast<float>(measurements[2]) / 10.0f;
       this->pm_4_0_sensor_->publish_state(pm_4_0);
     }
     if (this->pm_10_0_sensor_ != nullptr) {
       ESP_LOGV(TAG, "pm_10_0 = 0x%.4x", measurements[3]);
-      float pm_10_0 = measurements[3] == UINT16_MAX ? NAN : measurements[3] / 10.0f;
+      float pm_10_0 = measurements[3] == UINT16_MAX ? NAN : static_cast<float>(measurements[3]) / 10.0f;
       this->pm_10_0_sensor_->publish_state(pm_10_0);
     }
     if (this->humidity_sensor_ != nullptr) {
       int16_t value = static_cast<int16_t>(measurements[4]);
-      float humidity = value == INT16_MAX ? NAN : value / 100.0f;
+      float humidity = value == INT16_MAX ? NAN : static_cast<float>(value) / 100.0f;
       ESP_LOGV(TAG, "humidity = 0x%.4x", measurements[4]);
       this->humidity_sensor_->publish_state(humidity);
     }
     if (this->temperature_sensor_ != nullptr) {
       int16_t value = static_cast<int16_t>(measurements[5]);
-      float temperature = value == INT16_MAX ? NAN : value / 200.0f;
+      float temperature = value == INT16_MAX ? NAN : static_cast<float>(value) / 200.0f;
       ESP_LOGV(TAG, "temperature = 0x%.4x", measurements[5]);
       this->temperature_sensor_->publish_state(temperature);
     }
     if (this->voc_sensor_ != nullptr) {
       ESP_LOGV(TAG, "voc = 0x%.4x", measurements[6]);
       int16_t voc_idx = static_cast<int16_t>(measurements[6]);
-      float voc = (voc_idx < SEN6X_MIN_INDEX_VALUE || voc_idx > SEN6X_MAX_INDEX_VALUE) ? NAN : voc_idx / 10.0f;
+      float voc = (voc_idx < SEN6X_MIN_INDEX_VALUE || voc_idx > SEN6X_MAX_INDEX_VALUE) ? NAN : static_cast<float>(voc_idx) / 10.0f;
       this->voc_sensor_->publish_state(voc);
     }
     if (this->nox_sensor_ != nullptr) {
       ESP_LOGV(TAG, "nox = 0x%.4x", measurements[7]);
       int16_t nox_idx = static_cast<int16_t>(measurements[7]);
-      float nox = (nox_idx < SEN6X_MIN_INDEX_VALUE || nox_idx > SEN6X_MAX_INDEX_VALUE) ? NAN : nox_idx / 10.0f;
+      float nox = (nox_idx < SEN6X_MIN_INDEX_VALUE || nox_idx > SEN6X_MAX_INDEX_VALUE) ? NAN : static_cast<float>(nox_idx) / 10.0f;
       this->nox_sensor_->publish_state(nox);
     }
     if (this->co2_sensor_ != nullptr) {
@@ -417,18 +417,18 @@ void Sen6xComponent::update() {
         if (this->model_.value() == SEN69C)
           value = static_cast<int16_t>(measurements[9]);  // SEN69C
         ESP_LOGV(TAG, "co2 = 0x%.4x", value);
-        float co2_1 = value == INT16_MAX ? NAN : value / 1.0f;
+        float co2_1 = value == INT16_MAX ? NAN : static_cast<float>(value) / 1.0f;
         this->co2_sensor_->publish_state(co2_1);
       } else {
         // SEN66 reports as unsigned
         ESP_LOGV(TAG, "co2 = 0x%.4x", measurements[8]);  // SEN66
-        float co2_2 = measurements[8] == UINT16_MAX ? NAN : measurements[8] / 1.0f;
+        float co2_2 = measurements[8] == UINT16_MAX ? NAN : static_cast<float>(measurements[8]) / 1.0f;
         this->co2_sensor_->publish_state(co2_2);
       }
     }
     if (this->hcho_sensor_ != nullptr) {
       ESP_LOGV(TAG, "HCHO = 0x%.4x", measurements[8]);
-      float hcho = measurements[8] == UINT16_MAX ? NAN : measurements[8] / 10.0f;
+      float hcho = measurements[8] == UINT16_MAX ? NAN : static_cast<float>(measurements[8]) / 10.0f;
       this->hcho_sensor_->publish_state(hcho);
     }
     if (this->co2_ambient_pressure_source_ != nullptr) {
