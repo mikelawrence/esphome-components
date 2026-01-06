@@ -1,7 +1,6 @@
 name: CI
 
 on:
-  push:
   workflow_dispatch:
   schedule:
     - cron: "0 0 * * *"
@@ -19,10 +18,15 @@ jobs:
       matrix:
         #### Modify below here to match your project ####
         file:
+          - test/test-sen6x-esp32-s3-idf
+          - test/test-sen6x-esp32-s3-ard
+          - test/test-sen6x-rp2040
           - test/test-stusb4500-esp32-s3-idf
           - test/test-stusb4500-esp32-s3-ard
+          - test/test-stusb4500-rp2040
           - test/test-tfmini-esp32-s3-idf
           - test/test-tfmini-esp32-s3-ard
+          - test/test-tfmini-rp2040
         #### Modify above here to match your project ####
         esphome-version:
           - stable
@@ -66,7 +70,7 @@ jobs:
           fi
           echo "run_test=${run_test}" >> $GITHUB_OUTPUT
           echo "commit=${commit}" >> $GITHUB_OUTPUT
-          
+
       - name: Update reference
         if: steps.esphome-release.outputs.tag != steps.test-release.outputs.tag
         uses: fjogeleit/yaml-update-action@v0.16.1
@@ -76,16 +80,31 @@ jobs:
           branch: ${{ github.ref }}
           changes: |
             {
-              "test/test-stusb4500-esp32-s3-idf.yaml": {
+              "test/test-sen6x-esp32-s3-idf.yaml": {
                 "external_components.source.ref": "${{ github.ref }}"
               },
-              "test/test-tfmini-esp32-s3-idf.yaml": {
+              "test/test-sen6x-esp32-s3-ard.yaml": {
+                "external_components.source.ref": "${{ github.ref }}"
+              },
+              "test/test-sen6x-rp2040.yaml": {
+                "external_components.source.ref": "${{ github.ref }}"
+              }
+              "test/test-stusb4500-esp32-s3-idf.yaml": {
                 "external_components.source.ref": "${{ github.ref }}"
               },
               "test/test-stusb4500-esp32-s3-ard.yaml": {
                 "external_components.source.ref": "${{ github.ref }}"
               },
+              "test/test-stusb4500-rp2040.yaml": {
+                "external_components.source.ref": "${{ github.ref }}"
+              },
+              "test/test-tfmini-esp32-s3-idf.yaml": {
+                "external_components.source.ref": "${{ github.ref }}"
+              },
               "test/test-tfmini-esp32-s3-ard.yaml": {
+                "external_components.source.ref": "${{ github.ref }}"
+              },
+              "test/test-tfmini-rp2040.yaml": {
                 "external_components.source.ref": "${{ github.ref }}"
               }
             }
@@ -104,14 +123,15 @@ jobs:
           yaml-file: ${{ matrix.file }}.yaml
           version: ${{ matrix.esphome-version }}
 
-  # commit:
-  #   name: Commit if scheduled check
-  #   needs: [ci]
-  #   runs-on: ubuntu-latest
-  #   # - name: Commit and push json changes
-  #   #   if: success() && steps.test-conditions.outputs.commit != 0
-  #   #   uses: devops-infra/action-commit-push@v1.0.3
-  #   #   with:
-  #   #     github_token: ${{ secrets.GITHUB_TOKEN }}
-  #   #     commit_message: "Update last successfully tested ESPHome release version to ${{steps.test-release.outputs.tag}}"
+  commit:
+    name: Commit if scheduled check
+    needs: [ci]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Commit and push json changes
+        if: needs.ci.steps.test-conditions.outputs.commit != 0
+        uses: devops-infra/action-commit-push@v1.0.3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          commit_message: "Update last successfully tested ESPHome release version to ${{steps.test-release.outputs.tag}}"
 

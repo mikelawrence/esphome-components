@@ -1,0 +1,61 @@
+esphome:
+  name: test-sen6x-esp32-s3-idf
+  friendly_name: Test SEN6X Component with ESP32-S3 and ESP-IDF Framework
+
+esp32:
+  variant: ESP32S3
+  flash_size: 16MB
+  cpu_frequency: 240MHz
+  framework:
+    type: esp-idf
+
+external_components:
+  source:
+    type: git
+    url: https://github.com/mikelawrence/esphome-components
+    ref: dev
+  components: [ sen6x ]
+
+i2c:
+  - id: i2c1_bus
+    sda: GPIO48
+    scl: GPIO47
+    scan: true
+
+  - platform: sen6x
+    i2c_id: i2c1_bus
+    update_interval: 1s
+    model: SEN69C
+    temperature:
+      name: "Temperature"
+      accuracy_decimals: 2
+    humidity:
+      name: "Humidity"
+      accuracy_decimals: 2
+    pm_1_0:
+      name: "PM <1µm Mass concentration"
+      accuracy_decimals: 2
+    pm_2_5:
+      name: "PM <2.5µm Mass concentration"
+      accuracy_decimals: 2
+    pm_4_0:
+      name: "PM <4µm Mass concentration"
+      accuracy_decimals: 2
+    pm_10_0:
+      name: "PM <10µm Mass concentration"
+      accuracy_decimals: 2
+    co2:
+      name: "CO₂"
+      automatic_self_calibration: false
+      accuracy_decimals: 0
+    nox:
+      name: "NOₓ"
+      accuracy_decimals: 0
+    voc:
+      name: "VOC"
+      accuracy_decimals: 0
+      store_baseline: true
+    hcho:
+      name: "Formaldehyde"
+      automatic_self_calibration: false
+      accuracy_decimals: 0

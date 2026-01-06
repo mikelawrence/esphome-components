@@ -3,7 +3,6 @@ esphome:
   friendly_name: Test STUSB4500 Component with ESP32-S3 and Arduino Framework
 
 esp32:
-  board: esp32s3box
   variant: ESP32S3
   flash_size: 16MB
   cpu_frequency: 240MHz

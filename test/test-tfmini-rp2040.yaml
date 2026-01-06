@@ -1,20 +1,16 @@
 esphome:
-  name: test-stusb4500-esp32-s3-idf
-  friendly_name: Test STUSB4500 Component with ESP32-S3 and ESP-IDF Framework
+  name: test-stusb4500-rp2040
+  friendly_name: Test TFMini Component with RP2040
 
-esp32:
-  variant: ESP32S3
-  flash_size: 16MB
-  cpu_frequency: 240MHz
-  framework:
-    type: esp-idf
+rp2040:
+  board: rpipicow
 
 external_components:
   source:
     type: git
     url: https://github.com/mikelawrence/esphome-components
     ref: dev
-  components: [ stusb4500 ]
+  components: [ tfmini ]
 
 i2c:
   - id: i2c1_bus
