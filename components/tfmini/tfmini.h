@@ -14,7 +14,8 @@ enum SetupStates {
   TFMINI_SM_LOW_POWER,
   TFMINI_SM_SAMPLE_RATE,
   TFMINI_SM_FW_VERSION,
-  TFMINI_SM_GET_FW
+  TFMINI_SM_GET_FW,
+  TFMINI_SM_DONE
 };
 
 class TFminiComponent : public uart::UARTDevice, public Component {

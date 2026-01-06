@@ -107,14 +107,13 @@ void TFminiComponent::internal_setup_(SetupStates state) {
           break;
         }
       } else {
-        this->cmd_attempts_ = 0;
-        this->send_command_(CMD_FW_VERSION);  // send First Get Firmware Version Command
-        this->set_timeout(100, [this]() { this->internal_setup_(TFMINI_SM_FW_VERSION); });
+        this->internal_setup_(TFMINI_SM_DONE);
       }
       break;
+    case TFMINI_SM_DONE:
+      this->initialized_ = true;
+      break;
   }
-  // received responses from all commands
-  this->initialized_ = true;
 }
 
 void TFminiComponent::loop() {
