@@ -69,7 +69,7 @@ CONFIG_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_TEMPERATURE,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-        cv.Optional(CONF_LOW_POWER, default=False): cv.boolean,
+        cv.Optional(CONF_LOW_POWER): cv.boolean,
     }
 ).extend(uart.UART_DEVICE_SCHEMA)
 
@@ -79,12 +79,12 @@ def final_validate(config):
     if CONF_LOW_POWER in config:
         if model == TFMINI_PLUS:
             raise cv.Invalid(f"Model {model} does not support '{CONF_LOW_POWER}'.")
-        if config[CONF_SAMPLE_RATE] > 10:
-            raise cv.Invalid("In Low Power Mode Sample Rate must be at most 10.")
+        if CONF_SAMPLE_RATE not in config or config[CONF_SAMPLE_RATE] > 10:
+            raise cv.Invalid("When 'low_power=true', 'sample_rate' <= 10.")
     if model in {TF_LUNA} and config[CONF_SAMPLE_RATE] > 500:
-        raise cv.Invalid(f"Model {model} Sample Rate must be at most 500.")
+        raise cv.Invalid(f"Model {model} 'sample_rate' <= 500.")
     if CONF_CONFIG_PIN in config and model in {TFMINI_PLUS, TFMINI_S}:
-        raise cv.Invalid(f"Model {model} does not support '{CONF_CONFIG_PIN}'.")
+        raise cv.Invalid(f"Model {model} does not support 'config_pin'.")
     schema = uart.final_validate_device_schema(
         "tfmini",
         baud_rate=115200,
