@@ -36,6 +36,15 @@ external_components:
       url: https://github.com/mikelawrence/esphome-components
     components: [ tfmini ]
 
+uart:
+  - id: tfmini_uart
+    tx_pin: GPIO25
+    rx_pin: GPIO24
+    baud_rate: 115200
+    data_bits: 8
+    parity: NONE
+    stop_bits: 1
+
 sensor:
   - platform: tfmini
     model: TFMINI_PLUS
