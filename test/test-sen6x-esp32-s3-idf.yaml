@@ -13,7 +13,7 @@ external_components:
   source:
     type: git
     url: https://github.com/mikelawrence/esphome-components
-    ref: dev
+    ref: main
   components: [ sen6x ]
 
 i2c:
@@ -22,6 +22,7 @@ i2c:
     scl: GPIO47
     scan: true
 
+sensor:
   - platform: sen6x
     i2c_id: i2c1_bus
     update_interval: 1s

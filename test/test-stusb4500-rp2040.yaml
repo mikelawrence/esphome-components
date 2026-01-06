@@ -9,13 +9,13 @@ external_components:
   source:
     type: git
     url: https://github.com/mikelawrence/esphome-components
-    ref: dev
+    ref: main
   components: [ stusb4500 ]
 
 i2c:
   - id: i2c1_bus
-    sda: GPIO48
-    scl: GPIO47
+    sda: GPIO25
+    scl: GPIO24
     scan: true
 
 stusb4500:
