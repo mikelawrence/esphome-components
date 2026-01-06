@@ -1,28 +1,20 @@
 import esphome.codegen as cg
-from esphome import pins
-from esphome.components import sensor, text_sensor, uart
 import esphome.config_validation as cv
-from esphome.core import TimePeriod, TimePeriodSeconds
-
-from esphome.const import (
-    # CONF_DIRECTION,
+from esphome import pins
+from esphome.components import sensor, uart
+from esphome.const import (  # CONF_DIRECTION,; ICON_ACCELERATION,; ICON_RESTART,
     CONF_DISTANCE,
     CONF_ID,
     CONF_MODEL,
     CONF_SAMPLE_RATE,
     CONF_SIGNAL_STRENGTH,
     CONF_TEMPERATURE,
-    CONF_VERSION,
     DEVICE_CLASS_DISTANCE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     ICON_ARROW_EXPAND_VERTICAL,
-    # ICON_ACCELERATION,
-    ICON_CHIP,
     ICON_SIGNAL,
     ICON_THERMOMETER,
-    # ICON_RESTART,
     STATE_CLASS_MEASUREMENT,
     UNIT_CELSIUS,
     UNIT_CENTIMETER,
@@ -39,16 +31,16 @@ CONF_LOW_POWER = "low_power"
 tfmini_ns = cg.esphome_ns.namespace("tfmini")
 TFminiComponent = tfmini_ns.class_("TFminiComponent", uart.UARTDevice, cg.Component)
 
-MODEL_TFMINI_S = "TFMINI_S"
-MODEL_TFMINI_PLUS = "TFMINI_PLUS"
-MODEL_TF_LUNA = "TF_LUNA"
+TFMINI_S = "TFMINI_S"
+TFMINI_PLUS = "TFMINI_PLUS"
+TF_LUNA = "TF_LUNA"
 
 TFminiModel = tfmini_ns.enum("TFminiModel")
 
 TFMINI_MODELS = {
-    MODEL_TFMINI_S: TFminiModel.TFMINI_MODEL_TFMINI_S,
-    MODEL_TFMINI_PLUS: TFminiModel.TFMINI_MODEL_TFMINI_PLUS,
-    MODEL_TF_LUNA: TFminiModel.TFMINI_MODEL_TF_LUNA,
+    TFMINI_S: TFminiModel.MODEL_TFMINI_S,
+    TFMINI_PLUS: TFminiModel.MODEL_TFMINI_PLUS,
+    TF_LUNA: TFminiModel.MODEL_TF_LUNA,
 }
 
 CONFIG_SCHEMA = cv.Schema(
@@ -83,30 +75,16 @@ CONFIG_SCHEMA = cv.Schema(
 
 
 def final_validate(config):
-    if config[CONF_LOW_POWER] == True:
-        if config[CONF_MODEL] == MODEL_TFMINI_PLUS:
-            raise cv.Invalid(
-                "Model" + MODEL_TFMINI_PLUS + " does not support Low Power Mode."
-            )
-        else:
-            if config[CONF_SAMPLE_RATE] > 10:
-                raise cv.Invalid(
-                    "Model"
-                    + config[CONF_MODEL]
-                    + " in Low Power Mode Sample Rate must be at most 10."
-                )
-    else:
-        if config[CONF_MODEL] == MODEL_TF_LUNA:
-            if config[CONF_SAMPLE_RATE] > 500:
-                raise cv.Invalid(
-                    "Model" + MODEL_TF_LUNA + " Sample Rate must be at most 500."
-                )
-    if CONF_CONFIG_PIN in config:
-        if config[CONF_MODEL] != MODEL_TF_LUNA:
-            raise cv.Invalid(
-                "Model" + config[CONF_MODEL] + " does not have a CONFIG pin."
-            )
-
+    model = config[CONF_MODEL]
+    if CONF_LOW_POWER in config:
+        if model == TFMINI_PLUS:
+            raise cv.Invalid(f"Model {model} does not support '{CONF_LOW_POWER}'.")
+        if config[CONF_SAMPLE_RATE] > 10:
+            raise cv.Invalid("In Low Power Mode Sample Rate must be at most 10.")
+    if model in {TF_LUNA} and config[CONF_SAMPLE_RATE] > 500:
+        raise cv.Invalid(f"Model {model} Sample Rate must be at most 500.")
+    if CONF_CONFIG_PIN in config and model in {TFMINI_PLUS, TFMINI_S}:
+        raise cv.Invalid(f"Model {model} does not support '{CONF_CONFIG_PIN}'.")
     schema = uart.final_validate_device_schema(
         "tfmini",
         baud_rate=115200,
@@ -116,7 +94,6 @@ def final_validate(config):
         parity=None,
         stop_bits=1,
     )
-
     schema(config)
 
 
@@ -129,25 +106,15 @@ async def to_code(config):
     await uart.register_uart_device(var, config)
 
     cg.add(var.set_model(config[CONF_MODEL]))
-    cg.add(var.set_distance_sensor(await sensor.new_sensor(config[CONF_DISTANCE])))
+    if cfg := config.get(CONF_SAMPLE_RATE):
+        cg.add(var.set_sample_rate(cfg))
+    if cfg := config.get(CONF_CONFIG_PIN):
+        cg.add(var.set_config_pin(await cg.gpio_pin_expression(cfg)))
+    if cfg := config.get(CONF_LOW_POWER):
+        cg.add(var.set_low_power_mode(cfg))
 
-    if CONF_SAMPLE_RATE in config:
-        cg.add(var.set_sample_rate(config[CONF_SAMPLE_RATE]))
-    if CONF_CONFIG_PIN in config:
-        cg.add(
-            var.set_config_pin(await cg.gpio_pin_expression(config[CONF_CONFIG_PIN]))
-        )
-    if CONF_SIGNAL_STRENGTH in config:
-        cg.add(
-            var.set_signal_strength_sensor(
-                await sensor.new_sensor(config[CONF_SIGNAL_STRENGTH])
-            )
-        )
-    if CONF_TEMPERATURE in config:
-        cg.add(
-            var.set_temperature_sensor(
-                await sensor.new_sensor(config[CONF_TEMPERATURE])
-            )
-        )
-    if CONF_LOW_POWER in config:
-        cg.add(var.set_low_power_mode(config[CONF_LOW_POWER]))
+    cg.add(var.set_distance_sensor(await sensor.new_sensor(config[CONF_DISTANCE])))
+    if cfg := config.get(CONF_TEMPERATURE):
+        cg.add(var.set_temperature_sensor(await sensor.new_sensor(cfg)))
+    if cfg := config.get(CONF_SIGNAL_STRENGTH):
+        cg.add(var.set_signal_strength_sensor(await sensor.new_sensor(cfg)))
