@@ -53,7 +53,7 @@ class SetTemperatureCompensationAction : public Action<Ts...>, public Parented<S
 
  protected:
   TEMPLATABLE_VALUE(float, offset)
-  TEMPLATABLE_VALUE(float, normalize_offset_slope)
+  TEMPLATABLE_VALUE(float, normalized_offset_slope)
   TEMPLATABLE_VALUE(uint16_t, time_constant)
   TEMPLATABLE_VALUE(uint16_t, slot)
 };
