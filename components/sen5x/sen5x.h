@@ -66,7 +66,7 @@ struct TemperatureCompensation {
     this->offset = static_cast<int16_t>(offset * 200.0);
     this->normalized_offset_slope = static_cast<int16_t>(normalized_offset_slope * 10000.0);
     this->time_constant = time_constant;
-    this->slot = slot
+    this->slot = slot;
   }
 };
 

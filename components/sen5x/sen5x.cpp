@@ -332,7 +332,7 @@ void SEN5XComponent::internal_setup_(SetupStates state) {
       break;
     case SM_SET_TP:
       if (this->temperature_compensation_.has_value()) {
-        if (!this->write_temperature_compensation_(this->temperature_compensation_)) {
+        if (!this->write_temperature_compensation_(this->temperature_compensation_.value())) {
           ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
           this->error_code_ = COMMUNICATION_FAILED;
           this->mark_failed();
@@ -373,7 +373,7 @@ void SEN5XComponent::internal_setup_(SetupStates state) {
       if (this->co2_ambient_pressure_source_ == nullptr) {
         // if ambient pressure was updated then send it to the sensor
         if (this->co2_ambient_pressure_ != 0) {
-          this->update_co2_ambient_pressure_compensation_(this->co2_ambient_pressure_);
+          this->write_co2_ambient_pressure_compensation_(this->co2_ambient_pressure_);
         }
       }
       this->set_timeout(2000, [this]() { this->internal_setup_(SM_START_MEAS); });
@@ -649,7 +649,7 @@ void SEN5XComponent::update() {
     if (this->co2_ambient_pressure_source_ != nullptr) {
       float pressure = this->co2_ambient_pressure_source_->state;
       if (!std::isnan(pressure)) {
-        write_ambient_pressure_compensation_(pressure);
+        this->write_co2_ambient_pressure_compensation_(pressure);
       }
     }
     this->status_clear_warning();
@@ -900,27 +900,27 @@ bool SEN5XComponent::action_perform_forced_co2_calibration(uint16_t co2) {
     ESP_LOGE(TAG, "Perform forced CO₂ calibration is not supported");
     return false;
   }
+}
 
-  bool SEN5XComponent::action_set_temperature_compensation(float offset, float normalized_offset_slope,
-                                                           uint16_t time_constant, uint8_t slot = 0) {
-    if (this->is_sen6x_()) {
-      if (this->busy_) {
-        ESP_LOGE(TAG, "Sensor is busy");
-        return false;
-      }
-      ESP_LOGD(TAG, "Set Temperature Compensation, offset=%d, normalized_offset_slope=%d, time_constant=%u, slot=%u",
-               offset, normalized_offset_slope, time_constant, slot);
-      this->busy_ = true;  // prevent actions from stomping on each other
-      TemperatureCompensation compensation(offset, normalized_offset_slope, time_constant, slot);
-      if (!this->write_temperature_compensation_(compensation);) {
-        ESP_LOGE(TAG, "Set Temperature Compensation failed");
-      }
-      this->set_timeout(50, [this]() { this->busy_ = false; });
-      return true;
-    } else {
-      ESP_LOGE(TAG, "Set Temperature Compensation is not supported");
+bool SEN5XComponent::action_set_temperature_compensation(float offset, float normalized_offset_slope,
+                                                         uint16_t time_constant, uint8_t slot = 0) {
+  if (this->is_sen6x_()) {
+    if (this->busy_) {
+      ESP_LOGE(TAG, "Sensor is busy");
       return false;
     }
+    ESP_LOGD(TAG, "Set Temperature Compensation, offset=%d, normalized_offset_slope=%d, time_constant=%u, slot=%u",
+             offset, normalized_offset_slope, time_constant, slot);
+    this->busy_ = true;  // prevent actions from stomping on each other
+    TemperatureCompensation compensation(offset, normalized_offset_slope, time_constant, slot);
+    if (!this->write_temperature_compensation_(compensation);) {
+      ESP_LOGE(TAG, "Set Temperature Compensation failed");
+    }
+    this->set_timeout(50, [this]() { this->busy_ = false; });
+    return true;
+  } else {
+    ESP_LOGE(TAG, "Set Temperature Compensation is not supported");
+    return false;
   }
 }
 
