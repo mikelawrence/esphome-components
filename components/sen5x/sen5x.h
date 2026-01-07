@@ -9,7 +9,7 @@
 namespace esphome {
 namespace sen5x {
 
-enum ERRORCODE {
+enum ERRORCODE : uint8_t {
   COMMUNICATION_FAILED,
   SERIAL_NUMBER_IDENTIFICATION_FAILED,
   MEASUREMENT_INIT_FAILED,
@@ -19,18 +19,7 @@ enum ERRORCODE {
   UNKNOWN
 };
 
-// Shortest time interval of 3H for storing baseline values.
-// Prevents wear of the flash because of too many write operations
-const uint32_t SHORTEST_BASELINE_STORE_INTERVAL = 10800;
-// Store anyway if the baseline difference exceeds the max storage diff value
-const uint32_t MAXIMUM_STORAGE_DIFF = 50;
-
-struct Sen5xBaselines {
-  int32_t state0;
-  int32_t state1;
-} PACKED;  // NOLINT
-
-enum Sen5xType { SEN50, SEN54, SEN55, SEN60, SEN63C, SEN65, SEN66, SEN68, UNKNOWN_MODEL };
+enum Sen5xType { SEN50, SEN54, SEN55, SEN62, SEN63C, SEN65, SEN66, SEN68, SEN69C, UNKNOWN_MODEL };
 enum RhtAccelerationMode : uint16_t { LOW_ACCELERATION = 0, MEDIUM_ACCELERATION = 1, HIGH_ACCELERATION = 2 };
 enum SetupStates {
   SM_START,
@@ -41,7 +30,7 @@ enum SetupStates {
   SM_GET_FW,
   SM_SET_VOCB,
   SM_SET_ACI,
-  SM_SET_RHTAM,
+  SM_SET_ACCEL,
   SM_SET_VOCT,
   SM_SET_NOXT,
   SM_SET_TP,
@@ -51,6 +40,11 @@ enum SetupStates {
   SM_START_MEAS,
   SM_DONE
 };
+
+struct Sen5xBaselines {
+  int32_t state0;
+  int32_t state1;
+} PACKED;  // NOLINT
 
 struct GasTuning {
   uint16_t index_offset;
@@ -65,7 +59,29 @@ struct TemperatureCompensation {
   int16_t offset;
   int16_t normalized_offset_slope;
   uint16_t time_constant;
+  uint8_t slot;
+
+  TemperatureCompensation() : offset(0), normalized_offset_slope(0), time_constant(0), slot(0) {}
+  TemperatureCompensation(float offset, float normalized_offset_slope, uint16_t time_constant, uint8_t slot = 0) {
+    this->offset = static_cast<int16_t>(offset * 200.0);
+    this->normalized_offset_slope = static_cast<int16_t>(normalized_offset_slope * 10000.0);
+    this->time_constant = time_constant;
+    this->slot = slot
+  }
 };
+
+struct AccelerationParameters {
+  uint16_t k;
+  uint16_t p;
+  uint16_t t1;
+  uint16_t t2;
+};
+
+// Shortest time interval of 3H for storing baseline values.
+// Prevents wear of the flash because of too many write operations
+static const uint32_t SHORTEST_BASELINE_STORE_INTERVAL = 10800;
+// Store anyway if the baseline difference exceeds the max storage diff value
+static const uint32_t MAXIMUM_STORAGE_DIFF = 50;
 
 class SEN5XComponent : public PollingComponent, public sensirion_common::SensirionI2CDevice {
  public:
@@ -114,20 +130,26 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
     tuning_params.gain_factor = gain_factor;
     this->nox_tuning_params_ = tuning_params;
   }
-  void set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant) {
-    TemperatureCompensation temp_comp;
-    temp_comp.offset = offset * 200;
-    temp_comp.normalized_offset_slope = normalized_offset_slope * 10000;
-    temp_comp.time_constant = time_constant;
-    this->temperature_compensation_ = temp_comp;
+  void set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant, uint8_t slot = 0) {
+    TemperatureCompensation compensation(offset, normalized_offset_slope, time_constant, slot);
+    this->temperature_compensation_ = compensation;
+  }
+  void set_temperature_acceleration(float k, float p, float t1, float t2) {
+    AccelerationParameters accel_param;
+    accel_param.k = k * 10;
+    accel_param.p = p * 10;
+    accel_param.t1 = t1 * 10;
+    accel_param.t2 = t2 * 10;
+    this->temperature_acceleration_ = accel_param;
   }
   void set_co2_auto_calibrate(bool value) { this->co2_auto_calibrate_ = value; }
   void set_co2_altitude_compensation(uint16_t altitude) { this->co2_altitude_compensation_ = altitude; }
   void set_ambient_pressure_source(sensor::Sensor *pressure) { this->co2_ambient_pressure_source_ = pressure; }
   bool start_fan_cleaning();
-  bool activate_heater();
-  bool perform_forced_co2_calibration(uint16_t co2);
-  bool set_ambient_pressure_compensation(float pressure_in_hpa);
+  bool action_set_ambient_pressure_compensation(float pressure_in_hpa);
+  bool action_activate_heater();
+  bool action_perform_forced_co2_calibration(uint16_t co2);
+  bool action_set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant, uint8_t slot = 0);
 
  protected:
   bool is_sen6x_();
@@ -135,11 +157,20 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   bool start_measurements_();
   bool stop_measurements_();
   bool write_tuning_parameters_(uint16_t i2c_command, const GasTuning &tuning);
-  bool write_temperature_compensation_(const TemperatureCompensation &compensation);
-  bool update_co2_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
+  bool write_temperature_compensation_(TemperatureCompensation compensation);
+  bool write_temperature_acceleration_();
+  bool write_co2_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
+
+  uint32_t seconds_since_last_store_;
+  uint16_t co2_ambient_pressure_{0};
   ERRORCODE error_code_;
+  uint8_t firmware_major_{0xFF};
+  uint8_t firmware_minor_{0xFF};
   bool initialized_{false};
   bool running_{false};
+  bool busy_{false};
+  bool store_baseline_;
+
   sensor::Sensor *pm_1_0_sensor_{nullptr};
   sensor::Sensor *pm_2_5_sensor_{nullptr};
   sensor::Sensor *pm_4_0_sensor_{nullptr};
@@ -150,26 +181,22 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   sensor::Sensor *hcho_sensor_{nullptr};
   sensor::Sensor *nox_sensor_{nullptr};
   sensor::Sensor *co2_sensor_{nullptr};
+  sensor::Sensor *co2_ambient_pressure_source_{nullptr};
 
-  std::string product_name_ = "Unknown";
-  std::string serial_number_ = "Unknown";
-  uint8_t firmware_major_{0xFF};
-  uint8_t firmware_minor_{0xFF};
-  Sen5xBaselines voc_baselines_storage_;
-  bool store_baseline_;
-  uint32_t seconds_since_last_store_;
-  ESPPreferenceObject pref_;
   optional<Sen5xType> model_;
   optional<RhtAccelerationMode> acceleration_mode_;
+  optional<AccelerationParameters> temperature_acceleration_;
   optional<uint32_t> auto_cleaning_interval_;
   optional<GasTuning> voc_tuning_params_;
   optional<GasTuning> nox_tuning_params_;
   optional<TemperatureCompensation> temperature_compensation_;
   optional<bool> co2_auto_calibrate_;
   optional<uint16_t> co2_altitude_compensation_;
-  sensor::Sensor *co2_ambient_pressure_source_{nullptr};
 
-  uint16_t co2_ambient_pressure_{0};
+  ESPPreferenceObject pref_;
+  std::string product_name_ = "Unknown";
+  std::string serial_number_ = "Unknown";
+  Sen5xBaselines voc_baselines_storage_;
 };
 
 }  // namespace sen5x
