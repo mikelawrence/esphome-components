@@ -760,7 +760,7 @@ bool SEN5XComponent::action_set_ambient_pressure_compensation(float pressure_in_
     }
     // Only send pressure value if it has changed since last update
     if (new_ambient_pressure != this->co2_ambient_pressure_) {
-      writew_co2_ambient_pressure_compensation_(new_ambient_pressure);
+      write_co2_ambient_pressure_compensation_(new_ambient_pressure);
       this->co2_ambient_pressure_ = new_ambient_pressure;
       this->set_timeout(20, []() {});
     }
