@@ -568,8 +568,8 @@ async def sen5x_stc_to_code(config, action_id, template_arg, args):
         config[CONF_NORMALIZED_OFFSET_SLOPE], args, cg.float_
     )
     time_constant = await cg.templatable(
-        config[CONF_TIME_CONSTANT], args, cg.positive_int
+        config[CONF_TIME_CONSTANT], args, cg.uint16
     )
-    slot = await cg.templatable(config[CONF_SLOT], args, cg.positive_int)
+    slot = await cg.templatable(config[CONF_SLOT], args, cg.uint16)
     cg.add(var.set_slot(offset, normalized_offset_slope, time_constant, slot))
     return var
