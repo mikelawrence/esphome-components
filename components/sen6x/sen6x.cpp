@@ -434,7 +434,7 @@ void Sen6xComponent::update() {
     if (this->co2_ambient_pressure_source_ != nullptr) {
       float pressure = this->co2_ambient_pressure_source_->state;
       if (!std::isnan(pressure)) {
-        set_ambient_pressure_compensation(pressure);
+        action_set_ambient_pressure_compensation(pressure);
       }
     }
     this->status_clear_warning();
@@ -497,7 +497,7 @@ bool Sen6xComponent::update_co2_ambient_pressure_compensation_(uint16_t pressure
   return result;
 }
 
-bool Sen6xComponent::set_ambient_pressure_compensation(float pressure_in_hpa) {
+bool Sen6xComponent::action_set_ambient_pressure_compensation(float pressure_in_hpa) {
   if (this->model_.value() == SEN63C || this->model_.value() == SEN66 || this->model_.value() == SEN69C) {
     uint16_t new_ambient_pressure = (uint16_t) pressure_in_hpa;
     if (!this->initialized_) {
@@ -517,7 +517,7 @@ bool Sen6xComponent::set_ambient_pressure_compensation(float pressure_in_hpa) {
   }
 }
 
-bool Sen6xComponent::start_fan_cleaning() {
+bool Sen6xComponent::action_start_fan_cleaning() {
   ESP_LOGD(TAG, "Fan cleaning started");
   this->initialized_ = false;  // prevent update from trying to read the sensors
   // measurements must be stopped first
@@ -551,7 +551,7 @@ bool Sen6xComponent::start_fan_cleaning() {
   return true;
 }
 
-bool Sen6xComponent::activate_heater() {
+bool Sen6xComponent::action_activate_heater() {
   ESP_LOGD(TAG, "Activate heater started");
   this->initialized_ = false;  // prevent update from trying to read the sensors
   // measurements must be stopped first
@@ -582,7 +582,7 @@ bool Sen6xComponent::activate_heater() {
   return true;
 }
 
-bool Sen6xComponent::perform_forced_co2_calibration(uint16_t co2) {
+bool Sen6xComponent::action_perform_forced_co2_calibration(uint16_t co2) {
   if (this->model_.value() == SEN63C || this->model_.value() == SEN66 || this->model_.value() == SEN69C) {
     ESP_LOGD(TAG, "Perform forced CO₂ calibration started, target co2=%d", co2);
     this->initialized_ = false;         // prevent update from trying to read the sensors

@@ -112,10 +112,10 @@ class Sen6xComponent : public PollingComponent, public sensirion_common::Sensiri
   void set_co2_auto_calibrate(bool value) { this->co2_auto_calibrate_ = value; }
   void set_co2_altitude_compensation(uint16_t altitude) { this->co2_altitude_compensation_ = altitude; }
   void set_ambient_pressure_source(sensor::Sensor *pressure) { this->co2_ambient_pressure_source_ = pressure; }
-  bool start_fan_cleaning();
-  bool activate_heater();
-  bool perform_forced_co2_calibration(uint16_t co2);
-  bool set_ambient_pressure_compensation(float pressure_in_hpa);
+  bool action_set_ambient_pressure_compensation(float pressure_in_hpa);
+  bool action_start_fan_cleaning();
+  bool action_activate_heater();
+  bool action_perform_forced_co2_calibration(uint16_t co2);
 
  protected:
   void internal_setup_(SetupStates state);
