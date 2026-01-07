@@ -677,6 +677,7 @@ bool SEN5XComponent::start_measurements_() {
   if (!result) {
     ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
   } else {
+    ESP_LOGD(TAG, "Measurements Enabled");
     this->running_ = true;
   }
   return result;
@@ -687,6 +688,7 @@ bool SEN5XComponent::stop_measurements_() {
   if (!result) {
     ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
   } else {
+    ESP_LOGD(TAG, "Measurements Stopped");
     this->running_ = false;
   }
   return result;
@@ -790,12 +792,12 @@ bool SEN5XComponent::start_fan_cleaning() {
     ESP_LOGE(TAG, "Sensor is busy");
     return false;
   }
-  ESP_LOGD(TAG, "Start fan cleaning started");
+  ESP_LOGD(TAG, "Fan cleaning started");
   this->busy_ = true;  // prevent actions from stomping on each other
   // measurements must be stopped first for certain devices
   if (this->is_sen6x_()) {
     if (!this->stop_measurements_()) {
-      ESP_LOGE(TAG, "Start fan cleaning failed");
+      ESP_LOGE(TAG, "Fan cleaning failed");
       this->busy_ = false;
       return false;
     }
@@ -806,18 +808,18 @@ bool SEN5XComponent::start_fan_cleaning() {
       if (!this->running_) {
         this->start_measurements_();
       }
-      ESP_LOGE(TAG, "Start fan cleaning failed");
+      ESP_LOGE(TAG, "Fan cleaning failed");
       this->set_timeout(50, [this]() { this->busy_ = false; });
     } else {
       this->set_timeout(10000, [this]() {
         if (!this->running_) {
           if (!this->start_measurements_()) {
-            ESP_LOGE(TAG, "Start fan cleaning failed");
+            ESP_LOGE(TAG, "Fan cleaning failed");
             this->busy_ = false;
             return;
           }
         }
-        ESP_LOGD(TAG, "Start fan cleaning finished");
+        ESP_LOGD(TAG, "Fan cleaning finished");
         this->set_timeout(50, [this]() { this->busy_ = false; });
       });
     }
@@ -831,10 +833,10 @@ bool SEN5XComponent::action_activate_heater() {
       ESP_LOGE(TAG, "Sensor is busy");
       return false;
     }
-    ESP_LOGD(TAG, "Activate heater started");
+    ESP_LOGD(TAG, "Heater started");
     this->busy_ = true;  // prevent actions from stomping on each other
     if (!this->stop_measurements_()) {
-      ESP_LOGE(TAG, "Activate heater failed");
+      ESP_LOGE(TAG, "Heater failed");
       this->busy_ = false;
       return false;
     }
@@ -847,9 +849,9 @@ bool SEN5XComponent::action_activate_heater() {
         this->set_timeout(20000, [this]() {
           if (!this->start_measurements_()) {
             this->busy_ = false;
-            ESP_LOGE(TAG, "Activate heater failed");
+            ESP_LOGE(TAG, "Heater failed");
           } else {
-            ESP_LOGD(TAG, "Activate heater finished");  // more than 10s after start
+            ESP_LOGD(TAG, "Heater finished");  // more than 10s after start
             this->set_timeout(50, [this]() { this->busy_ = false; });
           }
         });
@@ -857,7 +859,7 @@ bool SEN5XComponent::action_activate_heater() {
     });
     return true;
   } else {
-    ESP_LOGE(TAG, "Activate heater is not supported");
+    ESP_LOGE(TAG, "Heater is not supported");
     return false;
   }
 }
@@ -868,27 +870,27 @@ bool SEN5XComponent::action_perform_forced_co2_calibration(uint16_t co2) {
       ESP_LOGE(TAG, "Sensor is busy");
       return false;
     }
-    ESP_LOGD(TAG, "Perform forced CO₂ calibration, target co2=%d", co2);
+    ESP_LOGD(TAG, "Forced CO₂ recalibration, target co2=%d", co2);
     this->busy_ = true;  // prevent actions from stomping on each other
     if (!this->stop_measurements_()) {
-      ESP_LOGE(TAG, "Perform forced CO₂ calibration failed");
+      ESP_LOGE(TAG, "Forced CO₂ recalibration failed");
       this->busy_ = false;
       return false;
     }
     this->set_timeout(1400, [this, co2]() {
       if (!this->write_command(SEN6X_CMD_PERFORM_FORCED_CO2_RECAL, co2)) {
         this->start_measurements_();
-        ESP_LOGE(TAG, "Perform forced CO₂ calibration failed");
+        ESP_LOGE(TAG, "Forced CO₂ recalibration failed");
         this->set_timeout(50, [this]() { this->busy_ = false; });
       } else {
         this->set_timeout(500, [this]() {
           uint16_t correction = 0;
           if (!this->read_data(correction)) {
             this->start_measurements_();
-            ESP_LOGE(TAG, "Perform forced CO₂ calibration failed");
+            ESP_LOGE(TAG, "Forced CO₂ recalibration failed");
           } else {
             if (!this->start_measurements_() || correction == 0xFFFF) {
-              ESP_LOGE(TAG, "Perform forced CO₂ calibration failed");
+              ESP_LOGE(TAG, "Forced CO₂ recalibration failed");
             }
           }
           this->set_timeout(50, [this]() { this->busy_ = false; });
@@ -897,7 +899,7 @@ bool SEN5XComponent::action_perform_forced_co2_calibration(uint16_t co2) {
     });
     return true;
   } else {
-    ESP_LOGE(TAG, "Perform forced CO₂ calibration is not supported");
+    ESP_LOGE(TAG, "Forced CO₂ recalibration is not supported");
     return false;
   }
 }
