@@ -760,7 +760,7 @@ bool SEN5XComponent::action_set_ambient_pressure_compensation(float pressure_in_
     }
     // Only send pressure value if it has changed since last update
     if (new_ambient_pressure != this->co2_ambient_pressure_) {
-      update_co2_ambient_pressure_compensation_(new_ambient_pressure);
+      writew_co2_ambient_pressure_compensation_(new_ambient_pressure);
       this->co2_ambient_pressure_ = new_ambient_pressure;
       this->set_timeout(20, []() {});
     }
@@ -903,7 +903,7 @@ bool SEN5XComponent::action_perform_forced_co2_calibration(uint16_t co2) {
 }
 
 bool SEN5XComponent::action_set_temperature_compensation(float offset, float normalized_offset_slope,
-                                                         uint16_t time_constant, uint8_t slot = 0) {
+                                                         uint16_t time_constant, uint8_t slot) {
   if (this->is_sen6x_()) {
     if (this->busy_) {
       ESP_LOGE(TAG, "Sensor is busy");
@@ -913,7 +913,7 @@ bool SEN5XComponent::action_set_temperature_compensation(float offset, float nor
              offset, normalized_offset_slope, time_constant, slot);
     this->busy_ = true;  // prevent actions from stomping on each other
     TemperatureCompensation compensation(offset, normalized_offset_slope, time_constant, slot);
-    if (!this->write_temperature_compensation_(compensation);) {
+    if (!this->write_temperature_compensation_(compensation)) {
       ESP_LOGE(TAG, "Set Temperature Compensation failed");
     }
     this->set_timeout(50, [this]() { this->busy_ = false; });
