@@ -10,9 +10,8 @@ namespace sen5x {
 template<typename... Ts> class SetAmbientPressurehPa : public Action<Ts...>, public Parented<SEN5XComponent> {
  public:
   void play(const Ts &...x) override {
-    if (this->value_.has_value()) {
-      this->parent_->action_set_ambient_pressure_compensation(this->value_.value(x...));
-    }
+    auto value = this->value_.value(x...);
+    this->parent_->action_set_ambient_pressure_compensation(value);
   }
 
  protected:
