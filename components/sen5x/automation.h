@@ -45,10 +45,10 @@ class SetTemperatureCompensationAction : public Action<Ts...>, public Parented<S
  public:
   void play(Ts... x) override {
     auto offset = this->offset_.value(x...);
-    auto normalize_offset_slope = this->normalize_offset_slope_.value(x...);
+    auto normalized_offset_slope = this->normalized_offset_slope_.value(x...);
     auto time_constant = this->time_constant_.value(x...);
     auto slot = this->slot_.value(x...);
-    this->parent_->action_set_temperature_compensation(offset, normalize_offset_slope, time_constant, slot);
+    this->parent_->action_set_temperature_compensation(offset, normalized_offset_slope, time_constant, slot);
   }
 
  protected:
