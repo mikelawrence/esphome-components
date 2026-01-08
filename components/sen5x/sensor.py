@@ -206,9 +206,9 @@ CO2_SENSOR_SCHEMA = cv.Schema(
 
 TEMPERATURE_COMPENSATION_SCHEMA = cv.Schema(
     {
-        cv.Optional(CONF_OFFSET, default=0): cv.templatable(cv.float_),
+        cv.Optional(CONF_OFFSET, default=0): cv.templatable(cv._temperature_c),
         cv.Optional(CONF_NORMALIZED_OFFSET_SLOPE, default=0): cv.templatable(cv.float_),
-        cv.Optional(CONF_TIME_CONSTANT, default=0): cv.templatable(cv.positive_int),
+        cv.Optional(CONF_TIME_CONSTANT, default=0): cv.templatable(cv.uint16_t),
         cv.Optional(CONF_SLOT, default=0): cv.templatable(cv.int_range(min=0, max=4)),
     }
 )
