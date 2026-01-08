@@ -138,8 +138,8 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
     accel_param.t2 = t2 * 10;
     this->temperature_acceleration_ = accel_param;
   }
-  void set_co2_auto_calibrate(bool value) { this->co2_auto_calibrate_ = value; }
-  void set_co2_altitude_compensation(uint16_t altitude) { this->co2_altitude_compensation_ = altitude; }
+  void set_automatic_self_calibrate(bool value) { this->co2_auto_calibrate_ = value; }
+  void set_altitude_compensation(uint16_t altitude) { this->co2_altitude_compensation_ = altitude; }
   void set_ambient_pressure_source(sensor::Sensor *pressure) { this->co2_ambient_pressure_source_ = pressure; }
   bool start_fan_cleaning();
   bool set_ambient_pressure_compensation(float pressure_in_hpa);

@@ -338,7 +338,7 @@ SETTING_MAP = {
 }
 
 CO2_SETTING_MAP = {
-    CONF_AUTOMATIC_SELF_CALIBRATION: "set_co2_auto_calibrate",
+    CONF_AUTOMATIC_SELF_CALIBRATION: "set_automatic_self_calibrate",
     CONF_ALTITUDE_COMPENSATION: "set_altitude_compensation",
     CONF_AMBIENT_PRESSURE_COMPENSATION: "set_ambient_pressure_compensation",
 }
