@@ -219,7 +219,9 @@ CONFIG_SCHEMA = (
                             cv.Optional(CONF_TIME_CONSTANT, default=0): cv.int_range(
                                 min=0, max=65535
                             ),
-                            cv.Optional(CONF_SLOT, default=0): cv.int_range(min=0, max=4),
+                            cv.Optional(CONF_SLOT, default=0): cv.int_range(
+                                min=0, max=4
+                            ),
                         }
                     )
                 ),
@@ -290,7 +292,7 @@ CONFIG_SCHEMA = (
                         ): cv.boolean,
                         cv.Optional(
                             CONF_ALTITUDE_COMPENSATION, default=0
-                        ): cv.int_range(min=0, 3000),
+                        ): cv.int_range(min=0, max=3000),
                         cv.Optional(
                             CONF_AMBIENT_PRESSURE_COMPENSATION, default=1013
                         ): cv.int_range(min=700, max=1200),
