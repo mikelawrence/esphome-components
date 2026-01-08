@@ -194,10 +194,15 @@ CO2_SENSOR_SCHEMA = cv.Schema(
     {
         cv.Optional(CONF_AUTOMATIC_SELF_CALIBRATION, default=True): cv.boolean,
         cv.Optional(CONF_ALTITUDE_COMPENSATION, default="0m"): cv.All(
-            cv.float_with_unit("altitude", "(m|m a.s.l.|MAMSL|MASL)"),
+            cv.float_with_unit("altitude", "(m|m.a.s.l.|MAMSL|MASL)"),
             cv.int_range(min=0, max=0xFFFF, max_included=False),
         ),
-        cv.Optional(CONF_AMBIENT_PRESSURE_COMPENSATION, default=0): cv.pressure,
+        cv.Optional(CONF_AMBIENT_PRESSURE_COMPENSATION, default="700hPa"): cv.All(
+            cv.float_with_unit(
+                "pressure", "(mBar|mbar|mb|hPa|hpa|hPA)", optional_unit=True
+            ),
+            cv.int_range(min=700, max=1200),
+        ),
         cv.Optional(CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE): cv.use_id(
             sensor.Sensor
         ),
@@ -206,9 +211,16 @@ CO2_SENSOR_SCHEMA = cv.Schema(
 
 TEMPERATURE_COMPENSATION_SCHEMA = cv.Schema(
     {
-        cv.Optional(CONF_OFFSET, default=0): cv.templatable(cv._temperature_c),
-        cv.Optional(CONF_NORMALIZED_OFFSET_SLOPE, default=0): cv.templatable(cv.float_),
-        cv.Optional(CONF_TIME_CONSTANT, default=0): cv.templatable(cv.uint16_t),
+        cv.Optional(CONF_OFFSET, default=0): cv.templatable(
+            cv.All(cv._temperature_c, cv.float_range(min=-100.0, max=100.0))
+        ),
+        cv.Optional(CONF_NORMALIZED_OFFSET_SLOPE, default=0): cv.templatable(
+            cv.float_range(min=-3.0, max=3.0)
+        ),
+        cv.Optional(CONF_TIME_CONSTANT, default=0): cv.All(
+            cv.float_with_unit("seconds", "(s|sec|seconds)", optional_unit=True),
+            cv.int_range(min=0, max=65535),
+        ),
         cv.Optional(CONF_SLOT, default=0): cv.templatable(cv.int_range(min=0, max=4)),
     }
 )
