@@ -753,7 +753,7 @@ bool SEN5XComponent::write_co2_ambient_pressure_compensation_(uint16_t pressure_
   return result;
 }
 
-bool SEN5XComponent::action_set_ambient_pressure_compensation(float pressure_in_hpa) {
+bool SEN5XComponent::set_ambient_pressure_compensation(float pressure_in_hpa) {
   if (this->model_.value() == SEN63C || this->model_.value() == SEN66) {
     uint16_t new_ambient_pressure = static_cast<uint16_t>(pressure_in_hpa);
     if (!this->initialized_) {
@@ -827,7 +827,7 @@ bool SEN5XComponent::start_fan_cleaning() {
   return true;
 }
 
-bool SEN5XComponent::action_activate_heater() {
+bool SEN5XComponent::activate_heater() {
   if (this->is_sen6x_()) {
     if (this->busy_) {
       ESP_LOGE(TAG, "Sensor is busy");
@@ -864,7 +864,7 @@ bool SEN5XComponent::action_activate_heater() {
   }
 }
 
-bool SEN5XComponent::action_perform_forced_co2_calibration(uint16_t co2) {
+bool SEN5XComponent::perform_forced_co2_calibration(uint16_t co2) {
   if (this->model_.value() == SEN63C || this->model_.value() == SEN66 || this->model_.value() == SEN69C) {
     if (this->busy_) {
       ESP_LOGE(TAG, "Sensor is busy");
@@ -904,17 +904,24 @@ bool SEN5XComponent::action_perform_forced_co2_calibration(uint16_t co2) {
   }
 }
 
-bool SEN5XComponent::action_set_temperature_compensation(float offset, float normalized_offset_slope,
-                                                         uint16_t time_constant, uint8_t slot) {
+bool SEN5XComponent::set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
+                                                  uint8_t slot) {
   if (this->is_sen6x_()) {
+    TemperatureCompensation compensation(offset, normalized_offset_slope, time_constant, slot);
+    if (!this->initialized_) {
+      this->temperature_compensation_ = compensation;
+      return false;
+    }
     if (this->busy_) {
       ESP_LOGE(TAG, "Sensor is busy");
       return false;
     }
-    ESP_LOGD(TAG, "Set Temperature Compensation, offset=%d, normalized_offset_slope=%d, time_constant=%u, slot=%u",
+    ESP_LOGD(TAG, "Set Temperature Compensation, offset=%f, normalized_offset_slope=%f, time_constant=%d, slot=%d",
              offset, normalized_offset_slope, time_constant, slot);
     this->busy_ = true;  // prevent actions from stomping on each other
-    TemperatureCompensation compensation(offset, normalized_offset_slope, time_constant, slot);
+    ESP_LOGV(TAG,
+             "Set Temperature Compensation converted, offset=%d, normalized_offset_slope=%d, time_constant=%u, slot=%u",
+             compensation.offset, compensation.normalized_offset_slope, compensation.time_constant, compensation.slot);
     if (!this->write_temperature_compensation_(compensation)) {
       ESP_LOGE(TAG, "Set Temperature Compensation failed");
     }

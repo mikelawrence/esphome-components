@@ -63,22 +63,37 @@ static const uint32_t SHORTEST_BASELINE_STORE_INTERVAL = 10800;
 static const uint32_t MAXIMUM_STORAGE_DIFF = 50;
 
 class Sen6xComponent : public PollingComponent, public sensirion_common::SensirionI2CDevice {
+
+  SUB_SENSOR(pm_1_0_sensor)
+  SUB_SENSOR(pm_2_5_sensor)
+  SUB_SENSOR(pm_4_0_sensor)
+  SUB_SENSOR(pm_10_0_sensor)
+  SUB_SENSOR(temperature_sensor)
+  SUB_SENSOR(humidity_sensor)
+  SUB_SENSOR(voc_sensor)
+  SUB_SENSOR(nox_sensor)
+  SUB_SENSOR(co2_sensor)
+  SUB_SENSOR(hcho_sensor)
+  SUB_SENSOR(co2_ambient_pressure_source)
+  
+ // sensor::Sensor *co2_ambient_pressure_source_{nullptr};
+
  public:
   void setup() override;
   void dump_config() override;
   void update() override;
 
-  void set_pm_1_0_sensor(sensor::Sensor *pm_1_0) { this->pm_1_0_sensor_ = pm_1_0; }
-  void set_pm_2_5_sensor(sensor::Sensor *pm_2_5) { this->pm_2_5_sensor_ = pm_2_5; }
-  void set_pm_4_0_sensor(sensor::Sensor *pm_4_0) { this->pm_4_0_sensor_ = pm_4_0; }
-  void set_pm_10_0_sensor(sensor::Sensor *pm_10_0) { this->pm_10_0_sensor_ = pm_10_0; }
+  // void set_pm_1_0_sensor(sensor::Sensor *pm_1_0) { this->pm_1_0_sensor_ = pm_1_0; }
+  // void set_pm_2_5_sensor(sensor::Sensor *pm_2_5) { this->pm_2_5_sensor_ = pm_2_5; }
+  // void set_pm_4_0_sensor(sensor::Sensor *pm_4_0) { this->pm_4_0_sensor_ = pm_4_0; }
+  // void set_pm_10_0_sensor(sensor::Sensor *pm_10_0) { this->pm_10_0_sensor_ = pm_10_0; }
 
-  void set_voc_sensor(sensor::Sensor *voc_sensor) { this->voc_sensor_ = voc_sensor; }
-  void set_nox_sensor(sensor::Sensor *nox_sensor) { this->nox_sensor_ = nox_sensor; }
-  void set_co2_sensor(sensor::Sensor *co2_sensor) { this->co2_sensor_ = co2_sensor; }
-  void set_hcho_sensor(sensor::Sensor *hcho_sensor) { this->hcho_sensor_ = hcho_sensor; }
-  void set_humidity_sensor(sensor::Sensor *humidity_sensor) { this->humidity_sensor_ = humidity_sensor; }
-  void set_temperature_sensor(sensor::Sensor *temperature_sensor) { this->temperature_sensor_ = temperature_sensor; }
+  // void set_voc_sensor(sensor::Sensor *voc_sensor) { this->voc_sensor_ = voc_sensor; }
+  // void set_nox_sensor(sensor::Sensor *nox_sensor) { this->nox_sensor_ = nox_sensor; }
+  // void set_co2_sensor(sensor::Sensor *co2_sensor) { this->co2_sensor_ = co2_sensor; }
+  // void set_hcho_sensor(sensor::Sensor *hcho_sensor) { this->hcho_sensor_ = hcho_sensor; }
+  // void set_humidity_sensor(sensor::Sensor *humidity_sensor) { this->humidity_sensor_ = humidity_sensor; }
+  // void set_temperature_sensor(sensor::Sensor *temperature_sensor) { this->temperature_sensor_ = temperature_sensor; }
   void set_store_voc_baseline(bool store_voc_baseline) { this->store_voc_baseline_ = store_voc_baseline; }
   void set_model(Sen6xType model) { this->model_ = model; }
   void set_voc_algorithm_tuning(uint16_t index_offset, uint16_t learning_time_offset_hours,
@@ -105,17 +120,17 @@ class Sen6xComponent : public PollingComponent, public sensirion_common::Sensiri
     tuning_params.gain_factor = gain_factor;
     this->nox_tuning_params_ = tuning_params;
   }
-  void set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant) {
-    TemperatureCompensation temp_comp(offset, normalized_offset_slope, time_constant, 0);
+  void set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant, uint8_t slot) {
+    TemperatureCompensation temp_comp(offset, normalized_offset_slope, time_constant, slot);
     this->temperature_compensation_ = temp_comp;
   }
   void set_co2_auto_calibrate(bool value) { this->co2_auto_calibrate_ = value; }
-  void set_co2_altitude_compensation(uint16_t altitude) { this->co2_altitude_compensation_ = altitude; }
+  void set_altitude_compensation(uint16_t altitude) { this->co2_altitude_compensation_ = altitude; }
   void set_ambient_pressure_source(sensor::Sensor *pressure) { this->co2_ambient_pressure_source_ = pressure; }
-  bool action_set_ambient_pressure_compensation(float pressure_in_hpa);
-  bool action_start_fan_cleaning();
-  bool action_activate_heater();
-  bool action_perform_forced_co2_calibration(uint16_t co2);
+  bool set_ambient_pressure_compensation(float pressure_in_hpa);
+  bool start_fan_cleaning();
+  bool activate_heater();
+  bool perform_forced_co2_calibration(uint16_t co2);
 
  protected:
   void internal_setup_(SetupStates state);
@@ -133,17 +148,6 @@ class Sen6xComponent : public PollingComponent, public sensirion_common::Sensiri
   bool running_{false};
   bool store_voc_baseline_;
 
-  sensor::Sensor *pm_1_0_sensor_{nullptr};
-  sensor::Sensor *pm_2_5_sensor_{nullptr};
-  sensor::Sensor *pm_4_0_sensor_{nullptr};
-  sensor::Sensor *pm_10_0_sensor_{nullptr};
-  sensor::Sensor *temperature_sensor_{nullptr};
-  sensor::Sensor *humidity_sensor_{nullptr};
-  sensor::Sensor *voc_sensor_{nullptr};
-  sensor::Sensor *hcho_sensor_{nullptr};
-  sensor::Sensor *nox_sensor_{nullptr};
-  sensor::Sensor *co2_sensor_{nullptr};
-  sensor::Sensor *co2_ambient_pressure_source_{nullptr};
 
   optional<Sen6xType> model_;
   optional<GasTuning> voc_tuning_params_;

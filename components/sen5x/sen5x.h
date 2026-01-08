@@ -130,10 +130,8 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
     tuning_params.gain_factor = gain_factor;
     this->nox_tuning_params_ = tuning_params;
   }
-  void set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant, uint8_t slot = 0) {
-    TemperatureCompensation compensation(offset, normalized_offset_slope, time_constant, slot);
-    this->temperature_compensation_ = compensation;
-  }
+  void set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
+                                    uint8_t slot = 0) {}
   void set_temperature_acceleration(float k, float p, float t1, float t2) {
     AccelerationParameters accel_param;
     accel_param.k = k * 10;
@@ -146,10 +144,11 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   void set_co2_altitude_compensation(uint16_t altitude) { this->co2_altitude_compensation_ = altitude; }
   void set_ambient_pressure_source(sensor::Sensor *pressure) { this->co2_ambient_pressure_source_ = pressure; }
   bool start_fan_cleaning();
-  bool action_set_ambient_pressure_compensation(float pressure_in_hpa);
-  bool action_activate_heater();
-  bool action_perform_forced_co2_calibration(uint16_t co2);
-  bool action_set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant, uint8_t slot = 0);
+  bool set_ambient_pressure_compensation(float pressure_in_hpa);
+  bool activate_heater();
+  bool perform_forced_co2_calibration(uint16_t co2);
+  bool set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
+                                    uint8_t slot = 0);
 
  protected:
   bool is_sen6x_();

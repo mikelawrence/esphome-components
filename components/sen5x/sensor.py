@@ -107,13 +107,13 @@ CONF_T2 = "t2"
 CONF_TEMPERATURE_ACCELERATION = "temperature_acceleration"
 
 # Actions
-StartFanAction = sen5x_ns.class_("StartFanAction", automation.Action)
+StartFanCleaningAction = sen5x_ns.class_("StartFanCleaingAction", automation.Action)
 ActivateHeaterAction = sen5x_ns.class_("ActivateHeaterAction", automation.Action)
 PerformForcedCo2CalibrationAction = sen5x_ns.class_(
     "PerformForcedCo2CalibrationAction", automation.Action
 )
-SetAmbientPressurehPaAction = sen5x_ns.class_(
-    "SetAmbientPressurehPaAction", automation.Action
+SetAmbientPressureCompensationAction = sen5x_ns.class_(
+    "SetAmbientPressureCompensationAction", automation.Action
 )
 SetTemperatureCompensationAction = sen5x_ns.class_(
     "SetTemperatureCompensationAction", automation.Action
@@ -190,16 +190,26 @@ def _gas_sensor(
     )
 
 
-CO2_SENSOR = cv.Schema(
+CO2_SENSOR_SCHEMA = cv.Schema(
     {
         cv.Optional(CONF_AUTOMATIC_SELF_CALIBRATION, default=True): cv.boolean,
         cv.Optional(CONF_ALTITUDE_COMPENSATION, default="0m"): cv.All(
             cv.float_with_unit("altitude", "(m|m a.s.l.|MAMSL|MASL)"),
             cv.int_range(min=0, max=0xFFFF, max_included=False),
         ),
+        cv.Optional(CONF_AMBIENT_PRESSURE_COMPENSATION, default=0): cv.pressure,
         cv.Optional(CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE): cv.use_id(
             sensor.Sensor
         ),
+    }
+)
+
+TEMPERATURE_COMPENSATION_SCHEMA = cv.Schema(
+    {
+        cv.Optional(CONF_OFFSET, default=0): cv.templatable(cv.float_),
+        cv.Optional(CONF_NORMALIZED_OFFSET_SLOPE, default=0): cv.templatable(cv.float_),
+        cv.Optional(CONF_TIME_CONSTANT, default=0): cv.templatable(cv.positive_int),
+        cv.Optional(CONF_SLOT, default=0): cv.templatable(cv.int_range(min=0, max=4)),
     }
 )
 
@@ -220,16 +230,9 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_ACCELERATION_MODE): cv.enum(ACCELERATION_MODES),
             cv.Optional(CONF_AUTO_CLEANING_INTERVAL): cv.update_interval,
             cv.Optional(CONF_STORE_BASELINE): cv.boolean,
-            # CONF_VOC_BASELINE defined in config but not used in original sen5x component
-            # cv.Optional(CONF_VOC_BASELINE): cv.hex_uint16_t,
-            cv.Optional(CONF_TEMPERATURE_COMPENSATION): cv.Schema(
-                {
-                    cv.Optional(CONF_OFFSET, default=0): cv.float_,
-                    cv.Optional(CONF_NORMALIZED_OFFSET_SLOPE, default=0): cv.All(
-                        float_previously_pct, cv.float_
-                    ),
-                    cv.Optional(CONF_TIME_CONSTANT, default=0): cv.int_,
-                }
+            cv.Optional(CONF_TEMPERATURE_COMPENSATION): cv.All(
+                cv.ensure_list(TEMPERATURE_COMPENSATION_SCHEMA),
+                cv.Length(max=5),
             ),
             cv.Optional(CONF_TEMPERATURE_ACCELERATION): cv.Schema(
                 {
@@ -288,7 +291,7 @@ CONFIG_SCHEMA = (
                 accuracy_decimals=0,
                 device_class=DEVICE_CLASS_CARBON_DIOXIDE,
                 state_class=STATE_CLASS_MEASUREMENT,
-            ).extend(CO2_SENSOR),
+            ).extend(CO2_SENSOR_SCHEMA),
             cv.Optional(CONF_HCHO): sensor.sensor_schema(
                 unit_of_measurement=UNIT_PARTS_PER_BILLION,
                 icon=ICON_MOLECULE,
@@ -336,8 +339,8 @@ SETTING_MAP = {
 
 CO2_SETTING_MAP = {
     CONF_AUTOMATIC_SELF_CALIBRATION: "set_co2_auto_calibrate",
-    CONF_ALTITUDE_COMPENSATION: "set_co2_altitude_compensation",
-    CONF_AMBIENT_PRESSURE_COMPENSATION: "set_co2_ambient_pressure_compensation",
+    CONF_ALTITUDE_COMPENSATION: "set_altitude_compensation",
+    CONF_AMBIENT_PRESSURE_COMPENSATION: "set_ambient_pressure_compensation",
 }
 
 
@@ -491,7 +494,7 @@ SEN5X_ACTION_SCHEMA = maybe_simple_id(
 
 
 @automation.register_action(
-    "sen5x.start_fan_autoclean", StartFanAction, SEN5X_ACTION_SCHEMA
+    "sen5x.start_fan_cleaning", StartFanCleaningAction, SEN5X_ACTION_SCHEMA
 )
 async def sen5x_fan_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -530,8 +533,8 @@ async def sen5x_pfcc_to_code(config, action_id, template_arg, args):
 
 
 @automation.register_action(
-    "sen5x.set_ambient_pressure_hpa",
-    SetAmbientPressurehPaAction,
+    "sen5x.set_ambient_pressure_compensation",
+    SetAmbientPressureCompensationAction,
     SEN5X_VALUE_ACTION_SCHEMA,
 )
 async def sen5x_saph_to_code(config, action_id, template_arg, args):
@@ -542,16 +545,12 @@ async def sen5x_saph_to_code(config, action_id, template_arg, args):
     return var
 
 
-SEN5X_TEMPERATURE_COMPENSATION_SCHEMA = cv.Schema(
-    {
-        cv.GenerateID(): cv.use_id(SEN5XComponent),
-        cv.Optional(CONF_OFFSET, default=0): cv.templatable(cv._temperature_c),
-        cv.Optional(CONF_NORMALIZED_OFFSET_SLOPE, default=0): cv.float_,
-        cv.Optional(CONF_TIME_CONSTANT, default=0): cv.templatable(
-            cv.positive_time_period_seconds
-        ),
-        cv.Required(CONF_SLOT): cv.templatable(cv.int_range(min=0, max=4)),
-    }
+SEN5X_TEMPERATURE_COMPENSATION_SCHEMA = cv.maybe_simple_value(
+    TEMPERATURE_COMPENSATION_SCHEMA.extend(
+        {
+            cv.GenerateID(): cv.use_id(SEN5XComponent),
+        }
+    )
 )
 
 
@@ -563,16 +562,16 @@ SEN5X_TEMPERATURE_COMPENSATION_SCHEMA = cv.Schema(
 async def sen5x_stc_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
-    offset = await cg.templatable(config[CONF_OFFSET], args, cg.float_)
-    cg.add(var.set_offset(offset))
-    normalized_offset_slope = await cg.templatable(
-        config[CONF_NORMALIZED_OFFSET_SLOPE], args, cg.float_
-    )
-    cg.add(var.set_normalized_offset_slope(normalized_offset_slope))
-    time_constant = await cg.templatable(
-        config[CONF_TIME_CONSTANT], args, cg.uint16
-    )
-    cg.add(var.set_time_constant(time_constant))
-    slot = await cg.templatable(config[CONF_SLOT], args, cg.uint16)
-    cg.add(var.set_slot(slot))
+    if cfg := config.get(CONF_OFFSET):
+        template_ = await cg.templatable(cfg, args, cg.float_)
+        cg.add(var.set_offset(template_))
+    if cfg := config.get(CONF_NORMALIZED_OFFSET_SLOPE):
+        template_ = await cg.templatable(cfg, args, cg.float_)
+        cg.add(var.set_normalized_offset_slope(template_))
+    if cfg := config.get(CONF_TIME_CONSTANT):
+        template_ = await cg.templatable(cfg, args, cg.uint16)
+        cg.add(var.set_time_constant(template_))
+    if cfg := config.get(CONF_SLOT):
+        template_ = await cg.templatable(cfg, args, cg.uint8)
+        cg.add(var.set_slot(template_))
     return var
