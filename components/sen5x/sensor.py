@@ -107,7 +107,7 @@ CONF_T2 = "t2"
 CONF_TEMPERATURE_ACCELERATION = "temperature_acceleration"
 
 # Actions
-StartFanCleaningAction = sen5x_ns.class_("StartFanCleaingAction", automation.Action)
+StartFanCleaningAction = sen5x_ns.class_("StartFanCleaningAction", automation.Action)
 ActivateHeaterAction = sen5x_ns.class_("ActivateHeaterAction", automation.Action)
 PerformForcedCo2CalibrationAction = sen5x_ns.class_(
     "PerformForcedCo2CalibrationAction", automation.Action
