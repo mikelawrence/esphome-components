@@ -545,7 +545,7 @@ async def sen5x_saph_to_code(config, action_id, template_arg, args):
     return var
 
 
-SEN5X_TEMPERATURE_COMPENSATION_SCHEMA = cv.maybe_simple_value(
+SEN5X_TEMPERATURE_COMPENSATION_SCHEMA = cv.Schema(
     TEMPERATURE_COMPENSATION_SCHEMA.extend(
         {
             cv.GenerateID(): cv.use_id(SEN5XComponent),
