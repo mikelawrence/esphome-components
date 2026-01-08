@@ -1,37 +1,8 @@
-from esphome import automation
-from esphome.automation import maybe_simple_id
 import esphome.codegen as cg
-from esphome.components import i2c, sensirion_common, sensor
 import esphome.config_validation as cv
-from esphome.const import (
-    # CONF_ALGORITHM_TUNING,
-    # CONF_ALTITUDE_COMPENSATION,
-    # CONF_AMBIENT_PRESSURE_COMPENSATION,
-    # CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE,
-    # CONF_AUTOMATIC_SELF_CALIBRATION,
-    # CONF_CO2,
-    # CONF_GAIN_FACTOR,
-    # CONF_GATING_MAX_DURATION_MINUTES,
-    # CONF_HUMIDITY,
-    # CONF_ID,
-    # CONF_INDEX_OFFSET,
-    # CONF_LEARNING_TIME_GAIN_HOURS,
-    # CONF_LEARNING_TIME_OFFSET_HOURS,
-    # CONF_MODEL,
-    # CONF_NORMALIZED_OFFSET_SLOPE,
-    # CONF_NOX,
-    # CONF_OFFSET,
-    # CONF_PM_1_0,
-    # CONF_PM_2_5,
-    # CONF_PM_4_0,
-    # CONF_PM_10_0,
-    # CONF_STD_INITIAL,
-    # CONF_STORE_BASELINE,
-    # CONF_TEMPERATURE,
-    # CONF_TEMPERATURE_COMPENSATION,
-    # CONF_TIME_CONSTANT,
-    # CONF_VALUE,
-    # CONF_VOC,
+from esphome import automation
+from esphome.components import i2c, sensirion_common, sensor
+from esphome.const import (  # CONF_ALGORITHM_TUNING,; CONF_ALTITUDE_COMPENSATION,; CONF_AMBIENT_PRESSURE_COMPENSATION,; CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE,; CONF_AUTOMATIC_SELF_CALIBRATION,; CONF_CO2,; CONF_GAIN_FACTOR,; CONF_GATING_MAX_DURATION_MINUTES,; CONF_HUMIDITY,; CONF_ID,; CONF_INDEX_OFFSET,; CONF_LEARNING_TIME_GAIN_HOURS,; CONF_LEARNING_TIME_OFFSET_HOURS,; CONF_MODEL,; CONF_NORMALIZED_OFFSET_SLOPE,; CONF_NOX,; CONF_OFFSET,; CONF_PM_1_0,; CONF_PM_2_5,; CONF_PM_4_0,; CONF_PM_10_0,; CONF_STD_INITIAL,; CONF_STORE_BASELINE,; CONF_TEMPERATURE,; CONF_TEMPERATURE_COMPENSATION,; CONF_TIME_CONSTANT,; CONF_VALUE,; CONF_VOC,
     DEVICE_CLASS_AQI,
     DEVICE_CLASS_CARBON_DIOXIDE,
     DEVICE_CLASS_HUMIDITY,
@@ -96,16 +67,27 @@ RhtAccelerationMode = sen6x_ns.enum("RhtAccelerationMode")
 
 
 CONF_ACCELERATION_MODE = "acceleration_mode"
+CONF_AUTO_CLEANING_INTERVAL = "auto_cleaning_interval"
+CONF_K = "k"
 CONF_HCHO = "hcho"
 ICON_MOLECULE = "mdi:molecule"
+CONF_P = "p"
+CONF_SLOT = "slot"
+CONF_T1 = "t1"
+CONF_T2 = "t2"
+CONF_TEMPERATURE_ACCELERATION = "temperature_acceleration"
 
-StartFanAction = sen6x_ns.class_("StartFanAction", automation.Action)
+# Actions
+StartFanCleaningAction = sen6x_ns.class_("StartFanCleaningAction", automation.Action)
 ActivateHeaterAction = sen6x_ns.class_("ActivateHeaterAction", automation.Action)
 PerformForcedCo2CalibrationAction = sen6x_ns.class_(
     "PerformForcedCo2CalibrationAction", automation.Action
 )
-SetAmbientPressurehPaAction = sen6x_ns.class_(
-    "SetAmbientPressurehPaAction", automation.Action
+SetAmbientPressureCompensationAction = sen6x_ns.class_(
+    "SetAmbientPressureCompensationAction", automation.Action
+)
+SetTemperatureCompensationAction = sen6x_ns.class_(
+    "SetTemperatureCompensationAction", automation.Action
 )
 
 MODEL_SEN62 = "SEN62"
@@ -144,41 +126,27 @@ def _gas_sensor(
             cv.Optional(CONF_ALGORITHM_TUNING): cv.Schema(
                 {
                     cv.Optional(CONF_INDEX_OFFSET, default=index_offset): cv.int_range(
-                        1, 250
+                        min=1, max=250
                     ),
                     cv.Optional(
                         CONF_LEARNING_TIME_OFFSET_HOURS, default=learning_time_offset
-                    ): cv.int_range(1, 1000),
+                    ): cv.int_range(min=1, max=1000),
                     cv.Optional(
                         CONF_LEARNING_TIME_GAIN_HOURS, default=learning_time_gain
-                    ): cv.int_range(1, 1000),
+                    ): cv.int_range(min=1, max=1000),
                     cv.Optional(
                         CONF_GATING_MAX_DURATION_MINUTES, default=gating_max_duration
-                    ): cv.int_range(0, 3000),
+                    ): cv.int_range(min=0, max=3000),
                     cv.Optional(CONF_STD_INITIAL, default=std_initial): cv.int_range(
-                        10, 5000
+                        min=10, max=5000
                     ),
                     cv.Optional(CONF_GAIN_FACTOR, default=gain_factor): cv.int_range(
-                        1, 1000
+                        min=1, max=1000
                     ),
                 }
             )
         }
     )
-
-
-CO2_SENSOR_SCHEMA = cv.Schema(
-    {
-        cv.Optional(CONF_AUTOMATIC_SELF_CALIBRATION, default=True): cv.boolean,
-        cv.Optional(CONF_ALTITUDE_COMPENSATION, default="0m"): cv.All(
-            cv.float_with_unit("altitude", "(m|m a.s.l.|MAMSL|MASL)"),
-            cv.float_range(min=0.0, max=3000.0),
-        ),
-        cv.Optional(CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE): cv.use_id(
-            sensor.Sensor
-        ),
-    }
-)
 
 
 CONFIG_SCHEMA = (
@@ -188,9 +156,23 @@ CONFIG_SCHEMA = (
             cv.Required(CONF_MODEL): cv.enum(SEN6X_MODELS, upper=True),
             cv.Optional(CONF_TEMPERATURE_COMPENSATION): cv.Schema(
                 {
-                    cv.Optional(CONF_OFFSET, default=0): cv.float_,
-                    cv.Optional(CONF_NORMALIZED_OFFSET_SLOPE, default=0): cv.float_,
-                    cv.Optional(CONF_TIME_CONSTANT, default=0): cv.int_,
+                    cv.Optional(CONF_OFFSET, default=0): cv.float_range(
+                        min=-100.0, max=100.0
+                    ),
+                    cv.Optional(
+                        CONF_NORMALIZED_OFFSET_SLOPE, default=0
+                    ): cv.float_range(min=-3.0, max=3.0),
+                    cv.Optional(CONF_TIME_CONSTANT, default=0): cv.int_range(
+                        min=0, max=65535
+                    ),
+                }
+            ),
+            cv.Optional(CONF_TEMPERATURE_ACCELERATION): cv.Schema(
+                {
+                    cv.Required(CONF_K): cv.float_range(min=0.0, max=6535.5),
+                    cv.Required(CONF_P): cv.float_range(min=0.0, max=6535.5),
+                    cv.Required(CONF_T1): cv.float_range(min=0.0, max=6535.5),
+                    cv.Required(CONF_T2): cv.float_range(min=0.0, max=6535.5),
                 }
             ),
             cv.Optional(CONF_PM_1_0): sensor.sensor_schema(
@@ -242,7 +224,24 @@ CONFIG_SCHEMA = (
                 accuracy_decimals=0,
                 device_class=DEVICE_CLASS_CARBON_DIOXIDE,
                 state_class=STATE_CLASS_MEASUREMENT,
-            ).extend(CO2_SENSOR_SCHEMA),
+            ).extend(
+                cv.Schema(
+                    {
+                        cv.Optional(
+                            CONF_AUTOMATIC_SELF_CALIBRATION, default=True
+                        ): cv.boolean,
+                        cv.Optional(
+                            CONF_ALTITUDE_COMPENSATION, default=0
+                        ): cv.int_range(min=0, max=3000),
+                        cv.Optional(
+                            CONF_AMBIENT_PRESSURE_COMPENSATION, default=1013
+                        ): cv.int_range(min=700, max=1200),
+                        cv.Optional(
+                            CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE
+                        ): cv.use_id(sensor.Sensor),
+                    }
+                )
+            ),
             cv.Optional(CONF_HCHO): sensor.sensor_schema(
                 unit_of_measurement=UNIT_PARTS_PER_BILLION,
                 icon=ICON_MOLECULE,
@@ -283,16 +282,14 @@ SENSOR_MAP = {
 }
 
 CO2_SETTING_MAP = {
-    CONF_AUTOMATIC_SELF_CALIBRATION: "set_co2_auto_calibrate",
-    CONF_ALTITUDE_COMPENSATION: "set_co2_altitude_compensation",
-    CONF_AMBIENT_PRESSURE_COMPENSATION: "set_co2_ambient_pressure_compensation",
+    CONF_AUTOMATIC_SELF_CALIBRATION: "set_automatic_self_calibrate",
+    CONF_ALTITUDE_COMPENSATION: "set_altitude_compensation",
+    CONF_AMBIENT_PRESSURE_COMPENSATION: "set_ambient_pressure_compensation",
 }
 
 
 def final_validate(config):
     model = config[CONF_MODEL]
-    if CONF_STORE_BASELINE in config and model in {MODEL_SEN62, MODEL_SEN63C}:
-        raise cv.Invalid(f"Model {model} does not support '{CONF_STORE_BASELINE}'.")
     if CONF_VOC in config and model in {MODEL_SEN62, MODEL_SEN63C}:
         raise cv.Invalid(f"Model {model} does not support '{CONF_VOC}'.")
     if CONF_NOX in config and model in {MODEL_SEN62, MODEL_SEN63C}:
@@ -353,6 +350,15 @@ async def to_code(config):
                 cfg[CONF_TIME_CONSTANT],
             )
         )
+    if cfg := config.get(CONF_TEMPERATURE_ACCELERATION):
+        cg.add(
+            var.set_temperature_acceleration(
+                cfg[CONF_K],
+                cfg[CONF_P],
+                cfg[CONF_T1],
+                cfg[CONF_T2],
+            )
+        )
     if CONF_CO2 in config:
         for key, funcName in CO2_SETTING_MAP.items():
             if key in config[CONF_CO2]:
@@ -364,11 +370,11 @@ async def to_code(config):
                 cg.add(var.set_ambient_pressure_source(sens))
 
 
-SEN6X_ACTION_SCHEMA = maybe_simple_id({cv.GenerateID(): cv.use_id(Sen6xComponent)})
+SEN6X_ACTION_SCHEMA = cv.maybe_simple_id({cv.GenerateID(): cv.use_id(Sen6xComponent)})
 
 
 @automation.register_action(
-    "sen6x.start_fan_autoclean", StartFanAction, SEN6X_ACTION_SCHEMA
+    "sen6x.start_fan_cleaning", StartFanCleaningAction, SEN6X_ACTION_SCHEMA
 )
 async def sen6x_fan_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -385,7 +391,7 @@ async def sen6x_ah_to_code(config, action_id, template_arg, args):
     return var
 
 
-SEN6X_VALUE_ACTION_SCHEMA = maybe_simple_id(
+SEN6X_VALUE_ACTION_SCHEMA = cv.maybe_simple_value(
     {
         cv.GenerateID(): cv.use_id(Sen6xComponent),
         cv.Required(CONF_VALUE): cv.templatable(cv.positive_int),
@@ -401,19 +407,61 @@ SEN6X_VALUE_ACTION_SCHEMA = maybe_simple_id(
 async def sen6x_pfcc_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
-    template_ = await cg.templatable(config[CONF_VALUE], args, cg.uint16)
-    cg.add(var.set_value(template_))
+    template = await cg.templatable(config[CONF_VALUE], args, cg.uint16)
+    cg.add(var.set_value(template))
     return var
 
 
 @automation.register_action(
-    "sen6x.set_ambient_pressure_hpa",
-    SetAmbientPressurehPaAction,
+    "sen6x.set_ambient_pressure_compensation",
+    SetAmbientPressureCompensationAction,
     SEN6X_VALUE_ACTION_SCHEMA,
 )
 async def sen6x_saph_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
-    template_ = await cg.templatable(config[CONF_VALUE], args, cg.uint16)
-    cg.add(var.set_value(template_))
+    template = await cg.templatable(config[CONF_VALUE], args, cg.uint16)
+    cg.add(var.set_value(template))
+    return var
+
+
+SEN5X_TEMPERATURE_COMPENSATION_SCHEMA = cv.Schema(
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.use_id(Sen6xComponent),
+            cv.Optional(CONF_OFFSET, default=0.0): cv.templatable(
+                cv.float_range(-100.0, 100.0)
+            ),
+            cv.Optional(CONF_NORMALIZED_OFFSET_SLOPE, default=0.0): cv.templatable(
+                cv.float_range(-3.0000, 3.0000)
+            ),
+            cv.Optional(CONF_TIME_CONSTANT, default=0): cv.templatable(
+                cv.int_range(0, 65535),
+            ),
+            cv.Optional(CONF_SLOT, default=0): cv.templatable(cv.int_range(0, 4)),
+        }
+    )
+)
+
+
+@automation.register_action(
+    "sen5x.set_temperature_compensation",
+    SetTemperatureCompensationAction,
+    SEN5X_TEMPERATURE_COMPENSATION_SCHEMA,
+)
+async def sen5x_stc_to_code(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    if cfg := config.get(CONF_OFFSET):
+        template = await cg.templatable(cfg, args, cg.float_)
+        cg.add(var.set_offset(template))
+    if cfg := config.get(CONF_NORMALIZED_OFFSET_SLOPE):
+        template = await cg.templatable(cfg, args, cg.float_)
+        cg.add(var.set_normalized_offset_slope(template))
+    if cfg := config.get(CONF_TIME_CONSTANT):
+        template = await cg.templatable(cfg, args, cg.uint16)
+        cg.add(var.set_time_constant(template))
+    if cfg := config.get(CONF_SLOT):
+        template = await cg.templatable(cfg, args, cg.uint8)
+        cg.add(var.set_slot(template))
     return var

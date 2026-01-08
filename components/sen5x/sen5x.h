@@ -1,4 +1,4 @@
-#pragma once
+#pragma once 
 
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
@@ -100,12 +100,12 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   void set_hcho_sensor(sensor::Sensor *hcho_sensor) { this->hcho_sensor_ = hcho_sensor; }
   void set_humidity_sensor(sensor::Sensor *humidity_sensor) { this->humidity_sensor_ = humidity_sensor; }
   void set_temperature_sensor(sensor::Sensor *temperature_sensor) { this->temperature_sensor_ = temperature_sensor; }
-  void set_store_baseline(bool store_baseline) { this->store_baseline_ = store_baseline; }
-  void set_model(Sen5xType model) { this->model_ = model; }
   void set_acceleration_mode(RhtAccelerationMode mode) { this->acceleration_mode_ = mode; }
   void set_auto_cleaning_interval(uint32_t auto_cleaning_interval) {
     this->auto_cleaning_interval_ = auto_cleaning_interval;
   }
+  void set_store_voc_baseline(bool store_voc_baseline) { this->store_voc_baseline_ = store_voc_baseline; }
+  void set_model(Sen5xType model) { this->model_ = model; }
   void set_voc_algorithm_tuning(uint16_t index_offset, uint16_t learning_time_offset_hours,
                                 uint16_t learning_time_gain_hours, uint16_t gating_max_duration_minutes,
                                 uint16_t std_initial, uint16_t gain_factor) {
@@ -130,6 +130,8 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
     tuning_params.gain_factor = gain_factor;
     this->nox_tuning_params_ = tuning_params;
   }
+  bool set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
+                                    uint8_t slot = 0);
   void set_temperature_acceleration(float k, float p, float t1, float t2) {
     AccelerationParameters accel_param;
     accel_param.k = k * 10;
@@ -142,11 +144,9 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   void set_altitude_compensation(uint16_t altitude) { this->co2_altitude_compensation_ = altitude; }
   void set_ambient_pressure_source(sensor::Sensor *pressure) { this->co2_ambient_pressure_source_ = pressure; }
   bool start_fan_cleaning();
-  bool set_ambient_pressure_compensation(float pressure_in_hpa);
   bool activate_heater();
   bool perform_forced_co2_calibration(uint16_t co2);
-  bool set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
-                                    uint8_t slot = 0);
+  bool set_ambient_pressure_compensation(float pressure_in_hpa);
 
  protected:
   bool is_sen6x_();
@@ -154,7 +154,7 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   bool start_measurements_();
   bool stop_measurements_();
   bool write_tuning_parameters_(uint16_t i2c_command, const GasTuning &tuning);
-  bool write_temperature_compensation_(TemperatureCompensation compensation);
+  bool write_temperature_compensation_(const TemperatureCompensation &compensation);
   bool write_temperature_acceleration_();
   bool write_co2_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
 
@@ -166,7 +166,7 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   bool initialized_{false};
   bool running_{false};
   bool busy_{false};
-  bool store_baseline_;
+  bool store_voc_baseline_;
 
   sensor::Sensor *pm_1_0_sensor_{nullptr};
   sensor::Sensor *pm_2_5_sensor_{nullptr};
@@ -180,10 +180,10 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   sensor::Sensor *co2_sensor_{nullptr};
   sensor::Sensor *co2_ambient_pressure_source_{nullptr};
 
-  optional<Sen5xType> model_;
   optional<RhtAccelerationMode> acceleration_mode_;
   optional<AccelerationParameters> temperature_acceleration_;
   optional<uint32_t> auto_cleaning_interval_;
+  optional<Sen5xType> model_;
   optional<GasTuning> voc_tuning_params_;
   optional<GasTuning> nox_tuning_params_;
   optional<TemperatureCompensation> temperature_compensation_;

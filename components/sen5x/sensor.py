@@ -1,38 +1,8 @@
-from esphome import automation
-from esphome.automation import maybe_simple_id
 import esphome.codegen as cg
-from esphome.components import i2c, sensirion_common, sensor
 import esphome.config_validation as cv
-from esphome.const import (
-    #     CONF_ALGORITHM_TUNING,
-    #     CONF_ALTITUDE_COMPENSATION,
-    #     CONF_AMBIENT_PRESSURE_COMPENSATION,
-    #     CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE,
-    #     CONF_AUTOMATIC_SELF_CALIBRATION,
-    #     CONF_CO2,
-    #     CONF_GAIN_FACTOR,
-    #     CONF_GATING_MAX_DURATION_MINUTES,
-    #     CONF_HUMIDITY,
-    #     CONF_ID,
-    #     CONF_INDEX_OFFSET,
-    #     CONF_LEARNING_TIME_GAIN_HOURS,
-    #     CONF_LEARNING_TIME_OFFSET_HOURS,
-    #     CONF_MODEL,
-    #     CONF_NORMALIZED_OFFSET_SLOPE,
-    #     CONF_NOX,
-    #     CONF_OFFSET,
-    #     CONF_PM_1_0,
-    #     CONF_PM_2_5,
-    #     CONF_PM_4_0,
-    #     CONF_PM_10_0,
-    #     CONF_STD_INITIAL,
-    #     CONF_STORE_BASELINE,
-    #     CONF_TEMPERATURE,
-    #     CONF_TEMPERATURE_COMPENSATION,
-    #     CONF_TIME_CONSTANT,
-    #     CONF_VALUE,
-    #     CONF_VOC,
-    #     CONF_VOC_BASELINE,
+from esphome import automation
+from esphome.components import i2c, sensirion_common, sensor
+from esphome.const import (  # CONF_ALGORITHM_TUNING,; CONF_ALTITUDE_COMPENSATION,; CONF_AMBIENT_PRESSURE_COMPENSATION,; CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE,; CONF_AUTOMATIC_SELF_CALIBRATION,; CONF_CO2,; CONF_GAIN_FACTOR,; CONF_GATING_MAX_DURATION_MINUTES,; CONF_HUMIDITY,; CONF_ID,; CONF_INDEX_OFFSET,; CONF_LEARNING_TIME_GAIN_HOURS,; CONF_LEARNING_TIME_OFFSET_HOURS,; CONF_MODEL,; CONF_NORMALIZED_OFFSET_SLOPE,; CONF_NOX,; CONF_OFFSET,; CONF_PM_1_0,; CONF_PM_2_5,; CONF_PM_4_0,; CONF_PM_10_0,; CONF_STD_INITIAL,; CONF_STORE_BASELINE,; CONF_TEMPERATURE,; CONF_TEMPERATURE_COMPENSATION,; CONF_TIME_CONSTANT,; CONF_VALUE,; CONF_VOC,; CONF_VOC_BASELINE,
     DEVICE_CLASS_AQI,
     DEVICE_CLASS_CARBON_DIOXIDE,
     DEVICE_CLASS_HUMIDITY,
@@ -83,13 +53,14 @@ CONF_VALUE = "value"
 CONF_VOC = "voc"
 CONF_VOC_BASELINE = "voc_baseline"
 
+
 CODEOWNERS = ["@martgras", "@mikelawrence"]
 DEPENDENCIES = ["i2c"]
 AUTO_LOAD = ["sensirion_common"]
 
 sen5x_ns = cg.esphome_ns.namespace("sen5x")
-SEN5XComponent = sen5x_ns.class_(
-    "SEN5XComponent", cg.PollingComponent, sensirion_common.SensirionI2CDevice
+Sen5xComponent = sen5x_ns.class_(
+    "Sen5xComponent", cg.PollingComponent, sensirion_common.SensirionI2CDevice
 )
 Sen5xModel = sen5x_ns.enum("Sen5xModel")
 RhtAccelerationMode = sen5x_ns.enum("RhtAccelerationMode")
@@ -201,31 +172,23 @@ def float_previously_pct(value):
 CONFIG_SCHEMA = (
     cv.Schema(
         {
-            cv.GenerateID(): cv.declare_id(SEN5XComponent),
+            cv.GenerateID(): cv.declare_id(Sen5xComponent),
             cv.Required(CONF_MODEL): cv.enum(SEN5X_MODELS, upper=True),
             cv.Optional(CONF_ACCELERATION_MODE): cv.enum(ACCELERATION_MODES),
             cv.Optional(CONF_AUTO_CLEANING_INTERVAL): cv.update_interval,
             cv.Optional(CONF_STORE_BASELINE): cv.boolean,
-            cv.Optional(CONF_TEMPERATURE_COMPENSATION): cv.All(
-                cv.ensure_list(
-                    cv.Schema(
-                        {
-                            cv.Optional(CONF_OFFSET, default=0): cv.float_range(
-                                min=-100.0, max=100.0
-                            ),
-                            cv.Optional(
-                                CONF_NORMALIZED_OFFSET_SLOPE, default=0
-                            ): cv.float_range(min=-3.0, max=3.0),
-                            cv.Optional(CONF_TIME_CONSTANT, default=0): cv.int_range(
-                                min=0, max=65535
-                            ),
-                            cv.Optional(CONF_SLOT, default=0): cv.int_range(
-                                min=0, max=4
-                            ),
-                        }
-                    )
-                ),
-                cv.Length(max=5),
+            cv.Optional(CONF_TEMPERATURE_COMPENSATION): cv.Schema(
+                {
+                    cv.Optional(CONF_OFFSET, default=0): cv.float_range(
+                        min=-100.0, max=100.0
+                    ),
+                    cv.Optional(
+                        CONF_NORMALIZED_OFFSET_SLOPE, default=0
+                    ): cv.float_range(min=-3.0, max=3.0),
+                    cv.Optional(CONF_TIME_CONSTANT, default=0): cv.int_range(
+                        min=0, max=65535
+                    ),
+                }
             ),
             cv.Optional(CONF_TEMPERATURE_ACCELERATION): cv.Schema(
                 {
@@ -496,11 +459,7 @@ async def to_code(config):
                 cg.add(var.set_ambient_pressure_source(sens))
 
 
-SEN5X_ACTION_SCHEMA = maybe_simple_id(
-    {
-        cv.GenerateID(): cv.use_id(SEN5XComponent),
-    }
-)
+SEN5X_ACTION_SCHEMA = cv.maybe_simple_id({cv.GenerateID(): cv.use_id(Sen5xComponent)})
 
 
 @automation.register_action(
@@ -523,7 +482,7 @@ async def sen5x_ah_to_code(config, action_id, template_arg, args):
 
 SEN5X_VALUE_ACTION_SCHEMA = cv.maybe_simple_value(
     {
-        cv.GenerateID(): cv.use_id(SEN5XComponent),
+        cv.GenerateID(): cv.use_id(Sen5xComponent),
         cv.Required(CONF_VALUE): cv.templatable(cv.positive_int),
     }
 )
@@ -558,7 +517,7 @@ async def sen5x_saph_to_code(config, action_id, template_arg, args):
 SEN5X_TEMPERATURE_COMPENSATION_SCHEMA = cv.Schema(
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(SEN5XComponent),
+            cv.GenerateID(): cv.use_id(Sen5xComponent),
             cv.Optional(CONF_OFFSET, default=0.0): cv.templatable(
                 cv.float_range(-100.0, 100.0)
             ),
@@ -583,15 +542,15 @@ async def sen5x_stc_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
     if cfg := config.get(CONF_OFFSET):
-        template_ = await cg.templatable(cfg, args, cg.float_)
-        cg.add(var.set_offset(template_))
+        template = await cg.templatable(cfg, args, cg.float_)
+        cg.add(var.set_offset(template))
     if cfg := config.get(CONF_NORMALIZED_OFFSET_SLOPE):
-        template_ = await cg.templatable(cfg, args, cg.float_)
-        cg.add(var.set_normalized_offset_slope(template_))
+        template = await cg.templatable(cfg, args, cg.float_)
+        cg.add(var.set_normalized_offset_slope(template))
     if cfg := config.get(CONF_TIME_CONSTANT):
-        template_ = await cg.templatable(cfg, args, cg.uint16)
-        cg.add(var.set_time_constant(template_))
+        template = await cg.templatable(cfg, args, cg.uint16)
+        cg.add(var.set_time_constant(template))
     if cfg := config.get(CONF_SLOT):
-        template_ = await cg.templatable(cfg, args, cg.uint8)
-        cg.add(var.set_slot(template_))
+        template = await cg.templatable(cfg, args, cg.uint8)
+        cg.add(var.set_slot(template))
     return var

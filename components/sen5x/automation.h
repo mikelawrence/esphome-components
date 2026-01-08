@@ -7,7 +7,8 @@
 namespace esphome {
 namespace sen5x {
 
-template<typename... Ts> class SetAmbientPressureCompensationAction : public Action<Ts...>, public Parented<SEN5XComponent> {
+template<typename... Ts>
+class SetAmbientPressureCompensationAction : public Action<Ts...>, public Parented<SEN5XComponent> {
  public:
   void play(const Ts &...x) override {
     auto value = this->value_.value(x...);
