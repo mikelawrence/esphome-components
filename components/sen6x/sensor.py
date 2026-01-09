@@ -1,6 +1,6 @@
+from esphome import automation
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome import automation
 from esphome.components import i2c, sensirion_common, sensor
 from esphome.const import (  # CONF_ALGORITHM_TUNING,; CONF_ALTITUDE_COMPENSATION,; CONF_AMBIENT_PRESSURE_COMPENSATION,; CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE,; CONF_AUTOMATIC_SELF_CALIBRATION,; CONF_CO2,; CONF_GAIN_FACTOR,; CONF_GATING_MAX_DURATION_MINUTES,; CONF_HUMIDITY,; CONF_ID,; CONF_INDEX_OFFSET,; CONF_LEARNING_TIME_GAIN_HOURS,; CONF_LEARNING_TIME_OFFSET_HOURS,; CONF_MODEL,; CONF_NORMALIZED_OFFSET_SLOPE,; CONF_NOX,; CONF_OFFSET,; CONF_PM_1_0,; CONF_PM_2_5,; CONF_PM_4_0,; CONF_PM_10_0,; CONF_STD_INITIAL,; CONF_STORE_BASELINE,; CONF_TEMPERATURE,; CONF_TEMPERATURE_COMPENSATION,; CONF_TIME_CONSTANT,; CONF_VALUE,; CONF_VOC,
     DEVICE_CLASS_AQI,
@@ -370,7 +370,9 @@ async def to_code(config):
                 cg.add(var.set_ambient_pressure_source(sens))
 
 
-SEN6X_ACTION_SCHEMA = cv.maybe_simple_id({cv.GenerateID(): cv.use_id(Sen6xComponent)})
+SEN6X_ACTION_SCHEMA = automation.maybe_simple_id(
+    {cv.GenerateID(): cv.use_id(Sen6xComponent)}
+)
 
 
 @automation.register_action(
@@ -430,13 +432,13 @@ SEN5X_TEMPERATURE_COMPENSATION_SCHEMA = cv.Schema(
         {
             cv.GenerateID(): cv.use_id(Sen6xComponent),
             cv.Optional(CONF_OFFSET, default=0.0): cv.templatable(
-                cv.float_range(-100.0, 100.0)
+                cv.float_range(min=-100.0, max=100.0)
             ),
             cv.Optional(CONF_NORMALIZED_OFFSET_SLOPE, default=0.0): cv.templatable(
-                cv.float_range(-3.0000, 3.0000)
+                cv.float_range(min=-3.0000, max=3.0000)
             ),
             cv.Optional(CONF_TIME_CONSTANT, default=0): cv.templatable(
-                cv.int_range(0, 65535),
+                cv.int_range(min=0, max=65535),
             ),
             cv.Optional(CONF_SLOT, default=0): cv.templatable(cv.int_range(0, 4)),
         }
