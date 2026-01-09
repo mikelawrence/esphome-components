@@ -142,7 +142,6 @@ class Sen6xComponent : public PollingComponent, public sensirion_common::Sensiri
   bool write_co2_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
 
   uint32_t seconds_since_last_store_;
-  uint16_t co2_ambient_pressure_{0};
   uint8_t firmware_major_{0xFF};
   uint8_t firmware_minor_{0xFF};
   bool initialized_{false};
@@ -155,6 +154,7 @@ class Sen6xComponent : public PollingComponent, public sensirion_common::Sensiri
   optional<TemperatureCompensation> temperature_compensation_;
   optional<bool> co2_auto_calibrate_;
   optional<uint16_t> co2_altitude_compensation_;
+  optional<uint16_t> co2_ambient_pressure_compensation_;
 
   ESPPreferenceObject pref_;
   std::string product_name_ = "Unknown";

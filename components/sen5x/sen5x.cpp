@@ -327,8 +327,8 @@ void SEN5XComponent::internal_setup_(SetupStates state) {
     case SM_SENSOR_CHECK:
       if (this->co2_ambient_pressure_source_ == nullptr) {
         // if ambient pressure was updated then send it to the sensor
-        if (this->co2_ambient_pressure_ != 0) {
-          this->write_co2_ambient_pressure_compensation_(this->co2_ambient_pressure_);
+        if (this->co2_ambient_pressure_compensation_.value() != 0) {
+          this->write_co2_ambient_pressure_compensation_(this->co2_ambient_pressure_compensation_.value());
         }
       }
       this->set_timeout(20, [this]() { this->internal_setup_(SM_START_MEAS); });
@@ -411,8 +411,8 @@ void SEN5XComponent::dump_config() {
     if (this->co2_ambient_pressure_source_ != nullptr) {
       ESP_LOGCONFIG(TAG, "    Dynamic ambient pressure compensation using sensor '%s'",
                     this->co2_ambient_pressure_source_->get_name().c_str());
-    } else if (this->co2_ambient_pressure_.has_value()) {
-      ESP_LOGCONFIG(TAG, "    Pressure compensation: %dm", this->co2_ambient_pressure_.value());
+    } else if (this->co2_ambient_pressure_compensation_.has_value()) {
+      ESP_LOGCONFIG(TAG, "    Pressure compensation: %dm", this->co2_ambient_pressure_compensation_.value());
     } else if (this->co2_altitude_compensation_.has_value()) {
       ESP_LOGCONFIG(TAG, "    Altitude compensation: %dm", this->co2_altitude_compensation_.value());
     }
@@ -708,13 +708,13 @@ bool SEN5XComponent::set_ambient_pressure_compensation(float pressure_in_hpa) {
   if (this->model_.value() == SEN63C || this->model_.value() == SEN66 || this->model_.value() == SEN69C) {
     uint16_t new_ambient_pressure = static_cast<uint16_t>(pressure_in_hpa);
     if (!this->initialized_) {
-      this->co2_ambient_pressure_ = new_ambient_pressure;
+      this->co2_ambient_pressure_compensation_ = new_ambient_pressure;
       return false;
     }
     // Only send pressure value if it has changed since last update
-    if (new_ambient_pressure != this->co2_ambient_pressure_) {
+    if (new_ambient_pressure != this->co2_ambient_pressure_compensation_.value()) {
       write_co2_ambient_pressure_compensation_(new_ambient_pressure);
-      this->co2_ambient_pressure_ = new_ambient_pressure;
+      this->co2_ambient_pressure_compensation_ = new_ambient_pressure;
       this->set_timeout(20, []() {});
     }
     return true;
