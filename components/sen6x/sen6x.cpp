@@ -43,7 +43,7 @@ static const int8_t SEN6X_INDEX_SCALE_FACTOR = 10;                            //
 static const int8_t SEN6X_MIN_INDEX_VALUE = 1 * SEN6X_INDEX_SCALE_FACTOR;     // must be adjusted by the scale factor
 static const int16_t SEN6X_MAX_INDEX_VALUE = 500 * SEN6X_INDEX_SCALE_FACTOR;  // must be adjusted by the scale factor
 
-static inline const char *model_to_str(Sen6xType model) {
+static inline const char *model_to_str(SEN6XType model) {
   switch (model) {
     case SEN62:
       return "SEN62";
@@ -70,11 +70,11 @@ static inline std::string convert_to_string(uint16_t array[], uint8_t length) {
   return new_string;
 }
 
-void Sen6xComponent::setup() {
+void SEN6XComponent::setup() {
   this->set_timeout(100, [this]() { this->internal_setup_(SEN6X_SM_START); });
 }
 
-void Sen6xComponent::internal_setup_(SetupStates state) {
+void SEN6XComponent::internal_setup_(SetupStates state) {
   uint16_t string_number[16] = {0};
   switch (state) {
     case SEN6X_SM_START:
@@ -149,7 +149,7 @@ void Sen6xComponent::internal_setup_(SetupStates state) {
 #else
         uint32_t hash = fnv1_hash(App.get_compilation_time_ref() + this->serial_number_);
 #endif
-        this->pref_ = global_preferences->make_preference<Sen6xBaselines>(hash, true);
+        this->pref_ = global_preferences->make_preference<SEN6XBaselines>(hash, true);
         if (this->pref_.load(&this->voc_baselines_storage_)) {
           ESP_LOGV(TAG, "Loaded VOC baseline state0: 0x%04" PRIX32 ", state1: 0x%04" PRIX32,
                    this->voc_baselines_storage_.state0, this->voc_baselines_storage_.state1);
@@ -268,7 +268,7 @@ void Sen6xComponent::internal_setup_(SetupStates state) {
   }
 }
 
-void Sen6xComponent::dump_config() {
+void SEN6XComponent::dump_config() {
   ESP_LOGCONFIG(TAG,
                 "SEN6X:\n"
                 "  Initialized: %s\n"
@@ -300,7 +300,7 @@ void Sen6xComponent::dump_config() {
     LOG_SENSOR("  ", "HCHO", this->hcho_sensor_);
   }
 
-  void Sen6xComponent::update() {
+  void SEN6XComponent::update() {
     if (!this->initialized_) {
       return;
     }
@@ -458,7 +458,7 @@ void Sen6xComponent::dump_config() {
     });
   }
 
-  bool Sen6xComponent::start_measurements_() {
+  bool SEN6XComponent::start_measurements_() {
     auto result = this->write_command(CMD_START_MEASUREMENTS);
     if (!result) {
       ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
@@ -469,7 +469,7 @@ void Sen6xComponent::dump_config() {
     return result;
   }
 
-  bool Sen6xComponent::stop_measurements_() {
+  bool SEN6XComponent::stop_measurements_() {
     auto result = this->write_command(CMD_STOP_MEASUREMENTS);
     if (!result) {
       ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
@@ -482,7 +482,7 @@ void Sen6xComponent::dump_config() {
     return result;
   }
 
-  bool Sen6xComponent::write_tuning_parameters_(uint16_t i2c_command, const GasTuning &tuning) {
+  bool SEN6XComponent::write_tuning_parameters_(uint16_t i2c_command, const GasTuning &tuning) {
     uint16_t params[6];
     params[0] = tuning.index_offset;
     params[1] = tuning.learning_time_offset_hours;
@@ -497,7 +497,7 @@ void Sen6xComponent::dump_config() {
     return result;
   }
 
-  bool Sen6xComponent::write_temperature_compensation_(const TemperatureCompensation &compensation) {
+  bool SEN6XComponent::write_temperature_compensation_(const TemperatureCompensation &compensation) {
     uint16_t params[4];
     params[0] = static_cast<uint16_t>(compensation.offset);
     params[1] = static_cast<uint16_t>(compensation.normalized_offset_slope);
@@ -510,7 +510,7 @@ void Sen6xComponent::dump_config() {
     return result;
   }
 
-  bool Sen6xComponent::write_temperature_acceleration_() {
+  bool SEN6XComponent::write_temperature_acceleration_() {
     uint16_t params[4];
     if (this->temperature_acceleration_.has_value()) {
       auto accel_param = this->temperature_acceleration_.value();
@@ -527,7 +527,7 @@ void Sen6xComponent::dump_config() {
     return true;
   }
 
-  bool Sen6xComponent::write_co2_ambient_pressure_compensation_(uint16_t pressure_in_hpa) {
+  bool SEN6XComponent::write_co2_ambient_pressure_compensation_(uint16_t pressure_in_hpa) {
     auto result = this->write_command(CMD_CO2_SENSOR_AUTO_SELF_CAL, this->co2_auto_calibrate_.value() ? 0x01 : 0x00);
     if (!result) {
       ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
@@ -535,7 +535,7 @@ void Sen6xComponent::dump_config() {
     return result;
   }
 
-  bool Sen6xComponent::set_ambient_pressure_compensation(float pressure_in_hpa) {
+  bool SEN6XComponent::set_ambient_pressure_compensation(float pressure_in_hpa) {
     if (this->model_.value() == SEN63C || this->model_.value() == SEN66 || this->model_.value() == SEN69C) {
       uint16_t new_ambient_pressure = static_cast<uint16_t>(pressure_in_hpa);
       if (!this->initialized_) {
@@ -555,7 +555,7 @@ void Sen6xComponent::dump_config() {
     }
   }
 
-  bool Sen6xComponent::start_fan_cleaning() {
+  bool SEN6XComponent::start_fan_cleaning() {
     if (this->busy_) {
       ESP_LOGW(TAG, "Sensor is busy");
       return false;
@@ -589,7 +589,7 @@ void Sen6xComponent::dump_config() {
     return true;
   }
 
-  bool Sen6xComponent::action_activate_heater() {
+  bool SEN6XComponent::action_activate_heater() {
     if (this->busy_) {
       ESP_LOGW(TAG, "Sensor is busy");
       return false;
@@ -621,7 +621,7 @@ void Sen6xComponent::dump_config() {
     return true;
   }
 
-  bool Sen6xComponent::action_perform_forced_co2_calibration(uint16_t co2) {
+  bool SEN6XComponent::action_perform_forced_co2_calibration(uint16_t co2) {
     if (this->model_.value() == SEN63C || this->model_.value() == SEN66 || this->model_.value() == SEN69C) {
       if (this->busy_) {
         ESP_LOGW(TAG, "Sensor is busy");
@@ -665,7 +665,7 @@ void Sen6xComponent::dump_config() {
     }
   }
 
-  bool Sen6xComponent::set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
+  bool SEN6XComponent::set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
                                                     uint8_t slot) {
     TemperatureCompensation compensation(offset, normalized_offset_slope, time_constant, slot);
     if (!this->initialized_) {

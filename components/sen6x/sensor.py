@@ -59,10 +59,10 @@ DEPENDENCIES = ["i2c"]
 AUTO_LOAD = ["sensirion_common"]
 
 sen6x_ns = cg.esphome_ns.namespace("sen6x")
-Sen6xComponent = sen6x_ns.class_(
-    "Sen6xComponent", cg.PollingComponent, sensirion_common.SensirionI2CDevice
+SEN6XComponent = sen6x_ns.class_(
+    "SEN6XComponent", cg.PollingComponent, sensirion_common.SensirionI2CDevice
 )
-Sen6xModel = sen6x_ns.enum("Sen6xModel")
+SEN6XModel = sen6x_ns.enum("SEN6XModel")
 RhtAccelerationMode = sen6x_ns.enum("RhtAccelerationMode")
 
 
@@ -98,12 +98,12 @@ MODEL_SEN68 = "SEN68"
 MODEL_SEN69C = "SEN69C"
 
 SEN6X_MODELS = {
-    MODEL_SEN62: Sen6xModel.SEN62,
-    MODEL_SEN63C: Sen6xModel.SEN63C,
-    MODEL_SEN65: Sen6xModel.SEN65,
-    MODEL_SEN66: Sen6xModel.SEN66,
-    MODEL_SEN68: Sen6xModel.SEN68,
-    MODEL_SEN69C: Sen6xModel.SEN69C,
+    MODEL_SEN62: SEN6XModel.SEN62,
+    MODEL_SEN63C: SEN6XModel.SEN63C,
+    MODEL_SEN65: SEN6XModel.SEN65,
+    MODEL_SEN66: SEN6XModel.SEN66,
+    MODEL_SEN68: SEN6XModel.SEN68,
+    MODEL_SEN69C: SEN6XModel.SEN69C,
 }
 
 
@@ -152,7 +152,7 @@ def _gas_sensor(
 CONFIG_SCHEMA = (
     cv.Schema(
         {
-            cv.GenerateID(): cv.declare_id(Sen6xComponent),
+            cv.GenerateID(): cv.declare_id(SEN6XComponent),
             cv.Required(CONF_MODEL): cv.enum(SEN6X_MODELS, upper=True),
             cv.Optional(CONF_TEMPERATURE_COMPENSATION): cv.Schema(
                 {
@@ -371,7 +371,7 @@ async def to_code(config):
 
 
 SEN6X_ACTION_SCHEMA = automation.maybe_simple_id(
-    {cv.GenerateID(): cv.use_id(Sen6xComponent)}
+    {cv.GenerateID(): cv.use_id(SEN6XComponent)}
 )
 
 
@@ -395,7 +395,7 @@ async def sen6x_ah_to_code(config, action_id, template_arg, args):
 
 SEN6X_VALUE_ACTION_SCHEMA = cv.maybe_simple_value(
     {
-        cv.GenerateID(): cv.use_id(Sen6xComponent),
+        cv.GenerateID(): cv.use_id(SEN6XComponent),
         cv.Required(CONF_VALUE): cv.templatable(cv.positive_int),
     }
 )
@@ -430,7 +430,7 @@ async def sen6x_saph_to_code(config, action_id, template_arg, args):
 SEN5X_TEMPERATURE_COMPENSATION_SCHEMA = cv.Schema(
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(Sen6xComponent),
+            cv.GenerateID(): cv.use_id(SEN6XComponent),
             cv.Optional(CONF_OFFSET, default=0.0): cv.templatable(
                 cv.float_range(min=-100.0, max=100.0)
             ),

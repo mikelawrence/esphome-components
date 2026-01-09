@@ -59,10 +59,10 @@ DEPENDENCIES = ["i2c"]
 AUTO_LOAD = ["sensirion_common"]
 
 sen5x_ns = cg.esphome_ns.namespace("sen5x")
-Sen5xComponent = sen5x_ns.class_(
-    "Sen5xComponent", cg.PollingComponent, sensirion_common.SensirionI2CDevice
+SEN5XComponent = sen5x_ns.class_(
+    "SEN5XComponent", cg.PollingComponent, sensirion_common.SensirionI2CDevice
 )
-Sen5xModel = sen5x_ns.enum("Sen5xModel")
+SEN5XModel = sen5x_ns.enum("SEN5XModel")
 RhtAccelerationMode = sen5x_ns.enum("RhtAccelerationMode")
 
 
@@ -101,15 +101,15 @@ MODEL_SEN68 = "SEN68"
 MODEL_SEN69C = "SEN69C"
 
 SEN5X_MODELS = {
-    MODEL_SEN50: Sen5xModel.SEN50,
-    MODEL_SEN54: Sen5xModel.SEN54,
-    MODEL_SEN55: Sen5xModel.SEN55,
-    MODEL_SEN62: Sen5xModel.SEN62,
-    MODEL_SEN63C: Sen5xModel.SEN63C,
-    MODEL_SEN65: Sen5xModel.SEN65,
-    MODEL_SEN66: Sen5xModel.SEN66,
-    MODEL_SEN68: Sen5xModel.SEN68,
-    MODEL_SEN69C: Sen5xModel.SEN69C,
+    MODEL_SEN50: SEN5XModel.SEN50,
+    MODEL_SEN54: SEN5XModel.SEN54,
+    MODEL_SEN55: SEN5XModel.SEN55,
+    MODEL_SEN62: SEN5XModel.SEN62,
+    MODEL_SEN63C: SEN5XModel.SEN63C,
+    MODEL_SEN65: SEN5XModel.SEN65,
+    MODEL_SEN66: SEN5XModel.SEN66,
+    MODEL_SEN68: SEN5XModel.SEN68,
+    MODEL_SEN69C: SEN5XModel.SEN69C,
 }
 
 ACCELERATION_MODES = {
@@ -172,7 +172,7 @@ def float_previously_pct(value):
 CONFIG_SCHEMA = (
     cv.Schema(
         {
-            cv.GenerateID(): cv.declare_id(Sen5xComponent),
+            cv.GenerateID(): cv.declare_id(SEN5XComponent),
             cv.Required(CONF_MODEL): cv.enum(SEN5X_MODELS, upper=True),
             cv.Optional(CONF_ACCELERATION_MODE): cv.enum(ACCELERATION_MODES),
             cv.Optional(CONF_AUTO_CLEANING_INTERVAL): cv.update_interval,
@@ -460,7 +460,7 @@ async def to_code(config):
 
 
 SEN5X_ACTION_SCHEMA = automation.maybe_simple_id(
-    {cv.GenerateID(): cv.use_id(Sen5xComponent)}
+    {cv.GenerateID(): cv.use_id(SEN5XComponent)}
 )
 
 
@@ -484,7 +484,7 @@ async def sen5x_ah_to_code(config, action_id, template_arg, args):
 
 SEN5X_VALUE_ACTION_SCHEMA = cv.maybe_simple_value(
     {
-        cv.GenerateID(): cv.use_id(Sen5xComponent),
+        cv.GenerateID(): cv.use_id(SEN5XComponent),
         cv.Required(CONF_VALUE): cv.templatable(cv.positive_int),
     }
 )
@@ -519,7 +519,7 @@ async def sen5x_saph_to_code(config, action_id, template_arg, args):
 SEN5X_TEMPERATURE_COMPENSATION_SCHEMA = cv.Schema(
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(Sen5xComponent),
+            cv.GenerateID(): cv.use_id(SEN5XComponent),
             cv.Optional(CONF_OFFSET, default=0.0): cv.templatable(
                 cv.float_range(min=-100.0, max=100.0)
             ),

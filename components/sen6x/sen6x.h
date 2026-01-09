@@ -10,7 +10,7 @@
 namespace esphome {
 namespace sen6x {
 
-enum Sen6xType { SEN62, SEN63C, SEN65, SEN66, SEN68, SEN69C, UNKNOWN_MODEL };
+enum SEN6XType { SEN62, SEN63C, SEN65, SEN66, SEN68, SEN69C, UNKNOWN_MODEL };
 enum SetupStates {
   SEN6X_SM_START,
   SEN6X_SM_START_1,
@@ -29,7 +29,7 @@ enum SetupStates {
   SEN6X_SM_DONE
 };
 
-struct Sen6xBaselines {
+struct SEN6XBaselines {
   int32_t state0;
   int32_t state1;
 } PACKED;  // NOLINT
@@ -71,7 +71,7 @@ static const uint32_t SHORTEST_BASELINE_STORE_INTERVAL = 10800;
 // Store anyway if the baseline difference exceeds the max storage diff value
 static const uint32_t MAXIMUM_STORAGE_DIFF = 50;
 
-class Sen6xComponent : public PollingComponent, public sensirion_common::SensirionI2CDevice {
+class SEN6XComponent : public PollingComponent, public sensirion_common::SensirionI2CDevice {
   SUB_SENSOR(pm_1_0_sensor)
   SUB_SENSOR(pm_2_5_sensor)
   SUB_SENSOR(pm_4_0_sensor)
@@ -89,7 +89,7 @@ class Sen6xComponent : public PollingComponent, public sensirion_common::Sensiri
   void dump_config() override;
   void update() override;
   void set_store_voc_baseline(bool store_voc_baseline) { this->store_voc_baseline_ = store_voc_baseline; }
-  void set_model(Sen6xType model) { this->model_ = model; }
+  void set_model(SEN6XType model) { this->model_ = model; }
   void set_voc_algorithm_tuning(uint16_t index_offset, uint16_t learning_time_offset_hours,
                                 uint16_t learning_time_gain_hours, uint16_t gating_max_duration_minutes,
                                 uint16_t std_initial, uint16_t gain_factor) {
@@ -148,7 +148,7 @@ class Sen6xComponent : public PollingComponent, public sensirion_common::Sensiri
   bool running_{false};
   bool store_voc_baseline_;
 
-  optional<Sen6xType> model_;
+  optional<SEN6XType> model_;
   optional<GasTuning> voc_tuning_params_;
   optional<GasTuning> nox_tuning_params_;
   optional<TemperatureCompensation> temperature_compensation_;
@@ -159,7 +159,7 @@ class Sen6xComponent : public PollingComponent, public sensirion_common::Sensiri
   ESPPreferenceObject pref_;
   std::string product_name_ = "Unknown";
   std::string serial_number_ = "Unknown";
-  Sen6xBaselines voc_baselines_storage_;
+  SEN6XBaselines voc_baselines_storage_;
 };
 }  // namespace sen6x
 }  // namespace esphome
