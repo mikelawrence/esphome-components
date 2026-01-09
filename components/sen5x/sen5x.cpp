@@ -12,7 +12,7 @@ static const char *const TAG = "sen5x";
 
 static const uint16_t SEN5X_CMD_READ_MEASUREMENT = 0x03C4;
 static const uint16_t SEN62_CMD_READ_MEASUREMENT = 0x04A3;
-static const uint16_t SEN63_CMD_READ_MEASUREMENT = 0x0471;
+static const uint16_t SEN63C_CMD_READ_MEASUREMENT = 0x0471;
 static const uint16_t SEN65_CMD_READ_MEASUREMENT = 0x0446;
 static const uint16_t SEN66_CMD_READ_MEASUREMENT = 0x0300;
 static const uint16_t SEN68_CMD_READ_MEASUREMENT = 0x0467;
@@ -411,8 +411,8 @@ void SEN5XComponent::dump_config() {
     if (this->co2_ambient_pressure_source_ != nullptr) {
       ESP_LOGCONFIG(TAG, "    Dynamic ambient pressure compensation using sensor '%s'",
                     this->co2_ambient_pressure_source_->get_name().c_str());
-    } else if (this->this->co2_ambient_pressure_.has_value()) {
-      ESP_LOGCONFIG(TAG, "    Pressure compensation: %dm", this->this->co2_ambient_pressure_.value());
+    } else if (this->co2_ambient_pressure_.has_value()) {
+      ESP_LOGCONFIG(TAG, "    Pressure compensation: %dm", this->co2_ambient_pressure_.value());
     } else if (this->co2_altitude_compensation_.has_value()) {
       ESP_LOGCONFIG(TAG, "    Altitude compensation: %dm", this->co2_altitude_compensation_.value());
     }
@@ -476,7 +476,7 @@ void SEN5XComponent::update() {
       length = 6;
       break;
     case SEN63C:
-      cmd = SEN63_CMD_READ_MEASUREMENT;
+      cmd = SEN63C_CMD_READ_MEASUREMENT;
       length = 7;
       break;
     case SEN65:
@@ -647,7 +647,7 @@ bool SEN5XComponent::write_tuning_parameters_(uint16_t i2c_command, const GasTun
   return result;
 }
 
-bool SEN5XComponent::write_temperature_compensation_((const TemperatureCompensation &compensation) {
+bool SEN5XComponent::write_temperature_compensation_(const TemperatureCompensation &compensation) {
   uint16_t params[4];
   params[0] = static_cast<uint16_t>(compensation.offset);
   params[1] = static_cast<uint16_t>(compensation.normalized_offset_slope);
