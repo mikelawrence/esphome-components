@@ -72,7 +72,6 @@ static const uint32_t SHORTEST_BASELINE_STORE_INTERVAL = 10800;
 static const uint32_t MAXIMUM_STORAGE_DIFF = 50;
 
 class Sen6xComponent : public PollingComponent, public sensirion_common::SensirionI2CDevice {
-
   SUB_SENSOR(pm_1_0_sensor)
   SUB_SENSOR(pm_2_5_sensor)
   SUB_SENSOR(pm_4_0_sensor)
