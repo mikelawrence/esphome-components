@@ -129,7 +129,7 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
     tuning_params.gain_factor = gain_factor;
     this->nox_tuning_params_ = tuning_params;
   }
-  bool set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
+  void set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
                                     uint8_t slot = 0);
   void set_temperature_compensation_(const TemperatureCompensation &compensation);
   void set_temperature_acceleration(float k, float p, float t1, float t2) {

@@ -13,6 +13,7 @@ static const char *const TAG_FAN_CLEANING = "sen5x.start_fan_cleaning";
 static const char *const TAG_ACTIVATE_HEATER = "sen5x.activate_heater";
 static const char *const TAG_CO2_CAL = "sen5x.perform_forced_co2_calibration";
 static const char *const TAG_PRESS_COMP = "sen5x.set_ambient_pressure_compensation";
+static const char *const TAG_TEMP_COMP = "sen5x.set_temperature_compensation";
 
 static const uint16_t SEN5X_CMD_READ_MEASUREMENT = 0x03C4;
 static const uint16_t SEN62_CMD_READ_MEASUREMENT = 0x04A3;
@@ -726,7 +727,7 @@ bool SEN5XComponent::is_sen6x_() {
 void SEN5XComponent::set_ambient_pressure_compensation(float pressure_in_hpa) {
   if (this->model_.value() == SEN63C || this->model_.value() == SEN66 || this->model_.value() == SEN69C) {
     if (!this->initialized_) {
-      this->ambient_pressure_compensation_ = new_ambient_pressure;
+      this->ambient_pressure_compensation_ = static_cast<uint16_t>(pressure_in_hpa);
       return;
     }
     if (this->busy_) {
@@ -736,9 +737,9 @@ void SEN5XComponent::set_ambient_pressure_compensation(float pressure_in_hpa) {
     this->busy_ = true;  // prevent actions from stomping on each other
     if (this->updating_) {
       // let update finish before continuing set_ambient_pressure_compensation
-      this->set_timeout(100, [this]() { this->set_ambient_pressure_compensation_(); });
+      this->set_timeout(100, [this]() { this->set_ambient_pressure_compensation_(pressure_in_hpa); });
     } else {
-      this->set_ambient_pressure_compensation_();
+      this->set_ambient_pressure_compensation_(pressure_in_hpa);
     }
   } else {
     ESP_LOGE(TAG_PRESS_COMP, "Not supported");
@@ -909,9 +910,10 @@ void SEN5XComponent::set_temperature_compensation(float offset, float normalized
     this->busy_ = true;  // prevent actions from stomping on each other
     if (this->updating_) {
       // let update finish before continuing perform_forced_co2_calibration
-      this->set_timeout(100, [this]() { this->perform_forced_co2_calibration_(compensation); });
+      this->set_timeout(100, [this, &compensation]() { this->set_temperature_compensation(compensation); });
     } else {
-      this->perform_forced_co2_calibration_(compensation);
+      this->set_timeout(100, [this, &compensation]() { this->set_temperature_compensation(compensation); });
+      // this->perform_forced_co2_calibration_(compensation);
     }
   } else {
     ESP_LOGE(TAG_TEMP_COMP, "Not supported");
