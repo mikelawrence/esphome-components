@@ -735,28 +735,21 @@ void SEN5XComponent::set_ambient_pressure_compensation(float pressure_in_hpa) {
       return;
     }
     this->busy_ = true;  // prevent actions from stomping on each other
-    if (this->updating_) {
-      // let update finish before continuing set_ambient_pressure_compensation
-      this->set_timeout(100, [this]() { this->set_ambient_pressure_compensation_(pressure_in_hpa); });
-    } else {
-      this->set_ambient_pressure_compensation_(pressure_in_hpa);
-    }
+    // let update finish before continuing set_ambient_pressure_compensation
+    this->set_timeout(100, [this, pressure_in_hpa]() {
+      uint16_t new_ambient_pressure = static_cast<uint16_t>(pressure_in_hpa);
+      // Only send pressure value if it has changed since last update
+      if (!this->ambient_pressure_compensation_.has_value() ||
+          new_ambient_pressure != this->ambient_pressure_compensation_.value()) {
+        write_ambient_pressure_compensation_(new_ambient_pressure);
+        this->ambient_pressure_compensation_ = new_ambient_pressure;
+        ESP_LOGD(TAG_PRESS_COMP, "Updated, pressure=%d hPa", new_ambient_pressure);
+        this->set_timeout(20, []() { this->busy_ = false; });
+      }
+    });
   } else {
     ESP_LOGE(TAG_PRESS_COMP, "Not supported");
-    return;
   }
-}
-void SEN5XComponent::set_ambient_pressure_compensation_(float pressure_in_hpa) {
-  uint16_t new_ambient_pressure = static_cast<uint16_t>(pressure_in_hpa);
-  // Only send pressure value if it has changed since last update
-  if (!this->ambient_pressure_compensation_.has_value() ||
-      new_ambient_pressure != this->ambient_pressure_compensation_.value()) {
-    write_ambient_pressure_compensation_(new_ambient_pressure);
-    this->ambient_pressure_compensation_ = new_ambient_pressure;
-    ESP_LOGD(TAG_PRESS_COMP, "Updated, pressure=%d hPa", new_ambient_pressure);
-    this->set_timeout(20, []() {});
-  }
-  return;
 }
 
 void SEN5XComponent::start_fan_cleaning() {
@@ -765,37 +758,32 @@ void SEN5XComponent::start_fan_cleaning() {
     return;
   }
   this->busy_ = true;  // prevent actions from stomping on each other
-  if (this->updating_) {
-    // let update finish before continuing start_fan_heating
-    this->set_timeout(100, [this]() { this->start_fan_cleaning_(); });
-  } else {
-    this->start_fan_cleaning_();
-  }
-}
-void SEN5XComponent::start_fan_cleaning_() {
-  ESP_LOGD(TAG_FAN_CLEANING, "Started (12s)");
-  // measurements should/must be stopped
-  if (!this->stop_measurements_()) {
-    ESP_LOGE(TAG_FAN_CLEANING, "Failed");
-    this->busy_ = false;
-    return;
-  }
-  this->set_timeout(1400, [this]() {
-    if (!this->write_command(CMD_START_CLEANING_FAN)) {
-      ESP_LOGE(TAG_FAN_CLEANING, ESP_LOG_MSG_COMM_FAIL);
-      this->start_measurements_();
-      this->set_timeout(50, [this]() { this->busy_ = false; });
-    } else {
-      this->set_timeout(10000, [this]() {
-        if (!this->start_measurements_()) {
-          ESP_LOGE(TAG_FAN_CLEANING, "Failed");
-          this->busy_ = false;
-          return;
-        }
-        ESP_LOGD(TAG_FAN_CLEANING, "Finished");
-        this->set_timeout(50, [this]() { this->busy_ = false; });
-      });
+  // let update finish before continuing start_fan_heating
+  this->set_timeout(100, [this]() {
+    ESP_LOGD(TAG_FAN_CLEANING, "Started (12s)");
+    // measurements should/must be stopped
+    if (!this->stop_measurements_()) {
+      ESP_LOGE(TAG_FAN_CLEANING, "Failed");
+      this->busy_ = false;
+      return;
     }
+    this->set_timeout(1400, [this]() {
+      if (!this->write_command(CMD_START_CLEANING_FAN)) {
+        ESP_LOGE(TAG_FAN_CLEANING, ESP_LOG_MSG_COMM_FAIL);
+        this->start_measurements_();
+        this->set_timeout(50, [this]() { this->busy_ = false; });
+      } else {
+        this->set_timeout(10000, [this]() {
+          if (!this->start_measurements_()) {
+            ESP_LOGE(TAG_FAN_CLEANING, "Failed");
+            this->busy_ = false;
+            return;
+          }
+          ESP_LOGD(TAG_FAN_CLEANING, "Finished");
+          this->set_timeout(50, [this]() { this->busy_ = false; });
+        });
+      }
+    });
   });
 }
 
@@ -808,39 +796,36 @@ void SEN5XComponent::activate_heater() {
     this->busy_ = true;  // prevent actions from stomping on each other
     if (this->updating_) {
       // let update finish before continuing activate_heater
-      this->set_timeout(100, [this]() { this->activate_heater_(); });
-    } else {
-      this->activate_heater_();
-    }
-  } else {
-    ESP_LOGE(TAG_ACTIVATE_HEATER, "Not supported");
-    return;
-  }
-}
-void SEN5XComponent::activate_heater_() {
-  ESP_LOGD(TAG_ACTIVATE_HEATER, "Started (22s)");
-  if (!this->stop_measurements_()) {
-    ESP_LOGE(TAG_ACTIVATE_HEATER, "Failed");
-    this->busy_ = false;
-    return;
-  }
-  this->set_timeout(1400, [this]() {
-    if (!this->write_command(SEN6X_CMD_ACTIVATE_SHT_HEATER)) {
-      ESP_LOGE(TAG_ACTIVATE_HEATER, ESP_LOG_MSG_COMM_FAIL);
-      this->start_measurements_();
-      this->set_timeout(50, [this]() { this->busy_ = false; });
-    } else {
-      this->set_timeout(20000, [this]() {
-        if (!this->start_measurements_()) {
-          this->busy_ = false;
+      this->set_timeout(100, [this]() {
+        ESP_LOGD(TAG_ACTIVATE_HEATER, "Started (22s)");
+        if (!this->stop_measurements_()) {
           ESP_LOGE(TAG_ACTIVATE_HEATER, "Failed");
-        } else {
-          ESP_LOGD(TAG_ACTIVATE_HEATER, "Finished");
-          this->set_timeout(50, [this]() { this->busy_ = false; });
+          this->busy_ = false;
+          return;
         }
+        this->set_timeout(1400, [this]() {
+          if (!this->write_command(SEN6X_CMD_ACTIVATE_SHT_HEATER)) {
+            ESP_LOGE(TAG_ACTIVATE_HEATER, ESP_LOG_MSG_COMM_FAIL);
+            this->start_measurements_();
+            this->set_timeout(50, [this]() { this->busy_ = false; });
+          } else {
+            this->set_timeout(20000, [this]() {
+              if (!this->start_measurements_()) {
+                this->busy_ = false;
+                ESP_LOGE(TAG_ACTIVATE_HEATER, "Failed");
+              } else {
+                ESP_LOGD(TAG_ACTIVATE_HEATER, "Finished");
+                this->set_timeout(50, [this]() { this->busy_ = false; });
+              }
+            });
+          }
+        });
       });
+    } else {
+      ESP_LOGE(TAG_ACTIVATE_HEATER, "Not supported");
+      return;
     }
-  });
+  }
 }
 
 void SEN5XComponent::perform_forced_co2_calibration(uint16_t co2) {
@@ -850,49 +835,44 @@ void SEN5XComponent::perform_forced_co2_calibration(uint16_t co2) {
       return;
     }
     this->busy_ = true;  // prevent actions from stomping on each other
-    if (this->updating_) {
-      // let update finish before continuing perform_forced_co2_calibration
-      this->set_timeout(100, [this]() { this->perform_forced_co2_calibration_(co2); });
-    } else {
-      this->perform_forced_co2_calibration_(co2);
-    }
+    // let update finish before continuing perform_forced_co2_calibration
+    this->set_timeout(100, [this, co2]() {
+      ESP_LOGD(TAG_CO2_CAL, "Started, co2=%d", co2);
+      this->busy_ = true;  // prevent actions from stomping on each other
+      if (!this->stop_measurements_()) {
+        ESP_LOGE(TAG, "Failed");
+        this->busy_ = false;
+        return;
+      }
+      this->set_timeout(1400, [this, co2]() {
+        if (!this->write_command(SEN6X_CMD_PERFORM_FORCED_CO2_RECAL, co2)) {
+          this->start_measurements_();
+          ESP_LOGE(TAG_CO2_CAL, "Failed");
+          this->set_timeout(50, [this]() { this->busy_ = false; });
+        } else {
+          this->set_timeout(500, [this]() {
+            uint16_t frc = 0;
+            if (!this->read_data(frc)) {
+              ESP_LOGE(TAG_CO2_CAL, "Failed");
+            } else {
+              if (frc == 0xFFFF) {
+                ESP_LOGE(TAG_CO2_CAL, "Invalid, frc=0xFFFF");
+              } else {
+                ESP_LOGD(TAG_CO2_CAL, "Finished, frc=%d", static_cast<int32_t>(frc) - 0x8000);
+              }
+            }
+            if (!this->start_measurements_()) {
+              ESP_LOGE(TAG_CO2_CAL, "Failed");
+            }
+            this->set_timeout(50, [this]() { this->busy_ = false; });
+          });
+        }
+      });
+    });
   } else {
     ESP_LOGE(TAG_CO2_CAL, "Not supported");
     return;
   }
-}
-void SEN5XComponent::perform_forced_co2_calibration_(uint16_t co2) {
-  ESP_LOGD(TAG_CO2_CAL, "Started, co2=%d", co2);
-  this->busy_ = true;  // prevent actions from stomping on each other
-  if (!this->stop_measurements_()) {
-    ESP_LOGE(TAG, "Failed");
-    this->busy_ = false;
-    return;
-  }
-  this->set_timeout(1400, [this, co2]() {
-    if (!this->write_command(SEN6X_CMD_PERFORM_FORCED_CO2_RECAL, co2)) {
-      this->start_measurements_();
-      ESP_LOGE(TAG_CO2_CAL, "Failed");
-      this->set_timeout(50, [this]() { this->busy_ = false; });
-    } else {
-      this->set_timeout(500, [this]() {
-        uint16_t frc = 0;
-        if (!this->read_data(frc)) {
-          ESP_LOGE(TAG_CO2_CAL, "Failed");
-        } else {
-          if (frc == 0xFFFF) {
-            ESP_LOGE(TAG_CO2_CAL, "Invalid, frc=0xFFFF");
-          } else {
-            ESP_LOGD(TAG_CO2_CAL, "Finished, frc=%d", static_cast<int32_t>(frc) - 0x8000);
-          }
-        }
-        if (!this->start_measurements_()) {
-          ESP_LOGE(TAG_CO2_CAL, "Failed");
-        }
-        this->set_timeout(50, [this]() { this->busy_ = false; });
-      });
-    }
-  });
 }
 
 void SEN5XComponent::set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
@@ -908,28 +888,24 @@ void SEN5XComponent::set_temperature_compensation(float offset, float normalized
       return;
     }
     this->busy_ = true;  // prevent actions from stomping on each other
-    if (this->updating_) {
-      // let update finish before continuing perform_forced_co2_calibration
-      this->set_timeout(100, [this, &compensation]() { this->set_temperature_compensation(compensation); });
-    } else {
-      this->set_timeout(100, [this, &compensation]() { this->set_temperature_compensation(compensation); });
-      // this->perform_forced_co2_calibration_(compensation);
-    }
+    // let update finish before continuing perform_forced_co2_calibration
+    this->set_timeout(100, [this, &compensation]() {
+      ESP_LOGD(TAG_TEMP_COMP, "Updated, offset=%f, normalized_offset_slope=%f, time_constant=%d, slot=%d",
+               compensation.offset, compensation.normalized_offset_slope, compensation.time_constant,
+               compensation.slot);
+      if (!this->write_temperature_compensation_(compensation)) {
+        ESP_LOGE(TAG_TEMP_COMP, "Failed");
+        this->set_timeout(20, [this]() { this->busy_ = false; });
+      } else {
+        this->busy_ = false;
+      }
+    });
   } else {
     ESP_LOGE(TAG_TEMP_COMP, "Not supported");
     return;
   }
 }
-void SEN5XComponent::set_temperature_compensation_(const TemperatureCompensation &compensation) {
-  ESP_LOGD(TAG_TEMP_COMP, "Updated, offset=%f, normalized_offset_slope=%f, time_constant=%d, slot=%d",
-           compensation.offset, compensation.normalized_offset_slope, compensation.time_constant, compensation.slot);
-  if (!this->write_temperature_compensation_(compensation)) {
-    ESP_LOGE(TAG_TEMP_COMP, "Failed");
-    this->set_timeout(20, [this]() { this->busy_ = false; });
-  } else {
-    this->busy_ = false;
-  }
-}
+void SEN5XComponent::set_temperature_compensation_(const TemperatureCompensation &compensation) {}
 
 }  // namespace sen5x
 }  // namespace esphome

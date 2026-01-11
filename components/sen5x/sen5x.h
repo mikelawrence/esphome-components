@@ -146,6 +146,7 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
     this->ambient_pressure_compensation_source_ = pressure;
   }
   void set_ambient_pressure_compensation(float pressure_in_hpa);
+  void set_ambient_pressure_compensation_(float pressure_in_hpa);
   void start_fan_cleaning();
   void start_fan_cleaning_();
   void activate_heater();
