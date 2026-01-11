@@ -9,7 +9,7 @@ namespace esphome {
 namespace sen5x {
 
 static const char *const TAG = "sen5x";
-static const char *const TAG_START_FAN = "sen5x.start_fan_cleaning";
+static const char *const TAG_FAN_CLEANING = "sen5x.start_fan_cleaning";
 static const char *const TAG_ACTIVATE_HEATER = "sen5x.activate_heater";
 static const char *const TAG_CO2_CAL = "sen5x.perform_forced_co2_calibration";
 static const char *const TAG_PRESS_COMP = "sen5x.set_ambient_pressure_compensation";
@@ -422,8 +422,8 @@ void SEN5XComponent::update() {
   this->updating_ = true;
   uint32_t timeout = 0;
   // update pressure from ambient_pressure_compensation_source if configured
-  if (this->ambient_pressure_compensation_source_.has_value()) {
-    float pressure = this->ambient_pressure_compensation_source_.value()->state;
+  if (this->ambient_pressure_compensation_source_ != nullptr) {
+    float pressure = this->ambient_pressure_compensation_source_->state;
     if (!std::isnan(pressure)) {
       uint16_t new_ambient_pressure = static_cast<uint16_t>(pressure);
       if (!this->ambient_pressure_compensation_.has_value() ||
@@ -813,7 +813,7 @@ void SEN5XComponent::activate_heater() {
     }
   } else {
     ESP_LOGE(TAG_ACTIVATE_HEATER, "Not supported");
-    return false;
+    return;
   }
 }
 void SEN5XComponent::activate_heater_() {
@@ -851,83 +851,83 @@ void SEN5XComponent::perform_forced_co2_calibration(uint16_t co2) {
     this->busy_ = true;  // prevent actions from stomping on each other
     if (this->updating_) {
       // let update finish before continuing perform_forced_co2_calibration
-      this->set_timeout(100, [this]() { this->perform_forced_co2_calibration_(); });
+      this->set_timeout(100, [this]() { this->perform_forced_co2_calibration_(co2); });
     } else {
-      this->perform_forced_co2_calibration_();
+      this->perform_forced_co2_calibration_(co2);
     }
   } else {
     ESP_LOGE(TAG_CO2_CAL, "Not supported");
     return;
   }
-
-  void SEN5XComponent::perform_forced_co2_calibration_(uint16_t co2) {
-    ESP_LOGD(TAG_CO2_CAL, "Started, co2=%d", co2);
-    this->busy_ = true;  // prevent actions from stomping on each other
-    if (!this->stop_measurements_()) {
-      ESP_LOGE(TAG, "Failed");
-      this->busy_ = false;
-      return;
-    }
-    this->set_timeout(1400, [this, co2]() {
-      if (!this->write_command(SEN6X_CMD_PERFORM_FORCED_CO2_RECAL, co2)) {
-        this->start_measurements_();
-        ESP_LOGE(TAG_CO2_CAL, "Failed");
-        this->set_timeout(50, [this]() { this->busy_ = false; });
-      } else {
-        this->set_timeout(500, [this]() {
-          uint16_t frc = 0;
-          if (!this->read_data(frc)) {
-            ESP_LOGE(TAG_CO2_CAL, "Failed");
+}
+void SEN5XComponent::perform_forced_co2_calibration_(uint16_t co2) {
+  ESP_LOGD(TAG_CO2_CAL, "Started, co2=%d", co2);
+  this->busy_ = true;  // prevent actions from stomping on each other
+  if (!this->stop_measurements_()) {
+    ESP_LOGE(TAG, "Failed");
+    this->busy_ = false;
+    return;
+  }
+  this->set_timeout(1400, [this, co2]() {
+    if (!this->write_command(SEN6X_CMD_PERFORM_FORCED_CO2_RECAL, co2)) {
+      this->start_measurements_();
+      ESP_LOGE(TAG_CO2_CAL, "Failed");
+      this->set_timeout(50, [this]() { this->busy_ = false; });
+    } else {
+      this->set_timeout(500, [this]() {
+        uint16_t frc = 0;
+        if (!this->read_data(frc)) {
+          ESP_LOGE(TAG_CO2_CAL, "Failed");
+        } else {
+          if (frc == 0xFFFF) {
+            ESP_LOGE(TAG_CO2_CAL, "Invalid, frc=0xFFFF");
           } else {
-            if (frc == 0xFFFF) {
-              ESP_LOGE(TAG_CO2_CAL, "Invalid, frc=0xFFFF");
-            } else {
-              ESP_LOGD(TAG_CO2_CAL, "Finished, frc=%d", static_cast<int32_t>(frc) - 0x8000);
-            }
+            ESP_LOGD(TAG_CO2_CAL, "Finished, frc=%d", static_cast<int32_t>(frc) - 0x8000);
           }
-          if (!this->start_measurements_()) {
-            ESP_LOGE(TAG_CO2_CAL, "Failed");
-          }
-          this->set_timeout(50, [this]() { this->busy_ = false; });
-        });
-      }
-    });
-  }
+        }
+        if (!this->start_measurements_()) {
+          ESP_LOGE(TAG_CO2_CAL, "Failed");
+        }
+        this->set_timeout(50, [this]() { this->busy_ = false; });
+      });
+    }
+  });
+}
 
-  void SEN5XComponent::set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
-                                                    uint8_t slot) {
-    if (this->is_sen6x_() || this->model_.value() == SEN54 || this->model_.value() == SEN55) {
-      TemperatureCompensation compensation(offset, normalized_offset_slope, time_constant, slot);
-      if (!this->initialized_) {
-        this->temperature_compensation_ = compensation;
-        return;
-      }
-      if (this->busy_) {
-        ESP_LOGE(TAG_TEMP_COMP, "Aborted, sensor is busy");
-        return;
-      }
-      this->busy_ = true;  // prevent actions from stomping on each other
-      if (this->updating_) {
-        // let update finish before continuing perform_forced_co2_calibration
-        this->set_timeout(100, [this]() { this->perform_forced_co2_calibration_(compensation); });
-      } else {
-        this->perform_forced_co2_calibration_(compensation);
-      }
-    } else {
-      ESP_LOGE(TAG_TEMP_COMP, "Not supported");
+void SEN5XComponent::set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
+                                                  uint8_t slot) {
+  if (this->is_sen6x_() || this->model_.value() == SEN54 || this->model_.value() == SEN55) {
+    TemperatureCompensation compensation(offset, normalized_offset_slope, time_constant, slot);
+    if (!this->initialized_) {
+      this->temperature_compensation_ = compensation;
       return;
     }
-  }
-  void SEN5XComponent::set_temperature_compensation_(const TemperatureCompensation &compensation) {
-    ESP_LOGD(TAG_TEMP_COMP, "Updated, offset=%f, normalized_offset_slope=%f, time_constant=%d, slot=%d",
-             compensation.offset, compensation.normalized_offset_slope, compensation.time_constant, compensation.slot);
-    if (!this->write_temperature_compensation_(compensation)) {
-      ESP_LOGE(TAG_TEMP_COMP, "Failed");
-      this->set_timeout(20, [this]() { this->busy_ = false; });
-    } else {
-      this->busy_ = false;
+    if (this->busy_) {
+      ESP_LOGE(TAG_TEMP_COMP, "Aborted, sensor is busy");
+      return;
     }
+    this->busy_ = true;  // prevent actions from stomping on each other
+    if (this->updating_) {
+      // let update finish before continuing perform_forced_co2_calibration
+      this->set_timeout(100, [this]() { this->perform_forced_co2_calibration_(compensation); });
+    } else {
+      this->perform_forced_co2_calibration_(compensation);
+    }
+  } else {
+    ESP_LOGE(TAG_TEMP_COMP, "Not supported");
+    return;
   }
+}
+void SEN5XComponent::set_temperature_compensation_(const TemperatureCompensation &compensation) {
+  ESP_LOGD(TAG_TEMP_COMP, "Updated, offset=%f, normalized_offset_slope=%f, time_constant=%d, slot=%d",
+           compensation.offset, compensation.normalized_offset_slope, compensation.time_constant, compensation.slot);
+  if (!this->write_temperature_compensation_(compensation)) {
+    ESP_LOGE(TAG_TEMP_COMP, "Failed");
+    this->set_timeout(20, [this]() { this->busy_ = false; });
+  } else {
+    this->busy_ = false;
+  }
+}
 
 }  // namespace sen5x
 }  // namespace esphome
