@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
@@ -21,24 +21,23 @@ enum ERRORCODE : uint8_t {
 
 enum Sen5xType { SEN50, SEN54, SEN55, SEN62, SEN63C, SEN65, SEN66, SEN68, SEN69C, UNKNOWN_MODEL };
 enum RhtAccelerationMode : uint16_t { LOW_ACCELERATION = 0, MEDIUM_ACCELERATION = 1, HIGH_ACCELERATION = 2 };
-enum SetupStates {
-  SM_START,
-  SM_START_1,
-  SM_START_2,
-  SM_GET_SN,
-  SM_GET_PN,
-  SM_GET_FW,
-  SM_SET_VOCB,
-  SM_SET_ACI,
-  SM_SET_ACCEL,
-  SM_SET_VOCT,
-  SM_SET_NOXT,
-  SM_SET_TP,
-  SM_SET_CO2ASC,
-  SM_SET_CO2AC,
-  SM_SENSOR_CHECK,
-  SM_START_MEAS,
-  SM_DONE
+enum Sen5xSetupStates {
+  SEN5X_SM_START,
+  SEN5X_SM_START_1,
+  SEN5X_SM_START_2,
+  SEN5X_SM_GET_SN,
+  SEN5X_SM_GET_PN,
+  SEN5X_SM_GET_FW,
+  SEN5X_SM_SET_VOCB,
+  SEN5X_SM_SET_ACI,
+  SEN5X_SM_SET_ACCEL,
+  SEN5X_SM_SET_VOCT,
+  SEN5X_SM_SET_NOXT,
+  SEN5X_SM_SET_TP,
+  SEN5X_SM_SET_CO2ASC,
+  SEN5X_SM_SET_CO2AC,
+  SEN5X_SM_START_MEAS,
+  SEN5X_SM_DONE
 };
 
 struct Sen5xBaselines {
@@ -100,12 +99,12 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   void set_hcho_sensor(sensor::Sensor *hcho_sensor) { this->hcho_sensor_ = hcho_sensor; }
   void set_humidity_sensor(sensor::Sensor *humidity_sensor) { this->humidity_sensor_ = humidity_sensor; }
   void set_temperature_sensor(sensor::Sensor *temperature_sensor) { this->temperature_sensor_ = temperature_sensor; }
+  void set_store_baseline(bool store_baseline) { this->store_baseline_ = store_baseline; }
+  void set_model(Sen5xType model) { this->model_ = model; }
   void set_acceleration_mode(RhtAccelerationMode mode) { this->acceleration_mode_ = mode; }
   void set_auto_cleaning_interval(uint32_t auto_cleaning_interval) {
     this->auto_cleaning_interval_ = auto_cleaning_interval;
   }
-  void set_store_voc_baseline(bool store_voc_baseline) { this->store_voc_baseline_ = store_voc_baseline; }
-  void set_model(Sen5xType model) { this->model_ = model; }
   void set_voc_algorithm_tuning(uint16_t index_offset, uint16_t learning_time_offset_hours,
                                 uint16_t learning_time_gain_hours, uint16_t gating_max_duration_minutes,
                                 uint16_t std_initial, uint16_t gain_factor) {
@@ -132,6 +131,7 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   }
   bool set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
                                     uint8_t slot = 0);
+  void set_temperature_compensation_(const TemperatureCompensation &compensation);
   void set_temperature_acceleration(float k, float p, float t1, float t2) {
     AccelerationParameters accel_param;
     accel_param.k = k * 10;
@@ -140,23 +140,28 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
     accel_param.t2 = t2 * 10;
     this->temperature_acceleration_ = accel_param;
   }
-  void set_automatic_self_calibrate(bool value) { this->co2_auto_calibrate_ = value; }
-  void set_altitude_compensation(uint16_t altitude) { this->co2_altitude_compensation_ = altitude; }
-  void set_ambient_pressure_source(sensor::Sensor *pressure) { this->co2_ambient_pressure_source_ = pressure; }
-  bool start_fan_cleaning();
-  bool activate_heater();
-  bool perform_forced_co2_calibration(uint16_t co2);
+  void set_automatic_self_calibration(bool value) { this->auto_self_calibration_ = value; }
+  void set_altitude_compensation(uint16_t altitude) { this->altitude_compensation_ = altitude; }
+  void set_ambient_pressure_compensation_source(sensor::Sensor *pressure) {
+    this->ambient_pressure_compensation_source_ = pressure;
+  }
   bool set_ambient_pressure_compensation(float pressure_in_hpa);
+  void start_fan_cleaning();
+  void start_fan_cleaning_();
+  void activate_heater();
+  void activate_heater_();
+  void perform_forced_co2_calibration(uint16_t co2);
+  void perform_forced_co2_calibration_(uint16_t co2);
 
  protected:
   bool is_sen6x_();
-  void internal_setup_(SetupStates state);
+  void internal_setup_(Sen5xSetupStates state);
   bool start_measurements_();
   bool stop_measurements_();
   bool write_tuning_parameters_(uint16_t i2c_command, const GasTuning &tuning);
   bool write_temperature_compensation_(const TemperatureCompensation &compensation);
+  bool write_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
   bool write_temperature_acceleration_();
-  bool write_co2_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
 
   uint32_t seconds_since_last_store_;
   ERRORCODE error_code_;
@@ -164,8 +169,9 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   uint8_t firmware_minor_{0xFF};
   bool initialized_{false};
   bool running_{false};
-  bool busy_{false};
-  bool store_voc_baseline_;
+  bool busy_{true};
+  bool updating_{false};
+  bool store_baseline_;
 
   sensor::Sensor *pm_1_0_sensor_{nullptr};
   sensor::Sensor *pm_2_5_sensor_{nullptr};
@@ -174,21 +180,21 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   sensor::Sensor *temperature_sensor_{nullptr};
   sensor::Sensor *humidity_sensor_{nullptr};
   sensor::Sensor *voc_sensor_{nullptr};
-  sensor::Sensor *hcho_sensor_{nullptr};
   sensor::Sensor *nox_sensor_{nullptr};
+  sensor::Sensor *hcho_sensor_{nullptr};
   sensor::Sensor *co2_sensor_{nullptr};
-  sensor::Sensor *co2_ambient_pressure_source_{nullptr};
+  sensor::Sensor *ambient_pressure_compensation_source_{nullptr};
 
+  optional<Sen5xType> model_;
   optional<RhtAccelerationMode> acceleration_mode_;
   optional<AccelerationParameters> temperature_acceleration_;
   optional<uint32_t> auto_cleaning_interval_;
-  optional<Sen5xType> model_;
   optional<GasTuning> voc_tuning_params_;
   optional<GasTuning> nox_tuning_params_;
   optional<TemperatureCompensation> temperature_compensation_;
-  optional<bool> co2_auto_calibrate_;
-  optional<uint16_t> co2_altitude_compensation_;
-  optional<uint16_t> co2_ambient_pressure_compensation_;
+  optional<bool> auto_self_calibration_;
+  optional<uint16_t> altitude_compensation_;
+  optional<uint16_t> ambient_pressure_compensation_;
 
   ESPPreferenceObject pref_;
   std::string product_name_ = "Unknown";

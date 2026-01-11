@@ -1,7 +1,8 @@
 from esphome import automation
+from esphome.automation import maybe_simple_id
 import esphome.codegen as cg
-import esphome.config_validation as cv
 from esphome.components import i2c, sensirion_common, sensor
+import esphome.config_validation as cv
 from esphome.const import (  # CONF_ALGORITHM_TUNING,; CONF_ALTITUDE_COMPENSATION,; CONF_AMBIENT_PRESSURE_COMPENSATION,; CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE,; CONF_AUTOMATIC_SELF_CALIBRATION,; CONF_CO2,; CONF_GAIN_FACTOR,; CONF_GATING_MAX_DURATION_MINUTES,; CONF_HUMIDITY,; CONF_ID,; CONF_INDEX_OFFSET,; CONF_LEARNING_TIME_GAIN_HOURS,; CONF_LEARNING_TIME_OFFSET_HOURS,; CONF_MODEL,; CONF_NORMALIZED_OFFSET_SLOPE,; CONF_NOX,; CONF_OFFSET,; CONF_PM_1_0,; CONF_PM_2_5,; CONF_PM_4_0,; CONF_PM_10_0,; CONF_STD_INITIAL,; CONF_STORE_BASELINE,; CONF_TEMPERATURE,; CONF_TEMPERATURE_COMPENSATION,; CONF_TIME_CONSTANT,; CONF_VALUE,; CONF_VOC,; CONF_VOC_BASELINE,
     DEVICE_CLASS_AQI,
     DEVICE_CLASS_CARBON_DIOXIDE,
@@ -62,7 +63,7 @@ sen5x_ns = cg.esphome_ns.namespace("sen5x")
 SEN5XComponent = sen5x_ns.class_(
     "SEN5XComponent", cg.PollingComponent, sensirion_common.SensirionI2CDevice
 )
-SEN5XModel = sen5x_ns.enum("SEN5XModel")
+Sen5xModel = sen5x_ns.enum("Sen5xModel")
 RhtAccelerationMode = sen5x_ns.enum("RhtAccelerationMode")
 
 
@@ -101,15 +102,15 @@ MODEL_SEN68 = "SEN68"
 MODEL_SEN69C = "SEN69C"
 
 SEN5X_MODELS = {
-    MODEL_SEN50: SEN5XModel.SEN50,
-    MODEL_SEN54: SEN5XModel.SEN54,
-    MODEL_SEN55: SEN5XModel.SEN55,
-    MODEL_SEN62: SEN5XModel.SEN62,
-    MODEL_SEN63C: SEN5XModel.SEN63C,
-    MODEL_SEN65: SEN5XModel.SEN65,
-    MODEL_SEN66: SEN5XModel.SEN66,
-    MODEL_SEN68: SEN5XModel.SEN68,
-    MODEL_SEN69C: SEN5XModel.SEN69C,
+    MODEL_SEN50: Sen5xModel.SEN50,
+    MODEL_SEN54: Sen5xModel.SEN54,
+    MODEL_SEN55: Sen5xModel.SEN55,
+    MODEL_SEN62: Sen5xModel.SEN62,
+    MODEL_SEN63C: Sen5xModel.SEN63C,
+    MODEL_SEN65: Sen5xModel.SEN65,
+    MODEL_SEN66: Sen5xModel.SEN66,
+    MODEL_SEN68: Sen5xModel.SEN68,
+    MODEL_SEN69C: Sen5xModel.SEN69C,
 }
 
 ACCELERATION_MODES = {
@@ -168,6 +169,8 @@ def float_previously_pct(value):
         )
     return value
 
+
+GROUP_COMPENSATION = "Compensation Group: 'altitude_compensation' and 'ambient_pressure_compensation_source'"
 
 CONFIG_SCHEMA = (
     cv.Schema(
@@ -253,14 +256,12 @@ CONFIG_SCHEMA = (
                         cv.Optional(
                             CONF_AUTOMATIC_SELF_CALIBRATION, default=True
                         ): cv.boolean,
-                        cv.Optional(
-                            CONF_ALTITUDE_COMPENSATION, default=0
+                        cv.Exclusive(
+                            CONF_ALTITUDE_COMPENSATION, GROUP_COMPENSATION
                         ): cv.int_range(min=0, max=3000),
-                        cv.Optional(
-                            CONF_AMBIENT_PRESSURE_COMPENSATION, default=1013
-                        ): cv.int_range(min=700, max=1200),
-                        cv.Optional(
-                            CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE
+                        cv.Exclusive(
+                            CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE,
+                            GROUP_COMPENSATION,
                         ): cv.use_id(sensor.Sensor),
                     }
                 )
@@ -311,7 +312,7 @@ SETTING_MAP = {
 }
 
 CO2_SETTING_MAP = {
-    CONF_AUTOMATIC_SELF_CALIBRATION: "set_automatic_self_calibrate",
+    CONF_AUTOMATIC_SELF_CALIBRATION: "set_automatic_self_calibration",
     CONF_ALTITUDE_COMPENSATION: "set_altitude_compensation",
     CONF_AMBIENT_PRESSURE_COMPENSATION: "set_ambient_pressure_compensation",
 }
@@ -448,15 +449,13 @@ async def to_code(config):
                 cfg[CONF_T2],
             )
         )
-    if CONF_CO2 in config:
+    if cfg := config.get(CONF_CO2):
         for key, funcName in CO2_SETTING_MAP.items():
-            if key in config[CONF_CO2]:
+            if key in cfg:
                 cg.add(getattr(var, funcName)(config[CONF_CO2][key]))
-            if CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE in config[CONF_CO2]:
-                sens = await cg.get_variable(
-                    config[CONF_CO2][CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE]
-                )
-                cg.add(var.set_ambient_pressure_source(sens))
+        if source := cfg.get(CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE):
+            sens = await cg.get_variable(source)
+            cg.add(var.set_ambient_pressure_source(sens))
 
 
 SEN5X_ACTION_SCHEMA = automation.maybe_simple_id(
