@@ -744,7 +744,7 @@ void SEN5XComponent::set_ambient_pressure_compensation(float pressure_in_hpa) {
         write_ambient_pressure_compensation_(new_ambient_pressure);
         this->ambient_pressure_compensation_ = new_ambient_pressure;
         ESP_LOGD(TAG_PRESS_COMP, "Updated, pressure=%d hPa", new_ambient_pressure);
-        this->set_timeout(20, []() { this->busy_ = false; });
+        this->set_timeout(20, [this]() { this->busy_ = false; });
       }
     });
   } else {
@@ -905,7 +905,6 @@ void SEN5XComponent::set_temperature_compensation(float offset, float normalized
     return;
   }
 }
-void SEN5XComponent::set_temperature_compensation_(const TemperatureCompensation &compensation) {}
 
 }  // namespace sen5x
 }  // namespace esphome
