@@ -1,7 +1,8 @@
 from esphome import automation
+from esphome.automation import maybe_simple_id
 import esphome.codegen as cg
-import esphome.config_validation as cv
 from esphome.components import i2c, sensirion_common, sensor
+import esphome.config_validation as cv
 from esphome.const import (  # CONF_ALGORITHM_TUNING,; CONF_ALTITUDE_COMPENSATION,; CONF_AMBIENT_PRESSURE_COMPENSATION,; CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE,; CONF_AUTOMATIC_SELF_CALIBRATION,; CONF_CO2,; CONF_GAIN_FACTOR,; CONF_GATING_MAX_DURATION_MINUTES,; CONF_HUMIDITY,; CONF_ID,; CONF_INDEX_OFFSET,; CONF_LEARNING_TIME_GAIN_HOURS,; CONF_LEARNING_TIME_OFFSET_HOURS,; CONF_MODEL,; CONF_NORMALIZED_OFFSET_SLOPE,; CONF_NOX,; CONF_OFFSET,; CONF_PM_1_0,; CONF_PM_2_5,; CONF_PM_4_0,; CONF_PM_10_0,; CONF_STD_INITIAL,; CONF_STORE_BASELINE,; CONF_TEMPERATURE,; CONF_TEMPERATURE_COMPENSATION,; CONF_TIME_CONSTANT,; CONF_VALUE,; CONF_VOC,
     DEVICE_CLASS_AQI,
     DEVICE_CLASS_CARBON_DIOXIDE,
@@ -149,6 +150,8 @@ def _gas_sensor(
     )
 
 
+GROUP_COMPENSATION = "Compensation Group: 'altitude_compensation' and 'ambient_pressure_compensation_source'"
+
 CONFIG_SCHEMA = (
     cv.Schema(
         {
@@ -230,14 +233,12 @@ CONFIG_SCHEMA = (
                         cv.Optional(
                             CONF_AUTOMATIC_SELF_CALIBRATION, default=True
                         ): cv.boolean,
-                        cv.Optional(
-                            CONF_ALTITUDE_COMPENSATION, default=0
+                        cv.Exclusive(
+                            CONF_ALTITUDE_COMPENSATION, GROUP_COMPENSATION
                         ): cv.int_range(min=0, max=3000),
-                        cv.Optional(
-                            CONF_AMBIENT_PRESSURE_COMPENSATION, default=1013
-                        ): cv.int_range(min=700, max=1200),
-                        cv.Optional(
-                            CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE
+                        cv.Exclusive(
+                            CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE,
+                            GROUP_COMPENSATION,
                         ): cv.use_id(sensor.Sensor),
                     }
                 )

@@ -17,7 +17,7 @@ enum SetupStates {
   SEN6X_SM_GET_SN,
   SEN6X_SM_GET_PN,
   SEN6X_SM_GET_FW,
-  SEN6X_SM_ACCEL,
+  SEN6X_SM_SET_ACCEL,
   SEN6X_SM_SET_VOCB,
   SEN6X_SM_SET_VOCT,
   SEN6X_SM_SET_NOXT,
@@ -29,7 +29,7 @@ enum SetupStates {
   SEN6X_SM_DONE
 };
 
-struct SEN6XBaselines {
+struct Sen6xBaselines {
   int32_t state0;
   int32_t state1;
 } PACKED;  // NOLINT
@@ -89,7 +89,7 @@ class SEN6XComponent : public PollingComponent, public sensirion_common::Sensiri
   void dump_config() override;
   void update() override;
   void set_store_voc_baseline(bool store_voc_baseline) { this->store_voc_baseline_ = store_voc_baseline; }
-  void set_model(SEN6XType model) { this->model_ = model; }
+  void set_model(Sen6xType model) { this->model_ = model; }
   void set_voc_algorithm_tuning(uint16_t index_offset, uint16_t learning_time_offset_hours,
                                 uint16_t learning_time_gain_hours, uint16_t gating_max_duration_minutes,
                                 uint16_t std_initial, uint16_t gain_factor) {
@@ -124,42 +124,43 @@ class SEN6XComponent : public PollingComponent, public sensirion_common::Sensiri
     accel_param.t2 = t2 * 10;
     this->temperature_acceleration_ = accel_param;
   }
-  void set_automatic_self_calibrate(bool value) { this->co2_auto_calibrate_ = value; }
-  void set_altitude_compensation(uint16_t altitude) { this->co2_altitude_compensation_ = altitude; }
-  void set_ambient_pressure_source(sensor::Sensor *pressure) { this->co2_ambient_pressure_source_ = pressure; }
+  void set_automatic_self_calibration(bool value) { this->auto_self_calibration_ = value; }
+  void set_altitude_compensation(uint16_t altitude) { this->altitude_compensation_ = altitude; }
+  void set_ambient_pressure_compensation_source(sensor::Sensor *pressure) { this->ambient_pressure_compensation_source_ = pressure; }
+  bool set_ambient_pressure_compensation(float pressure_in_hpa);
   bool start_fan_cleaning();
   bool activate_heater();
   bool perform_forced_co2_calibration(uint16_t co2);
-  bool set_ambient_pressure_compensation(float pressure_in_hpa);
 
  protected:
-  void internal_setup_(SetupStates state);
+  void internal_setup_(Sen6xSetupStates state);
   bool start_measurements_();
   bool stop_measurements_();
   bool write_tuning_parameters_(uint16_t i2c_command, const GasTuning &tuning);
   bool write_temperature_compensation_(const TemperatureCompensation &compensation);
   bool write_temperature_acceleration_();
-  bool write_co2_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
+  bool write_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
 
   uint32_t seconds_since_last_store_;
   uint8_t firmware_major_{0xFF};
   uint8_t firmware_minor_{0xFF};
   bool initialized_{false};
   bool running_{false};
+  bool busy_{false};
   bool store_voc_baseline_;
-
-  optional<SEN6XType> model_;
+  
+  optional<Sen6xType> model_;
   optional<GasTuning> voc_tuning_params_;
   optional<GasTuning> nox_tuning_params_;
   optional<TemperatureCompensation> temperature_compensation_;
-  optional<bool> co2_auto_calibrate_;
-  optional<uint16_t> co2_altitude_compensation_;
-  optional<uint16_t> co2_ambient_pressure_compensation_;
+  optional<bool> auto_self_calibration_;
+  optional<uint16_t> altitude_compensation_;
+  optional<uint16_t> ambient_pressure_compensation_;
 
   ESPPreferenceObject pref_;
   std::string product_name_ = "Unknown";
   std::string serial_number_ = "Unknown";
-  SEN6XBaselines voc_baselines_storage_;
+  Sen6xBaselines voc_baselines_storage_;
 };
 }  // namespace sen6x
 }  // namespace esphome
