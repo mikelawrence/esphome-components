@@ -568,8 +568,7 @@ void SEN5XComponent::update() {
         this->hcho_sensor_->publish_state(hcho);
       }
       // Store baselines after defined interval or if the diff between current and stored baseline becomes too much
-      if (this->voc_sensor_ && this->store_baseline_ &&
-          this->seconds_since_last_store_ > SHORTEST_BASELINE_STORE_INTERVAL) {
+      if (this->store_baseline_ && this->seconds_since_last_store_ > SHORTEST_BASELINE_STORE_INTERVAL) {
         if (!this->write_command(CMD_VOC_ALGORITHM_STATE)) {
           ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
           this->status_set_warning(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
