@@ -627,26 +627,17 @@ bool SEN5XComponent::start_measurements_() {
       cmd = CMD_START_MEASUREMENTS;
       break;
   }
-
   auto result = this->write_command(cmd);
-  if (!result) {
-    ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
-  } else {
+  if (result) {
     this->running_ = true;
-    ESP_LOGD(TAG, "Measurements Enabled");
   }
   return result;
 }
 
 bool SEN5XComponent::stop_measurements_() {
   auto result = this->write_command(CMD_STOP_MEASUREMENTS);
-  if (!result) {
-    ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
-  } else {
+  if (result) {
     this->running_ = false;
-    if (this->initialized_) {
-      ESP_LOGD(TAG, "Measurements Stopped");
-    }
   }
   return result;
 }
