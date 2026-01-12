@@ -879,12 +879,13 @@ void SEN5XComponent::set_temperature_compensation(float offset, float normalized
     }
     this->busy_ = true;  // prevent actions from stomping on each other
     // let update finish before continuing perform_forced_co2_calibration
+    ESP_LOGD(TAG_TEMP_COMP, "Update, offset=%f, normalized_offset_slope=%f, time_constant=%d, slot=%d", offset,
+             normalized_offset_slope, time_constant, slot);
     this->set_timeout(100, [this, &compensation]() {
       if (!this->write_temperature_compensation_(compensation)) {
         ESP_LOGE(TAG_TEMP_COMP, "Failed");
       } else {
-        ESP_LOGD(TAG_TEMP_COMP, "Updated, offset=%f, normalized_offset_slope=%f, time_constant=%d, slot=%d", offset,
-                 normalized_offset_slope, time_constant, slot);
+        ESP_LOGD(TAG_TEMP_COMP, "Finished");
       }
       this->set_timeout(20, [this]() { this->busy_ = false; });
     });
