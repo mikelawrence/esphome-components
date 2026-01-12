@@ -172,7 +172,7 @@ def float_previously_pct(value):
 
 GROUP_COMPENSATION = "Compensation Group: 'altitude_compensation' and 'ambient_pressure_compensation_source'"
 
-CONFIG_SCHEMA = (
+CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(SEN5XComponent),
@@ -289,7 +289,19 @@ CONFIG_SCHEMA = (
         }
     )
     .extend(cv.polling_component_schema("60s"))
-    .extend(i2c.i2c_device_schema(0x69))
+    .extend(i2c.i2c_device_schema(0x69)),
+    cv.has_at_least_one_key(
+        CONF_PM_1_0,
+        CONF_PM_2_5,
+        CONF_PM_4_0,
+        CONF_PM_10_0,
+        CONF_VOC,
+        CONF_NOX,
+        CONF_CO2,
+        CONF_HCHO,
+        CONF_TEMPERATURE,
+        CONF_HUMIDITY,
+    ),
 )
 
 SENSOR_MAP = {
