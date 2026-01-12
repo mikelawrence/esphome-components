@@ -784,37 +784,35 @@ void SEN5XComponent::activate_heater() {
       return;
     }
     this->busy_ = true;  // prevent actions from stomping on each other
-    if (this->updating_) {
-      // let update finish before continuing activate_heater
-      this->set_timeout(100, [this]() {
-        ESP_LOGD(TAG_ACTIVATE_HEATER, "Started (22s)");
-        if (!this->stop_measurements_()) {
-          ESP_LOGE(TAG_ACTIVATE_HEATER, "Failed");
-          this->busy_ = false;
-          return;
-        }
-        this->set_timeout(1400, [this]() {
-          if (!this->write_command(SEN6X_CMD_ACTIVATE_SHT_HEATER)) {
-            ESP_LOGE(TAG_ACTIVATE_HEATER, ESP_LOG_MSG_COMM_FAIL);
-            this->start_measurements_();
+    // let update finish before continuing activate_heater
+    this->set_timeout(100, [this]() {
+      ESP_LOGD(TAG_ACTIVATE_HEATER, "Started (22s)");
+      if (!this->stop_measurements_()) {
+        ESP_LOGE(TAG_ACTIVATE_HEATER, "Failed");
+        this->busy_ = false;
+        return;
+      }
+      this->set_timeout(1400, [this]() {
+        if (!this->write_command(SEN6X_CMD_ACTIVATE_SHT_HEATER)) {
+          ESP_LOGE(TAG_ACTIVATE_HEATER, ESP_LOG_MSG_COMM_FAIL);
+          this->start_measurements_();
+          this->set_timeout(50, [this]() { this->busy_ = false; });
+        } else {
+          this->set_timeout(20000, [this]() {
+            if (!this->start_measurements_()) {
+              this->busy_ = false;
+              ESP_LOGE(TAG_ACTIVATE_HEATER, "Failed");
+              return;
+            }
+            ESP_LOGD(TAG_ACTIVATE_HEATER, "Finished");
             this->set_timeout(50, [this]() { this->busy_ = false; });
-          } else {
-            this->set_timeout(20000, [this]() {
-              if (!this->start_measurements_()) {
-                this->busy_ = false;
-                ESP_LOGE(TAG_ACTIVATE_HEATER, "Failed");
-              } else {
-                ESP_LOGD(TAG_ACTIVATE_HEATER, "Finished");
-                this->set_timeout(50, [this]() { this->busy_ = false; });
-              }
-            });
-          }
-        });
+          });
+        }
       });
-    } else {
-      ESP_LOGE(TAG_ACTIVATE_HEATER, "Not supported");
-      return;
-    }
+    });
+  } else {
+    ESP_LOGE(TAG_ACTIVATE_HEATER, "Not supported");
+    return;
   }
 }
 
@@ -836,8 +834,8 @@ void SEN5XComponent::perform_forced_co2_calibration(uint16_t co2) {
       }
       this->set_timeout(1400, [this, co2]() {
         if (!this->write_command(SEN6X_CMD_PERFORM_FORCED_CO2_RECAL, co2)) {
-          this->start_measurements_();
           ESP_LOGE(TAG_CO2_CAL, "Failed");
+          this->start_measurements_();
           this->set_timeout(50, [this]() { this->busy_ = false; });
         } else {
           this->set_timeout(500, [this]() {
@@ -865,6 +863,8 @@ void SEN5XComponent::perform_forced_co2_calibration(uint16_t co2) {
   }
 }
 
+// This function is called when temperature_compensation is set in a config file
+// This function is also called by sen5x.set_temperature_compensation action
 void SEN5XComponent::set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
                                                   uint8_t slot) {
   if (this->is_sen6x_() || this->model_.value() == SEN54 || this->model_.value() == SEN55) {
@@ -880,15 +880,13 @@ void SEN5XComponent::set_temperature_compensation(float offset, float normalized
     this->busy_ = true;  // prevent actions from stomping on each other
     // let update finish before continuing perform_forced_co2_calibration
     this->set_timeout(100, [this, &compensation]() {
-      ESP_LOGD(TAG_TEMP_COMP, "Updated, offset=%f, normalized_offset_slope=%f, time_constant=%d, slot=%d",
-               compensation.offset, compensation.normalized_offset_slope, compensation.time_constant,
-               compensation.slot);
       if (!this->write_temperature_compensation_(compensation)) {
         ESP_LOGE(TAG_TEMP_COMP, "Failed");
-        this->set_timeout(20, [this]() { this->busy_ = false; });
       } else {
-        this->busy_ = false;
+        ESP_LOGD(TAG_TEMP_COMP, "Updated, offset=%f, normalized_offset_slope=%f, time_constant=%d, slot=%d", offset,
+                 normalized_offset_slope, time_constant, slot);
       }
+      this->set_timeout(20, [this]() { this->busy_ = false; });
     });
   } else {
     ESP_LOGE(TAG_TEMP_COMP, "Not supported");
