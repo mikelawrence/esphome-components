@@ -69,13 +69,6 @@ struct TemperatureCompensation {
   }
 };
 
-struct AccelerationParameters {
-  uint16_t k;
-  uint16_t p;
-  uint16_t t1;
-  uint16_t t2;
-};
-
 // Shortest time interval of 3H for storing baseline values.
 // Prevents wear of the flash because of too many write operations
 static const uint32_t SHORTEST_BASELINE_STORE_INTERVAL = 10800;
@@ -129,27 +122,18 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
     tuning_params.gain_factor = gain_factor;
     this->nox_tuning_params_ = tuning_params;
   }
-  void set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
+  bool set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
                                     uint8_t slot = 0);
-  void set_temperature_acceleration(float k, float p, float t1, float t2) {
-    AccelerationParameters accel_param;
-    accel_param.k = k * 10;
-    accel_param.p = p * 10;
-    accel_param.t1 = t1 * 10;
-    accel_param.t2 = t2 * 10;
-    this->temperature_acceleration_ = accel_param;
-  }
   void set_automatic_self_calibration(bool value) { this->auto_self_calibration_ = value; }
   void set_altitude_compensation(uint16_t altitude) { this->altitude_compensation_ = altitude; }
   void set_ambient_pressure_compensation_source(sensor::Sensor *pressure) {
     this->ambient_pressure_compensation_source_ = pressure;
   }
-  void set_ambient_pressure_compensation(float pressure_in_hpa);
-  void start_fan_cleaning();
-  void activate_heater();
-  void activate_heater_();
-  void perform_forced_co2_calibration(uint16_t co2);
-  
+  bool set_ambient_pressure_compensation(float pressure_in_hpa);
+  bool start_fan_cleaning();
+  bool activate_heater();
+  bool perform_forced_co2_calibration(uint16_t co2);
+
  protected:
   bool is_sen6x_();
   void internal_setup_(Sen5xSetupStates state);
@@ -158,7 +142,6 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   bool write_tuning_parameters_(uint16_t i2c_command, const GasTuning &tuning);
   bool write_temperature_compensation_(const TemperatureCompensation &compensation);
   bool write_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
-  bool write_temperature_acceleration_();
 
   uint32_t seconds_since_last_store_;
   ERRORCODE error_code_;
@@ -166,8 +149,7 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   uint8_t firmware_minor_{0xFF};
   bool initialized_{false};
   bool running_{false};
-  bool busy_{true};
-  bool updating_{false};
+  bool busy_{false};
   bool store_baseline_;
 
   sensor::Sensor *pm_1_0_sensor_{nullptr};
@@ -184,7 +166,6 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
 
   optional<Sen5xType> model_;
   optional<RhtAccelerationMode> acceleration_mode_;
-  optional<AccelerationParameters> temperature_acceleration_;
   optional<uint32_t> auto_cleaning_interval_;
   optional<GasTuning> voc_tuning_params_;
   optional<GasTuning> nox_tuning_params_;
