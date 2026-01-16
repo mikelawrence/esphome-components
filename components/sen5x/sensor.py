@@ -6,7 +6,7 @@ import esphome.codegen as cg
 from esphome.components import i2c, sensirion_common, sensor
 import esphome.config_validation as cv
 from esphome.const import (
-    CONF_ALGORITHM_TUNING,
+    # CONF_ALGORITHM_TUNING,
     CONF_ALTITUDE_COMPENSATION,
     CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE,
     CONF_AUTOMATIC_SELF_CALIBRATION,
@@ -53,6 +53,8 @@ from esphome.const import (
     UNIT_PARTS_PER_MILLION,
     UNIT_PERCENT,
 )
+
+CONF_ALGORITHM_TUNING = "algorithm_tuning"
 
 CODEOWNERS = ["@martgras", "@mikelawrence"]
 DEPENDENCIES = ["i2c"]
