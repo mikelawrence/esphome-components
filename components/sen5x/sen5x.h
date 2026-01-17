@@ -45,14 +45,14 @@ struct GasTuning {
   uint16_t gain_factor;
 };
 
-struct TemperatureCompensation {
+struct TempCompParameters {
   int16_t offset;
   int16_t normalized_offset_slope;
   uint16_t time_constant;
   uint8_t slot;
 
-  TemperatureCompensation() : offset(0), normalized_offset_slope(0), time_constant(0), slot(0) {}
-  TemperatureCompensation(float offset, float normalized_offset_slope, uint16_t time_constant, uint8_t slot = 0) {
+  TempCompParameters() : offset(0), normalized_offset_slope(0), time_constant(0), slot(0) {}
+  TempCompParameters(float offset, float normalized_offset_slope, uint16_t time_constant, uint8_t slot = 0) {
     this->offset = static_cast<int16_t>(offset * 200.0);
     this->normalized_offset_slope = static_cast<int16_t>(normalized_offset_slope * 10000.0);
     this->time_constant = time_constant;
@@ -60,7 +60,7 @@ struct TemperatureCompensation {
   }
 };
 
-struct AccelerationParameters {
+struct TempAccelParameters {
   uint16_t k;
   uint16_t p;
   uint16_t t1;
@@ -107,12 +107,11 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
     this->voc_tuning_params_ = tuning_params;
   }
   void set_nox_algorithm_tuning(uint16_t index_offset, uint16_t learning_time_offset_hours,
-                                uint16_t learning_time_gain_hours, uint16_t gating_max_duration_minutes,
-                                uint16_t gain_factor) {
+                                uint16_t gating_max_duration_minutes, uint16_t gain_factor) {
     GasTuning tuning_params;
     tuning_params.index_offset = index_offset;
     tuning_params.learning_time_offset_hours = learning_time_offset_hours;
-    tuning_params.learning_time_gain_hours = learning_time_gain_hours;
+    tuning_params.learning_time_gain_hours = 12;
     tuning_params.gating_max_duration_minutes = gating_max_duration_minutes;
     tuning_params.std_initial = 50;
     tuning_params.gain_factor = gain_factor;
@@ -121,7 +120,7 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   void set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
                                     uint8_t slot = 0);
   void set_temperature_acceleration(float k, float p, float t1, float t2) {
-    AccelerationParameters accel_param;
+    TempAccelParameters accel_param;
     accel_param.k = k * 10;
     accel_param.p = p * 10;
     accel_param.t1 = t1 * 10;
@@ -144,17 +143,20 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   bool start_measurements_();
   bool stop_measurements_();
   bool write_tuning_parameters_(uint16_t i2c_command, const GasTuning &tuning);
-  bool write_temperature_compensation_(const TemperatureCompensation &compensation);
+  bool write_temperature_compensation_(const TempCompParameters &compensation);
   bool write_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
   bool write_temperature_acceleration_();
 
+  uint16_t baseline_data_[4]{0};
   uint32_t last_store_time_;
   uint16_t ambient_pressure_compensation_{0};
   uint8_t firmware_major_{0xFF};
   uint8_t firmware_minor_{0xFF};
   bool initialized_{false};
   bool running_{false};
+  bool updating_{false};
   bool busy_{false};
+  bool baseline_error_{false};
 
   sensor::Sensor *pm_1_0_sensor_{nullptr};
   sensor::Sensor *pm_2_5_sensor_{nullptr};
@@ -170,11 +172,11 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
 
   optional<Sen5xType> model_;
   optional<RhtAccelerationMode> acceleration_mode_;
-  optional<AccelerationParameters> temperature_acceleration_;
+  optional<TempAccelParameters> temperature_acceleration_;
   optional<uint32_t> auto_cleaning_interval_;
   optional<GasTuning> voc_tuning_params_;
   optional<GasTuning> nox_tuning_params_;
-  optional<TemperatureCompensation> temperature_compensation_;
+  optional<TempCompParameters> temperature_compensation_;
   optional<bool> auto_self_calibration_;
   optional<uint16_t> altitude_compensation_;
   optional<bool> store_baseline_;
