@@ -17,7 +17,7 @@ external_components:
     type: git
     url: https://github.com/mikelawrence/esphome-components
     ref: ${ref}
-  components: [ sen6x ]
+  components: [ sen5x ]
 
 i2c:
   - id: i2c1_bus
@@ -26,10 +26,20 @@ i2c:
     scan: true
 
 sensor:
-  - platform: sen6x
+  - platform: sen5x
     i2c_id: i2c1_bus
     update_interval: 1s
     model: SEN69C
+    store_baseline:
+    temperature_compensation:
+      offset: 0
+      normalized_offset_slope: 0
+      time_constant: 0
+    temperature_acceleration:
+      t1: 100
+      t2: 300
+      k: 20
+      p: 20
     temperature:
       name: "Temperature"
       accuracy_decimals: 2
@@ -55,10 +65,21 @@ sensor:
     nox:
       name: "NOₓ"
       accuracy_decimals: 0
+      algorithm_tuning:
+        index_offset: 1
+        learning_time_offset_hours: 12
+        gating_max_duration_minutes: 720
+        gain_factor: 230
     voc:
       name: "VOC"
       accuracy_decimals: 0
-      store_baseline: true
+      algorithm_tuning:
+        index_offset: 100
+        learning_time_offset_hours: 12
+        learning_time_gain_hours: 12
+        gating_max_duration_minutes: 180
+        std_initial: 50
+        gain_factor: 230
     hcho:
       name: "Formaldehyde"
       accuracy_decimals: 0
