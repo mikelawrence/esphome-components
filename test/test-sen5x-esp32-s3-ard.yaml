@@ -17,7 +17,7 @@ external_components:
     type: git
     url: https://github.com/mikelawrence/esphome-components
     ref: ${ref}
-  components: [ sen5x ]
+  components: [sen5x]
 
 i2c:
   - id: i2c1_bus
@@ -30,7 +30,6 @@ sensor:
     i2c_id: i2c1_bus
     update_interval: 1s
     model: SEN69C
-    store_baseline:
     temperature_compensation:
       offset: 0
       normalized_offset_slope: 0
@@ -70,6 +69,7 @@ sensor:
         learning_time_offset_hours: 12
         gating_max_duration_minutes: 720
         gain_factor: 230
+    store_baseline: true
     voc:
       name: "VOC"
       accuracy_decimals: 0
