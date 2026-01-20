@@ -184,7 +184,7 @@ void SEN5XComponent::internal_setup_(Sen5xSetupStates state) {
     case SEN5X_SM_SET_VOCB:
       if (this->store_baseline_.has_value() && this->store_baseline_.value()) {
         // Hash with serial number. Serial numbers are unique, so multiple sensors can be used without conflict
-        uint32_t hash = fnv1_hash(this->serial_number_);
+        uint32_t hash = fnv1a_hash(this->serial_number_);
         this->pref_ = global_preferences->make_preference<uint16_t[4]>(hash, true);
         this->baseline_time_ = App.get_loop_component_start_time();
         if (this->pref_.load(&this->baseline_state_)) {
@@ -460,14 +460,12 @@ void SEN5XComponent::update() {
   }
   if (!this->write_command(cmd)) {
     this->status_set_warning(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
-    ESP_LOGW(TAG, ESP_LOG_MSG_COMM_FAIL);
     this->updating_ = false;
     return;
   }
   this->set_timeout(20, [this, length]() {  // wait for read measurement command
     uint16_t measurements[10];
     if (!this->read_data(measurements, length)) {
-      ESP_LOGW(TAG, ESP_LOG_MSG_COMM_FAIL);
       this->status_set_warning(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
       this->updating_ = false;
       return;
