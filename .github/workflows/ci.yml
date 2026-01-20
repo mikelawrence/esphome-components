@@ -18,9 +18,9 @@ jobs:
       matrix:
         #### Modify below here to match your project ####
         file:
-          - test/test-sen6x-esp32-s3-idf
-          - test/test-sen6x-esp32-s3-ard
-          - test/test-sen6x-rp2040
+          - test/test-sen5x-esp32-s3-idf
+          - test/test-sen5x-esp32-s3-ard
+          - test/test-sen5x-rp2040
           - test/test-stusb4500-esp32-s3-idf
           - test/test-stusb4500-esp32-s3-ard
           - test/test-stusb4500-rp2040
