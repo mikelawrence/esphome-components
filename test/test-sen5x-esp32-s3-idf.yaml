@@ -2,7 +2,7 @@ substitutions:
   ref: main
 
 esphome:
-  name: test-sen5x-esp32-s3-idf
+  name: test-sen6x-esp32-s3-idf
   friendly_name: Test SEN6X Component with ESP32-S3 and ESP-IDF Framework
 
 esp32:
@@ -17,7 +17,7 @@ external_components:
     type: git
     url: https://github.com/mikelawrence/esphome-components
     ref: ${ref}
-  components: [ sen5x ]
+  components: [sen5x]
 
 i2c:
   - id: i2c1_bus
@@ -29,7 +29,16 @@ sensor:
   - platform: sen5x
     i2c_id: i2c1_bus
     update_interval: 1s
-    type: SEN69C
+    model: SEN69C
+    temperature_compensation:
+      offset: 0
+      normalized_offset_slope: 0
+      time_constant: 0
+    temperature_acceleration:
+      t1: 100
+      t2: 300
+      k: 20
+      p: 20
     temperature:
       name: "Temperature"
       accuracy_decimals: 2
@@ -55,10 +64,22 @@ sensor:
     nox:
       name: "NOₓ"
       accuracy_decimals: 0
+      algorithm_tuning:
+        index_offset: 1
+        learning_time_offset_hours: 12
+        gating_max_duration_minutes: 720
+        gain_factor: 230
     store_baseline: true
     voc:
       name: "VOC"
       accuracy_decimals: 0
+      algorithm_tuning:
+        index_offset: 100
+        learning_time_offset_hours: 12
+        learning_time_gain_hours: 12
+        gating_max_duration_minutes: 180
+        std_initial: 50
+        gain_factor: 230
     hcho:
       name: "Formaldehyde"
       accuracy_decimals: 0

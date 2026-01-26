@@ -62,7 +62,6 @@ SEN5XComponent = sen5x_ns.class_(
 Sen5xType = sen5x_ns.enum("Sen5xType")
 RhtAccelerationMode = sen5x_ns.enum("RhtAccelerationMode")
 
-
 CONF_ACCELERATION_MODE = "acceleration_mode"
 CONF_AUTO_CLEANING_INTERVAL = "auto_cleaning_interval"
 CONF_K = "k"
@@ -262,21 +261,6 @@ TH_SCHEMA = cv.Schema(
                     float_previously_pct, cv.float_
                 ),
                 cv.Optional(CONF_TIME_CONSTANT, default=0): cv.int_,
-            }
-        ),
-    }
-)
-SEN5X_TH_SCHEMA = TH_SCHEMA.extend(
-    {cv.Optional(CONF_ACCELERATION_MODE): cv.enum(ACCELERATION_MODES)}
-)
-SEN6X_TH_SCHEMA = TH_SCHEMA.extend(
-    {
-        cv.Optional(CONF_TEMPERATURE_ACCELERATION): cv.Schema(
-            {
-                cv.Required(CONF_K): cv.float_range(min=0.0, max=6535.5),
-                cv.Required(CONF_P): cv.float_range(min=0.0, max=6535.5),
-                cv.Required(CONF_T1): cv.float_range(min=0.0, max=6535.5),
-                cv.Required(CONF_T2): cv.float_range(min=0.0, max=6535.5),
             }
         ),
     }

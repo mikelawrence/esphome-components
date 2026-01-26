@@ -129,7 +129,6 @@ void SEN5XComponent::internal_setup_(Sen5xSetupStates state) {
         }
         this->set_timeout(1400, [this]() { this->internal_setup_(SEN5X_SM_GET_SN); });
       } else {
-        ESP_LOGV(TAG, "Sensor is in idle mode");
         this->internal_setup_(SEN5X_SM_GET_SN);
       }
       break;
@@ -200,7 +199,7 @@ void SEN5XComponent::internal_setup_(Sen5xSetupStates state) {
           } else {
 #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
             char hex_buf[5 * 4];
-            format_hex_pretty_to(hex_buf, state, 4, 0);
+            format_hex_pretty_to(hex_buf, this->baseline_state_, 4, 0);
             ESP_LOGV(TAG, "VOC Baseline State loaded: %s", hex_buf);
 #endif
             this->set_timeout(20, [this]() { this->internal_setup_(SEN5X_SM_SET_ACI); });
@@ -345,7 +344,7 @@ void SEN5XComponent::dump_config() {
                   "  Temperature Compensation:\n"
                   "    Offset: %.3f\n"
                   "    Normalized Offset Slope: %.6f\n"
-                  "    Time Constant: %u\n",
+                  "    Time Constant: %u",
                   comp.offset / 200.0, comp.normalized_offset_slope / 10000.0, comp.time_constant);
   }
   if (this->temperature_acceleration_.has_value()) {
@@ -355,20 +354,17 @@ void SEN5XComponent::dump_config() {
                   "    T1: %.1f\n"
                   "    T2: %.1f\n"
                   "    K: %.1f\n"
-                  "    P: %.1f\n",
+                  "    P: %.1f",
                   accel.t1 / 10.0, accel.t2 / 10.0, accel.k / 10.0, accel.p / 10.0);
   }
   if (this->store_baseline_.has_value()) {
     char hex_buf[5 * 4];
     format_hex_pretty_to(hex_buf, this->voc_baseline_state_, 4, 0);
-    uint32_t next_upd =
-        (SHORTEST_BASELINE_STORE_INTERVAL - (App.get_loop_component_start_time() - this->baseline_time_)) / 60000 + 1;
     ESP_LOGCONFIG(TAG,
                   "  Store Baseline: %s\n"
                   "    Error: %s\n"
-                  "    State: %s\n"
-                  "    Update: %u mins",
-                  TRUEFALSE(this->store_baseline_.value()), TRUEFALSE(this->baseline_error_), hex_buf, next_upd);
+                  "    State: %s\n",
+                  TRUEFALSE(this->baseline_error_), TRUEFALSE(this->store_baseline_.value()), hex_buf);
   }
   LOG_SENSOR("  ", "PM  1.0", this->pm_1_0_sensor_);
   LOG_SENSOR("  ", "PM  2.5", this->pm_2_5_sensor_);
@@ -386,7 +382,7 @@ void SEN5XComponent::dump_config() {
                   "      Learning Time Gain (hours): %u\n"
                   "      Gating Max Duration (minutes): %u\n"
                   "      STD Initial: %u\n"
-                  "      Gain Factor: %u\n",
+                  "      Gain Factor: %u",
                   tuning_params.index_offset, tuning_params.learning_time_offset_hours,
                   tuning_params.learning_time_gain_hours, tuning_params.gating_max_duration_minutes,
                   tuning_params.std_initial, tuning_params.gain_factor);
@@ -399,21 +395,19 @@ void SEN5XComponent::dump_config() {
                   "      Index Offset: %u\n"
                   "      Learning Time Offset (hours): %u\n"
                   "      Gating Max Duration (minutes): %u\n"
-                  "      Gain Factor: %u\n",
+                  "      Gain Factor: %u",
                   tuning_params.index_offset, tuning_params.learning_time_offset_hours,
                   tuning_params.gating_max_duration_minutes, tuning_params.gain_factor);
   }
   LOG_SENSOR("  ", "CO₂", this->co2_sensor_);
-  if (this->co2_sensor_ != nullptr) {
-    if (this->auto_self_calibration_.has_value()) {
-      ESP_LOGCONFIG(TAG, "    Automatic self calibration: %s", ONOFF(this->auto_self_calibration_.value()));
-    }
-    if (this->ambient_pressure_compensation_source_ != nullptr) {
-      ESP_LOGCONFIG(TAG, "    Ambient Pressure Compensation Source: %s",
-                    this->ambient_pressure_compensation_source_->get_name().c_str());
-    } else if (this->altitude_compensation_.has_value()) {
-      ESP_LOGCONFIG(TAG, "    Altitude Compensation: %d", this->altitude_compensation_.value());
-    }
+  if (this->auto_self_calibration_.has_value()) {
+    ESP_LOGCONFIG(TAG, "    Automatic self calibration: %s", ONOFF(this->auto_self_calibration_.value()));
+  }
+  if (this->ambient_pressure_compensation_source_ != nullptr) {
+    ESP_LOGCONFIG(TAG, "    Ambient Pressure Compensation Source: %s",
+                  this->ambient_pressure_compensation_source_->get_name().c_str());
+  } else if (this->altitude_compensation_.has_value()) {
+    ESP_LOGCONFIG(TAG, "    Altitude Compensation: %d", this->altitude_compensation_.value());
   }
   LOG_SENSOR("  ", "HCHO", this->hcho_sensor_);
 }
@@ -421,8 +415,10 @@ void SEN5XComponent::dump_config() {
 void SEN5XComponent::update() {
   if (!this->initialized_ || !this->running_ || this->busy_)
     return;
+
   uint16_t cmd;
   uint8_t length;
+  this->updating_ = true;
   switch (this->type_.value()) {
     case Sen5xType::SEN50:
       cmd = SEN5X_CMD_READ_MEASUREMENT;
@@ -463,12 +459,10 @@ void SEN5XComponent::update() {
     default:
       ESP_LOGE(TAG, "Unsupported model");
       this->status_set_warning();
-      this->updating_ = false;
       return;
   }
   if (!this->write_command(cmd)) {
-    this->status_set_warning();
-    ESP_LOGW(TAG, ESP_LOG_MSG_COMM_FAIL);
+    this->status_set_warning(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
     this->updating_ = false;
     return;
   }
@@ -476,7 +470,7 @@ void SEN5XComponent::update() {
     uint16_t measurements[10];
     if (!this->read_data(measurements, length)) {
       ESP_LOGW(TAG, ESP_LOG_MSG_COMM_FAIL);
-      this->status_set_warning();
+      this->status_set_warning(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
       this->updating_ = false;
       return;
     }
@@ -553,21 +547,17 @@ void SEN5XComponent::update() {
         (App.get_loop_component_start_time() - this->voc_baseline_time_) >= SHORTEST_BASELINE_STORE_INTERVAL) {
       this->voc_baseline_time_ = App.get_loop_component_start_time();
       if (!this->write_command(CMD_VOC_ALGORITHM_STATE)) {
-        this->status_set_warning(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
+        this->status_set_warning();
         ESP_LOGW(TAG, ESP_LOG_MSG_COMM_FAIL);
         this->updating_ = false;
       } else {
         this->set_timeout(20, [this]() {
           if (!this->read_data(this->voc_baseline_state_, 4)) {
-            this->status_set_warning(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
+            this->status_set_warning();
             ESP_LOGW(TAG, ESP_LOG_MSG_COMM_FAIL);
           } else {
             if (this->pref_.save(&this->voc_baseline_state_)) {
-              char hex_buf[5 * 4];
-              format_hex_pretty_to(hex_buf, state, 4, '.');
-              ESP_LOGD(TAG, "VOC Algorithm State saved: %s", hex_buf);
-              memcpy(this->baseline_state_, state, 8);
-              this->baseline_error_ = false;
+              ESP_LOGD(TAG, "VOC Baseline State saved");
             }
             this->status_clear_warning();
           }
@@ -584,10 +574,7 @@ void SEN5XComponent::update() {
             this->updating_ = false;
             return;
           } else {
-            this->set_timeout(20, [this]() {
-              this->status_clear_warning();
-              this->updating_ = false;
-            });
+            this->set_timeout(20, [this]() { this->status_clear_warning(); });
           }
         }
       }
@@ -680,7 +667,7 @@ bool SEN5XComponent::write_ambient_pressure_compensation_(uint16_t pressure_in_h
       ESP_LOGE(TAG, ESP_LOG_MSG_COMM_FAIL);
       return false;
     }
-    ESP_LOGD(TAG, "Ambient Pressure Compensation updated: %d hPa", pressure_in_hpa);
+    ESP_LOGD(TAG, "Ambient Pressure Compensation updated, pres=%d hPa", pressure_in_hpa);
   }
   return true;
 }
@@ -798,7 +785,7 @@ void SEN5XComponent::perform_forced_co2_recalibration(uint16_t co2) {
     }
     this->busy_ = true;
     this->set_timeout(75, [this, co2]() {
-      ESP_LOGD(TAG, "Forced CO₂ Recalibration started, co2=%d", co2);
+      ESP_LOGD(TAG, "Forced CO₂ Recalibration started: co2=%d", co2);
       if (!this->stop_measurements_()) {
         ESP_LOGE(TAG, "Forced CO₂ Recalibration failed");
         this->busy_ = false;
@@ -847,7 +834,7 @@ void SEN5XComponent::set_temperature_compensation(float offset, float normalized
       return;
     }
     this->busy_ = true;
-    this->set_timeout(75, [this, comp]() {  // let any update in progress finish
+    this->set_timeout(75, [this, comp]() {
       ESP_LOGD(
           TAG,
           "Set Temperature Compensation updated, offset=%.3f, normalized_offset_slope=%.6f, time_constant=%u, slot=%u",

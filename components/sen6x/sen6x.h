@@ -10,11 +10,9 @@
 namespace esphome {
 namespace sen6x {
 
-enum SEN6XType { SEN62, SEN63C, SEN65, SEN66, SEN68, SEN69C, UNKNOWN_MODEL };
-enum SetupStates {
+enum Sen6xType : uint8_t { SEN50, SEN54, SEN55, 
   SEN6X_SM_START,
   SEN6X_SM_START_1,
-  SEN6X_SM_START_2,
   SEN6X_SM_GET_SN,
   SEN6X_SM_GET_PN,
   SEN6X_SM_GET_FW,
@@ -29,11 +27,6 @@ enum SetupStates {
   SEN6X_SM_START_MEAS,
   SEN6X_SM_DONE
 };
-
-struct Sen6xBaselines {
-  int32_t state0;
-  int32_t state1;
-} PACKED;  // NOLINT
 
 struct GasTuning {
   uint16_t index_offset;
@@ -64,11 +57,18 @@ struct TemperatureAcceleration {
   uint16_t p;
   uint16_t t1;
   uint16_t t2;
+  TemperatureAcceleration() : k(20), p(20), t1(100), t2(300) {}
+  TemperatureAcceleration(float k, float p, float t1, float t2) {
+    this->k = static_cast<uint16_t>(k * 10.0);
+    this->p = static_cast<uint16_t>(p * 10.0);
+    this->t1 = static_cast<uint16_t>(t1 * 10.0);
+    this->t2 = static_cast<uint16_t>(t2 * 10.0);
+  }
 };
 
-// Shortest time interval of 3H for storing baseline values.
+// Shortest time interval of 2H (in milliseconds) for storing baseline values.
 // Prevents wear of the flash because of too many write operations
-static const uint32_t SHORTEST_BASELINE_STORE_INTERVAL = 3 * 60 * 60 * 1000;
+static const uint32_t SHORTEST_BASELINE_STORE_INTERVAL = 2 * 60 * 60 * 1000;
 
 class SEN6XComponent : public PollingComponent, public sensirion_common::SensirionI2CDevice {
   SUB_SENSOR(pm_1_0_sensor)
@@ -88,7 +88,7 @@ class SEN6XComponent : public PollingComponent, public sensirion_common::Sensiri
   void dump_config() override;
   void update() override;
   void set_store_voc_baseline(bool store_voc_baseline) { this->store_voc_baseline_ = store_voc_baseline; }
-  void set_model(Sen6xType model) { this->model_ = model; }
+  void set_type(Sen5xType type) { this->type_ = type; }
   void set_voc_algorithm_tuning(uint16_t index_offset, uint16_t learning_time_offset_hours,
                                 uint16_t learning_time_gain_hours, uint16_t gating_max_duration_minutes,
                                 uint16_t std_initial, uint16_t gain_factor) {
@@ -112,15 +112,11 @@ class SEN6XComponent : public PollingComponent, public sensirion_common::Sensiri
     tuning_params.gain_factor = gain_factor;
     this->nox_tuning_params_ = tuning_params;
   }
-  bool set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
+  void set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
                                     uint8_t slot = 0);
   void set_temperature_acceleration(float k, float p, float t1, float t2) {
-    AccelerationParameters accel_param;
-    accel_param.k = k * 10;
-    accel_param.p = p * 10;
-    accel_param.t1 = t1 * 10;
-    accel_param.t2 = t2 * 10;
-    this->temperature_acceleration_ = accel_param;
+    TemperatureAcceleration accel(k, p, t1, t2);
+    this->temperature_acceleration_ = accel;
   }
   void set_automatic_self_calibration(bool value) { this->auto_self_calibration_ = value; }
   void set_altitude_compensation(uint16_t altitude) { this->altitude_compensation_ = altitude; }
@@ -140,8 +136,11 @@ class SEN6XComponent : public PollingComponent, public sensirion_common::Sensiri
   bool write_temperature_compensation_(const TemperatureCompensation &compensation);
   bool write_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
   bool write_temperature_acceleration_();
-  uint16_t baseline_data_[4]{0};
-  uint32_t last_store_time_;
+  bool write_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
+
+  char serial_number_[17] = "UNKNOWN";
+  uint16_t voc_baseline_state_[4]{0};
+  uint32_t voc_baseline_time_;
   uint16_t ambient_pressure_compensation_{0};
   uint8_t firmware_major_{0xFF};
   uint8_t firmware_minor_{0xFF};
@@ -150,19 +149,17 @@ class SEN6XComponent : public PollingComponent, public sensirion_common::Sensiri
   bool updating_{false};
   bool busy_{false};
   bool baseline_error_{false};
-
-  optional<Sen6xType> model_;
-  optional<TemperatureAcceleration> temperature_acceleration_;
+  
+  optional<Sen6xType> type_;
   optional<GasTuning> voc_tuning_params_;
   optional<GasTuning> nox_tuning_params_;
   optional<TemperatureCompensation> temperature_compensation_;
   optional<bool> auto_self_calibration_;
   optional<uint16_t> altitude_compensation_;
-  optional<bool> store_baseline_;
+  optional<uint16_t> ambient_pressure_compensation_;
+  optional<bool> store_algorithm_state_;
 
   ESPPreferenceObject pref_;
-  std::string product_name_ = "Unknown";
-  std::string serial_number_ = "Unknown";
 };
 }  // namespace sen6x
 }  // namespace esphome
