@@ -161,9 +161,9 @@ void SEN5XComponent::internal_setup_(Sen5xSetupStates state) {
         // product name and type must match
         if (strncmp(product_name, LOG_STR_ARG(type_to_string(this->type_.value())), 10) != 0) {
           ESP_LOGE(TAG, "Product Name does not match: %.32s", product_name);
-        this->mark_failed(LOG_STR("Product Name failed"));
-        return;
-      }
+          this->mark_failed(LOG_STR("Product Name failed"));
+          return;
+        }
       }
       ESP_LOGV(TAG, "Read Product Name: %.32s", product_name);
       this->set_timeout(20, [this]() { this->internal_setup_(SEN5X_SM_GET_FW); });
@@ -563,36 +563,36 @@ void SEN5XComponent::update() {
             ESP_LOGW(TAG, ESP_LOG_MSG_COMM_FAIL);
           } else {
             if (this->pref_.save(&this->voc_baseline_state_)) {
-                char hex_buf[5 * 4];
-                format_hex_pretty_to(hex_buf, state, 4, '.');
-                ESP_LOGD(TAG, "VOC Algorithm State saved: %s", hex_buf);
-                memcpy(this->baseline_state_, state, 8);
-                this->baseline_error_ = false;
+              char hex_buf[5 * 4];
+              format_hex_pretty_to(hex_buf, state, 4, '.');
+              ESP_LOGD(TAG, "VOC Algorithm State saved: %s", hex_buf);
+              memcpy(this->baseline_state_, state, 8);
+              this->baseline_error_ = false;
             }
             this->status_clear_warning();
           }
-	      this->updating_ = false;
+          this->updating_ = false;
         });
       }
     } else {
-    if (this->ambient_pressure_compensation_source_ != nullptr) {
-      float pressure = this->ambient_pressure_compensation_source_->state;
-      if (!std::isnan(pressure)) {
-        uint16_t new_ambient_pressure = static_cast<uint16_t>(pressure);
-        if (!write_ambient_pressure_compensation_(new_ambient_pressure)) {
-          this->status_set_warning(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
-          this->updating_ = false;
-          return;
-      } else {
-            this->set_timeout(20, [this]() { 
-            	this->status_clear_warning();
-	          this->updating_ = false;
-            	});
-              }
-            }
+      if (this->ambient_pressure_compensation_source_ != nullptr) {
+        float pressure = this->ambient_pressure_compensation_source_->state;
+        if (!std::isnan(pressure)) {
+          uint16_t new_ambient_pressure = static_cast<uint16_t>(pressure);
+          if (!write_ambient_pressure_compensation_(new_ambient_pressure)) {
+            this->status_set_warning(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
+            this->updating_ = false;
+            return;
+          } else {
+            this->set_timeout(20, [this]() {
+              this->status_clear_warning();
+              this->updating_ = false;
+            });
+          }
         }
       }
-    });
+    }
+  });
 }
 
 bool SEN5XComponent::start_measurements_() {
@@ -608,8 +608,8 @@ bool SEN5XComponent::start_measurements_() {
   } else {
     this->running_ = true;
     if (this->initialized_) {
-    ESP_LOGD(TAG, "Measurements Enabled");
-  }
+      ESP_LOGD(TAG, "Measurements Enabled");
+    }
   }
   return result;
 }

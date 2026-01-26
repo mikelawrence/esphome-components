@@ -496,18 +496,18 @@ async def sen5x_saph_to_code(config, action_id, template_arg, args):
 
 
 SEN5X_TEMPERATURE_COMPENSATION_SCHEMA = cv.Schema(
-        {
-            cv.GenerateID(): cv.use_id(SEN5XComponent),
-            cv.Optional(CONF_OFFSET, default=0.0): cv.templatable(
-                cv.float_range(min=-100.0, max=100.0)
-            ),
-            cv.Optional(CONF_NORMALIZED_OFFSET_SLOPE, default=0.0): cv.templatable(
-                cv.float_range(min=-3.0000, max=3.0000)
-            ),
-            cv.Optional(CONF_TIME_CONSTANT, default=0): cv.templatable(
-                cv.int_range(min=0, max=65535),
-            ),
-            cv.Optional(CONF_SLOT, default=0): cv.templatable(cv.int_range(0, 4)),
+    {
+        cv.GenerateID(): cv.use_id(SEN5XComponent),
+        cv.Optional(CONF_OFFSET, default=0.0): cv.templatable(
+            cv.float_range(min=-100.0, max=100.0)
+        ),
+        cv.Optional(CONF_NORMALIZED_OFFSET_SLOPE, default=0.0): cv.templatable(
+            cv.float_range(min=-3.0000, max=3.0000)
+        ),
+        cv.Optional(CONF_TIME_CONSTANT, default=0): cv.templatable(
+            cv.int_range(min=0, max=65535),
+        ),
+        cv.Optional(CONF_SLOT, default=0): cv.templatable(cv.int_range(0, 4)),
     },
 )
 
