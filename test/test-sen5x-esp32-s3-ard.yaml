@@ -34,11 +34,11 @@ sensor:
       offset: 0
       normalized_offset_slope: 0
       time_constant: 0
-    temperature_acceleration:
-      t1: 100
-      t2: 300
-      k: 20
-      p: 20
+    # temperature_acceleration:
+    #   t1: 100
+    #   t2: 300
+    #   k: 20
+    #   p: 20
     temperature:
       name: "Temperature"
       accuracy_decimals: 2
