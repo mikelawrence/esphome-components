@@ -14,6 +14,7 @@ enum SEN6XType { SEN62, SEN63C, SEN65, SEN66, SEN68, SEN69C, UNKNOWN_MODEL };
 enum SetupStates {
   SEN6X_SM_START,
   SEN6X_SM_START_1,
+  SEN6X_SM_START_2,
   SEN6X_SM_GET_SN,
   SEN6X_SM_GET_PN,
   SEN6X_SM_GET_FW,
@@ -58,7 +59,7 @@ struct TemperatureCompensation {
   }
 };
 
-struct AccelerationParameters {
+struct TemperatureAcceleration {
   uint16_t k;
   uint16_t p;
   uint16_t t1;
@@ -67,9 +68,7 @@ struct AccelerationParameters {
 
 // Shortest time interval of 3H for storing baseline values.
 // Prevents wear of the flash because of too many write operations
-static const uint32_t SHORTEST_BASELINE_STORE_INTERVAL = 10800;
-// Store anyway if the baseline difference exceeds the max storage diff value
-static const uint32_t MAXIMUM_STORAGE_DIFF = 50;
+static const uint32_t SHORTEST_BASELINE_STORE_INTERVAL = 3 * 60 * 60 * 1000;
 
 class SEN6XComponent : public PollingComponent, public sensirion_common::SensirionI2CDevice {
   SUB_SENSOR(pm_1_0_sensor)
@@ -103,12 +102,11 @@ class SEN6XComponent : public PollingComponent, public sensirion_common::Sensiri
     this->voc_tuning_params_ = tuning_params;
   }
   void set_nox_algorithm_tuning(uint16_t index_offset, uint16_t learning_time_offset_hours,
-                                uint16_t learning_time_gain_hours, uint16_t gating_max_duration_minutes,
-                                uint16_t gain_factor) {
+                                uint16_t gating_max_duration_minutes, uint16_t gain_factor) {
     GasTuning tuning_params;
     tuning_params.index_offset = index_offset;
     tuning_params.learning_time_offset_hours = learning_time_offset_hours;
-    tuning_params.learning_time_gain_hours = learning_time_gain_hours;
+    tuning_params.learning_time_gain_hours = 12;
     tuning_params.gating_max_duration_minutes = gating_max_duration_minutes;
     tuning_params.std_initial = 50;
     tuning_params.gain_factor = gain_factor;
@@ -127,10 +125,10 @@ class SEN6XComponent : public PollingComponent, public sensirion_common::Sensiri
   void set_automatic_self_calibration(bool value) { this->auto_self_calibration_ = value; }
   void set_altitude_compensation(uint16_t altitude) { this->altitude_compensation_ = altitude; }
   void set_ambient_pressure_compensation_source(sensor::Sensor *pressure) { this->ambient_pressure_compensation_source_ = pressure; }
-  bool set_ambient_pressure_compensation(float pressure_in_hpa);
-  bool start_fan_cleaning();
-  bool activate_heater();
-  bool perform_forced_co2_calibration(uint16_t co2);
+  void set_ambient_pressure_compensation(uint16_t pressure_in_hpa);
+  void start_fan_cleaning();
+  void activate_heater();
+  void perform_forced_co2_recalibration(uint16_t co2);
 
  protected:
   void internal_setup_(Sen6xSetupStates state);
@@ -138,29 +136,31 @@ class SEN6XComponent : public PollingComponent, public sensirion_common::Sensiri
   bool stop_measurements_();
   bool write_tuning_parameters_(uint16_t i2c_command, const GasTuning &tuning);
   bool write_temperature_compensation_(const TemperatureCompensation &compensation);
-  bool write_temperature_acceleration_();
   bool write_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
-
-  uint32_t seconds_since_last_store_;
+  bool write_temperature_acceleration_();
+  uint16_t baseline_data_[4]{0};
+  uint32_t last_store_time_;
+  uint16_t ambient_pressure_compensation_{0};
   uint8_t firmware_major_{0xFF};
   uint8_t firmware_minor_{0xFF};
   bool initialized_{false};
   bool running_{false};
+  bool updating_{false};
   bool busy_{false};
-  bool store_voc_baseline_;
-  
+  bool baseline_error_{false};
+
   optional<Sen6xType> model_;
+  optional<TemperatureAcceleration> temperature_acceleration_;
   optional<GasTuning> voc_tuning_params_;
   optional<GasTuning> nox_tuning_params_;
   optional<TemperatureCompensation> temperature_compensation_;
   optional<bool> auto_self_calibration_;
   optional<uint16_t> altitude_compensation_;
-  optional<uint16_t> ambient_pressure_compensation_;
+  optional<bool> store_baseline_;
 
   ESPPreferenceObject pref_;
   std::string product_name_ = "Unknown";
   std::string serial_number_ = "Unknown";
-  Sen6xBaselines voc_baselines_storage_;
 };
 }  // namespace sen6x
 }  // namespace esphome
