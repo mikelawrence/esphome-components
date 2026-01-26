@@ -148,69 +148,73 @@ def _gas_sensor(
 
 GROUP_COMPENSATION = "Compensation Group: 'altitude_compensation' and 'ambient_pressure_compensation_source'"
 
-BASE_SCHEMA = cv.Schema(
-    {
-        cv.GenerateID(): cv.declare_id(SEN5XComponent),
-        cv.Optional(CONF_PM_1_0): sensor.sensor_schema(
-            unit_of_measurement=UNIT_MICROGRAMS_PER_CUBIC_METER,
-            icon=ICON_CHEMICAL_WEAPON,
-            accuracy_decimals=2,
-            device_class=DEVICE_CLASS_PM1,
-            state_class=STATE_CLASS_MEASUREMENT,
-        ),
-        cv.Optional(CONF_PM_2_5): sensor.sensor_schema(
-            unit_of_measurement=UNIT_MICROGRAMS_PER_CUBIC_METER,
-            icon=ICON_CHEMICAL_WEAPON,
-            accuracy_decimals=2,
-            device_class=DEVICE_CLASS_PM25,
-            state_class=STATE_CLASS_MEASUREMENT,
-        ),
-        cv.Optional(CONF_PM_4_0): sensor.sensor_schema(
-            unit_of_measurement=UNIT_MICROGRAMS_PER_CUBIC_METER,
-            icon=ICON_CHEMICAL_WEAPON,
-            accuracy_decimals=2,
-            state_class=STATE_CLASS_MEASUREMENT,
-        ),
-        cv.Optional(CONF_PM_10_0): sensor.sensor_schema(
-            unit_of_measurement=UNIT_MICROGRAMS_PER_CUBIC_METER,
-            icon=ICON_CHEMICAL_WEAPON,
-            accuracy_decimals=2,
-            device_class=DEVICE_CLASS_PM10,
-            state_class=STATE_CLASS_MEASUREMENT,
-        ),
-        cv.Optional(CONF_TEMPERATURE): sensor.sensor_schema(
-            unit_of_measurement=UNIT_CELSIUS,
-            icon=ICON_THERMOMETER,
-            accuracy_decimals=2,
-            device_class=DEVICE_CLASS_TEMPERATURE,
-            state_class=STATE_CLASS_MEASUREMENT,
-        ),
-        cv.Optional(CONF_HUMIDITY): sensor.sensor_schema(
-            unit_of_measurement=UNIT_PERCENT,
-            icon=ICON_WATER_PERCENT,
-            accuracy_decimals=2,
-            device_class=DEVICE_CLASS_HUMIDITY,
-            state_class=STATE_CLASS_MEASUREMENT,
-        ),
-        cv.Optional(CONF_TEMPERATURE_COMPENSATION): cv.Schema(
-            {
-                cv.Optional(CONF_OFFSET, default=0): cv.float_,
-                cv.Optional(CONF_NORMALIZED_OFFSET_SLOPE, default=0): cv.All(
-                    float_previously_pct, cv.float_
-                ),
-                cv.Optional(CONF_TIME_CONSTANT, default=0): cv.int_,
-            }
-        ),
-        cv.Optional(CONF_TEMPERATURE_ACCELERATION): cv.Schema(
-            {
-                cv.Required(CONF_K): cv.float_range(min=0.0, max=6535.5),
-                cv.Required(CONF_P): cv.float_range(min=0.0, max=6535.5),
-                cv.Required(CONF_T1): cv.float_range(min=0.0, max=6535.5),
-                cv.Required(CONF_T2): cv.float_range(min=0.0, max=6535.5),
-            }
-        ),
-    }
-).extend(cv.polling_component_schema("60s")).extend(i2c.i2c_device_schema(0x6B))
+BASE_SCHEMA = (
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.declare_id(SEN5XComponent),
+            cv.Optional(CONF_PM_1_0): sensor.sensor_schema(
+                unit_of_measurement=UNIT_MICROGRAMS_PER_CUBIC_METER,
+                icon=ICON_CHEMICAL_WEAPON,
+                accuracy_decimals=2,
+                device_class=DEVICE_CLASS_PM1,
+                state_class=STATE_CLASS_MEASUREMENT,
+            ),
+            cv.Optional(CONF_PM_2_5): sensor.sensor_schema(
+                unit_of_measurement=UNIT_MICROGRAMS_PER_CUBIC_METER,
+                icon=ICON_CHEMICAL_WEAPON,
+                accuracy_decimals=2,
+                device_class=DEVICE_CLASS_PM25,
+                state_class=STATE_CLASS_MEASUREMENT,
+            ),
+            cv.Optional(CONF_PM_4_0): sensor.sensor_schema(
+                unit_of_measurement=UNIT_MICROGRAMS_PER_CUBIC_METER,
+                icon=ICON_CHEMICAL_WEAPON,
+                accuracy_decimals=2,
+                state_class=STATE_CLASS_MEASUREMENT,
+            ),
+            cv.Optional(CONF_PM_10_0): sensor.sensor_schema(
+                unit_of_measurement=UNIT_MICROGRAMS_PER_CUBIC_METER,
+                icon=ICON_CHEMICAL_WEAPON,
+                accuracy_decimals=2,
+                device_class=DEVICE_CLASS_PM10,
+                state_class=STATE_CLASS_MEASUREMENT,
+            ),
+            cv.Optional(CONF_TEMPERATURE): sensor.sensor_schema(
+                unit_of_measurement=UNIT_CELSIUS,
+                icon=ICON_THERMOMETER,
+                accuracy_decimals=2,
+                device_class=DEVICE_CLASS_TEMPERATURE,
+                state_class=STATE_CLASS_MEASUREMENT,
+            ),
+            cv.Optional(CONF_HUMIDITY): sensor.sensor_schema(
+                unit_of_measurement=UNIT_PERCENT,
+                icon=ICON_WATER_PERCENT,
+                accuracy_decimals=2,
+                device_class=DEVICE_CLASS_HUMIDITY,
+                state_class=STATE_CLASS_MEASUREMENT,
+            ),
+            cv.Optional(CONF_TEMPERATURE_COMPENSATION): cv.Schema(
+                {
+                    cv.Optional(CONF_OFFSET, default=0): cv.float_,
+                    cv.Optional(CONF_NORMALIZED_OFFSET_SLOPE, default=0): cv.All(
+                        float_previously_pct, cv.float_
+                    ),
+                    cv.Optional(CONF_TIME_CONSTANT, default=0): cv.int_,
+                }
+            ),
+            cv.Optional(CONF_TEMPERATURE_ACCELERATION): cv.Schema(
+                {
+                    cv.Required(CONF_K): cv.float_range(min=0.0, max=6535.5),
+                    cv.Required(CONF_P): cv.float_range(min=0.0, max=6535.5),
+                    cv.Required(CONF_T1): cv.float_range(min=0.0, max=6535.5),
+                    cv.Required(CONF_T2): cv.float_range(min=0.0, max=6535.5),
+                }
+            ),
+        }
+    )
+    .extend(cv.polling_component_schema("60s"))
+    .extend(i2c.i2c_device_schema(0x6B))
+)
 
 VOC_SCHEMA = cv.Schema(
     {
@@ -337,7 +341,7 @@ async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     await i2c.register_i2c_device(var, config)
-   cg.add(var.set_model(SEN5X_MODELS[config[CONF_TYPE]]))
+    cg.add(var.set_model(SEN5X_MODELS[config[CONF_TYPE]]))
     for key, funcName in SENSOR_MAP.items():
         if cfg := config.get(key):
             sens = await sensor.new_sensor(cfg)
@@ -390,9 +394,7 @@ async def to_code(config):
             cg.add(var.set_ambient_pressure_compensation_source(sens))
 
 
-SEN6X_ACTION_SCHEMA = maybe_simple_id(
-    {cv.GenerateID(): cv.use_id(SEN6XComponent)}
-)
+SEN6X_ACTION_SCHEMA = maybe_simple_id({cv.GenerateID(): cv.use_id(SEN6XComponent)})
 
 
 @automation.register_action(

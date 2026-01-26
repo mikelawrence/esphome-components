@@ -55,10 +55,10 @@ sensor:
     nox:
       name: "NOₓ"
       accuracy_decimals: 0
+    store_baseline: true
     voc:
       name: "VOC"
       accuracy_decimals: 0
-      store_baseline: true
     hcho:
       name: "Formaldehyde"
       accuracy_decimals: 0

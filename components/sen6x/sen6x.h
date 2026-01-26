@@ -124,7 +124,9 @@ class SEN6XComponent : public PollingComponent, public sensirion_common::Sensiri
   }
   void set_automatic_self_calibration(bool value) { this->auto_self_calibration_ = value; }
   void set_altitude_compensation(uint16_t altitude) { this->altitude_compensation_ = altitude; }
-  void set_ambient_pressure_compensation_source(sensor::Sensor *pressure) { this->ambient_pressure_compensation_source_ = pressure; }
+  void set_ambient_pressure_compensation_source(sensor::Sensor *pressure) {
+    this->ambient_pressure_compensation_source_ = pressure;
+  }
   void set_ambient_pressure_compensation(uint16_t pressure_in_hpa);
   void start_fan_cleaning();
   void activate_heater();
