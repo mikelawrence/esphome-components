@@ -29,7 +29,7 @@ sensor:
   - platform: sen5x
     i2c_id: i2c1_bus
     update_interval: 1s
-    model: SEN69C
+    type: SEN69C
     temperature_compensation:
       offset: 0
       normalized_offset_slope: 0
