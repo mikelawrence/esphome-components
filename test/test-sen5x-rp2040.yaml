@@ -2,7 +2,7 @@ substitutions:
   ref: main
 
 esphome:
-  name: test-sen6x-rp2040
+  name: test-sen5x-rp2040
   friendly_name: Test SEN6X Component with RP2040
 
 rp2040:
@@ -13,7 +13,7 @@ external_components:
     type: git
     url: https://github.com/mikelawrence/esphome-components
     ref: ${ref}
-  components: [ sen6x ]
+  components: [ sen5x ]
 
 i2c:
   - id: i2c1_bus
@@ -22,10 +22,10 @@ i2c:
     scan: true
 
 sensor:
-  - platform: sen6x
+  - platform: sen5x
     i2c_id: i2c1_bus
     update_interval: 1s
-    model: SEN69C
+    type: SEN69C
     temperature:
       name: "Temperature"
       accuracy_decimals: 2

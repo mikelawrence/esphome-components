@@ -1,6 +1,6 @@
 {
   "python.analysis.extraPaths": [
-    "${workspaceFolder}/../esphome"
+    "${workspaceFolder}/../esphome",
+    "C:\\Users\\mike\\OneDrive\\Documents\\GitHub\\esphome"
   ]
 }
-
