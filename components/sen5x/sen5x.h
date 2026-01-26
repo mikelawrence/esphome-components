@@ -15,7 +15,7 @@ enum RhtAccelerationMode : uint16_t {
   HIGH_ACCELERATION = 2,
 };
 
-enum Sen5xType { SEN50, SEN54, SEN55, SEN62, SEN63C, SEN65, SEN66, SEN68, SEN69C, UNKNOWN_MODEL };
+enum Sen5xType : uint8_t { SEN50, SEN54, SEN55, SEN62, SEN63C, SEN65, SEN66, SEN68, SEN69C, UNKNOWN };
 
 enum Sen5xSetupStates {
   SEN5X_SM_START,
@@ -74,9 +74,9 @@ struct TemperatureAcceleration {
   }
 };
 
-// Shortest time interval of 3H for storing baseline values.
+// Shortest time interval of 2H (in milliseconds) for storing baseline values.
 // Prevents wear of the flash because of too many write operations
-static const uint32_t SHORTEST_BASELINE_STORE_INTERVAL = 3 * 60 * 60 * 1000;
+static const uint32_t SHORTEST_BASELINE_STORE_INTERVAL = 2 * 60 * 60 * 1000;
 
 class SEN5XComponent : public PollingComponent, public sensirion_common::SensirionI2CDevice {
  public:
@@ -96,7 +96,7 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   void set_humidity_sensor(sensor::Sensor *humidity_sensor) { this->humidity_sensor_ = humidity_sensor; }
   void set_temperature_sensor(sensor::Sensor *temperature_sensor) { this->temperature_sensor_ = temperature_sensor; }
   void set_store_baseline(bool store_baseline) { this->store_baseline_ = store_baseline; }
-  void set_model(Sen5xType model) { this->model_ = model; }
+  void set_type(Sen5xType type) { this->type_ = type; }
   void set_acceleration_mode(RhtAccelerationMode mode) { this->acceleration_mode_ = mode; }
   void set_auto_cleaning_interval(uint32_t auto_cleaning_interval) {
     this->auto_cleaning_interval_ = auto_cleaning_interval;
@@ -150,8 +150,9 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   bool write_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
   bool write_temperature_acceleration_();
 
-  uint16_t baseline_state_[4]{0};
-  uint32_t baseline_time_;
+  char serial_number_[17] = "UNKNOWN";
+  uint16_t voc_baseline_state_[4]{0};
+  uint32_t voc_baseline_time_;
   uint16_t ambient_pressure_compensation_{0};
   uint8_t firmware_major_{0xFF};
   uint8_t firmware_minor_{0xFF};
@@ -173,7 +174,7 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   sensor::Sensor *co2_sensor_{nullptr};
   sensor::Sensor *ambient_pressure_compensation_source_{nullptr};
 
-  optional<Sen5xType> model_;
+  optional<Sen5xType> type_;
   optional<RhtAccelerationMode> acceleration_mode_;
   optional<TemperatureAcceleration> temperature_acceleration_;
   optional<uint32_t> auto_cleaning_interval_;
@@ -185,8 +186,6 @@ class SEN5XComponent : public PollingComponent, public sensirion_common::Sensiri
   optional<bool> store_baseline_;
 
   ESPPreferenceObject pref_;
-  std::string product_name_ = "Unknown";
-  std::string serial_number_ = "Unknown";
 };
 
 }  // namespace sen5x

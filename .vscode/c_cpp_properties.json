@@ -2,7 +2,8 @@
     "configurations": [
         {
             "includePath": [
-                "${workspaceFolder}/../esphome"
+                "${workspaceFolder}/../esphome",
+                "C:\\Users\\mike\\OneDrive\\Documents\\GitHub\\esphome"
             ],
             "intelliSenseMode": "windows-msvc-x64",
             "compilerPath": "C:\\Program Files\\LLVM\\bin\\clang.exe",

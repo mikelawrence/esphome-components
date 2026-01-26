@@ -51,7 +51,6 @@ from esphome.const import (
     UNIT_PERCENT,
 )
 
-
 CODEOWNERS = ["@martgras", "@mikelawrence"]
 DEPENDENCIES = ["i2c"]
 AUTO_LOAD = ["sensirion_common"]
@@ -60,9 +59,8 @@ sen5x_ns = cg.esphome_ns.namespace("sen5x")
 SEN5XComponent = sen5x_ns.class_(
     "SEN5XComponent", cg.PollingComponent, sensirion_common.SensirionI2CDevice
 )
-Sen5xModel = sen5x_ns.enum("Sen5xModel")
+Sen5xType = sen5x_ns.enum("Sen5xType")
 RhtAccelerationMode = sen5x_ns.enum("RhtAccelerationMode")
-
 
 CONF_ACCELERATION_MODE = "acceleration_mode"
 CONF_AUTO_CLEANING_INTERVAL = "auto_cleaning_interval"
@@ -98,16 +96,16 @@ SEN66 = "SEN66"
 SEN68 = "SEN68"
 SEN69C = "SEN69C"
 
-SEN5X_MODELS = {
-    SEN50: Sen5xModel.SEN50,
-    SEN54: Sen5xModel.SEN54,
-    SEN55: Sen5xModel.SEN55,
-    SEN62: Sen5xModel.SEN62,
-    SEN63C: Sen5xModel.SEN63C,
-    SEN65: Sen5xModel.SEN65,
-    SEN66: Sen5xModel.SEN66,
-    SEN68: Sen5xModel.SEN68,
-    SEN69C: Sen5xModel.SEN69C,
+SEN5X_TYPES = {
+    SEN50: Sen5xType.SEN50,
+    SEN54: Sen5xType.SEN54,
+    SEN55: Sen5xType.SEN55,
+    SEN62: Sen5xType.SEN62,
+    SEN63C: Sen5xType.SEN63C,
+    SEN65: Sen5xType.SEN65,
+    SEN66: Sen5xType.SEN66,
+    SEN68: Sen5xType.SEN68,
+    SEN69C: Sen5xType.SEN69C,
 }
 
 ACCELERATION_MODES = {
@@ -267,21 +265,6 @@ TH_SCHEMA = cv.Schema(
         ),
     }
 )
-SEN5X_TH_SCHEMA = TH_SCHEMA.extend(
-    {cv.Optional(CONF_ACCELERATION_MODE): cv.enum(ACCELERATION_MODES)}
-)
-SEN6X_TH_SCHEMA = TH_SCHEMA.extend(
-    {
-        cv.Optional(CONF_TEMPERATURE_ACCELERATION): cv.Schema(
-            {
-                cv.Required(CONF_K): cv.float_range(min=0.0, max=6535.5),
-                cv.Required(CONF_P): cv.float_range(min=0.0, max=6535.5),
-                cv.Required(CONF_T1): cv.float_range(min=0.0, max=6535.5),
-                cv.Required(CONF_T2): cv.float_range(min=0.0, max=6535.5),
-            }
-        ),
-    }
-)
 
 CO2_SCHEMA = cv.Schema(
     {
@@ -310,22 +293,25 @@ CO2_SCHEMA = cv.Schema(
     }
 )
 
-SEN50_SCHEMA = PM_SCHEMA.extend(
-    {cv.Optional(CONF_AUTO_CLEANING_INTERVAL): cv.update_interval}
+SEN5X_SCHEMA = (
+    PM_SCHEMA.extend({cv.Optional(CONF_AUTO_CLEANING_INTERVAL): cv.update_interval})
 ).extend(i2c.i2c_device_schema(0x69))
-SEN54_SCHEMA = SEN50_SCHEMA.extend(SEN5X_TH_SCHEMA).extend(VOC_SCHEMA)
-SEN62_SCHEMA = PM_SCHEMA.extend(SEN6X_TH_SCHEMA).extend(i2c.i2c_device_schema(0x6B))
-SEN65_SCHEMA = SEN62_SCHEMA.extend(VOC_SCHEMA).extend(NOX_SCHEMA)
+SEN54_SCHEMA = (
+    SEN5X_SCHEMA.extend(TH_SCHEMA)
+    .extend({cv.Optional(CONF_ACCELERATION_MODE): cv.enum(ACCELERATION_MODES)})
+    .extend(VOC_SCHEMA)
+)
+SEN6X_SCHEMA = PM_SCHEMA.extend(TH_SCHEMA).extend(i2c.i2c_device_schema(0x6B))
+SEN65_SCHEMA = SEN6X_SCHEMA.extend(VOC_SCHEMA).extend(NOX_SCHEMA)
 
-
-CONFIG_SCHEMA = cv.All(
+CONFIG_SCHEMA = cv.Schema(
     cv.typed_schema(
         {
-            SEN50: SEN50_SCHEMA,
+            SEN50: SEN5X_SCHEMA,
             SEN54: SEN54_SCHEMA,
             SEN55: SEN54_SCHEMA.extend(NOX_SCHEMA),
-            SEN62: SEN62_SCHEMA,
-            SEN63C: SEN62_SCHEMA.extend(CO2_SCHEMA),
+            SEN62: SEN6X_SCHEMA,
+            SEN63C: SEN6X_SCHEMA.extend(CO2_SCHEMA),
             SEN65: SEN65_SCHEMA,
             SEN66: SEN65_SCHEMA.extend(CO2_SCHEMA),
             SEN68: SEN65_SCHEMA.extend(HCHO_SCHEMA),
@@ -346,7 +332,6 @@ CONFIG_SCHEMA = cv.All(
         CONF_HCHO,
     ),
 )
-
 
 SENSOR_MAP = {
     CONF_PM_1_0: "set_pm_1_0_sensor",
@@ -385,7 +370,7 @@ async def to_code(config):
     await cg.register_component(var, config)
     await i2c.register_i2c_device(var, config)
 
-    cg.add(var.set_model(SEN5X_MODELS[config[CONF_TYPE]]))
+    cg.add(var.set_type(SEN5X_TYPES[config[CONF_TYPE]]))
     for key, funcName in SETTING_MAP.items():
         if cfg := config.get(key):
             cg.add(getattr(var, funcName)(cfg))
@@ -517,7 +502,6 @@ SEN5X_TEMPERATURE_COMPENSATION_SCHEMA = cv.Schema(
     SEN5X_TEMPERATURE_COMPENSATION_SCHEMA,
 )
 async def sen5x_stc_to_code(config, action_id, template_arg, args):
-    print(cg.esphome_ns.namespace)
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
     if cfg := config.get(CONF_OFFSET):
