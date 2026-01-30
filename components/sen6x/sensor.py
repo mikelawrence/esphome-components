@@ -1,8 +1,8 @@
+import esphome.codegen as cg
+import esphome.config_validation as cv
 from esphome import automation
 from esphome.automation import maybe_simple_id
-import esphome.codegen as cg
 from esphome.components import i2c, sensirion_common, sensor
-import esphome.config_validation as cv
 from esphome.const import (
     CONF_ALGORITHM_TUNING,
     CONF_ALTITUDE_COMPENSATION,
@@ -58,8 +58,7 @@ sen6x_ns = cg.esphome_ns.namespace("sen6x")
 SEN6XComponent = sen6x_ns.class_(
     "SEN6XComponent", cg.PollingComponent, sensirion_common.SensirionI2CDevice
 )
-SEN6XModel = sen6x_ns.enum("SEN5XModel")
-
+SEN6XType = sen6x_ns.enum("SEN6XType", is_class=True)
 
 
 CONF_K = "k"
@@ -73,7 +72,7 @@ CONF_T2 = "t2"
 CONF_TEMPERATURE_ACCELERATION = "temperature_acceleration"
 
 # Actions
-StartFanAction = sen6x_ns.class_("StartFanAction", automation.Action)
+StartFanCleaningAction = sen6x_ns.class_("StartFanCleaningAction", automation.Action)
 ActivateHeaterAction = sen6x_ns.class_("ActivateHeaterAction", automation.Action)
 PerformForcedCo2RecalibrationAction = sen6x_ns.class_(
     "PerformForcedCo2RecalibrationAction", automation.Action
@@ -93,12 +92,12 @@ SEN68 = "SEN68"
 SEN69C = "SEN69C"
 
 SEN6X_TYPES = {
-    SEN62: Sen6xType.SEN62,
-    SEN63C: Sen6xType.SEN63C,
-    SEN65: Sen6xType.SEN65,
-    SEN66: Sen6xType.SEN66,
-    SEN68: Sen6xType.SEN68,
-    SEN69C: Sen6xType.SEN69C,
+    SEN62: SEN6XType.SEN62,
+    SEN63C: SEN6XType.SEN63C,
+    SEN65: SEN6XType.SEN65,
+    SEN66: SEN6XType.SEN66,
+    SEN68: SEN6XType.SEN68,
+    SEN69C: SEN6XType.SEN69C,
 }
 
 
@@ -146,7 +145,8 @@ def _gas_sensor(
 
 GROUP_COMPENSATION = "Compensation Group: 'altitude_compensation' and 'ambient_pressure_compensation_source'"
 
-PM_SCHEMA = cv.Schema(
+BASE_SCHEMA = (
+    cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(SEN6XComponent),
             cv.Optional(CONF_PM_1_0): sensor.sensor_schema(
@@ -189,13 +189,6 @@ PM_SCHEMA = cv.Schema(
                 accuracy_decimals=2,
                 device_class=DEVICE_CLASS_HUMIDITY,
                 state_class=STATE_CLASS_MEASUREMENT,
-            ),
-            cv.Optional(CONF_TEMPERATURE_COMPENSATION): cv.Schema(
-                {
-                    cv.Optional(CONF_OFFSET, default=0): cv.float_,
-                    cv.Optional(CONF_NORMALIZED_OFFSET_SLOPE, default=0): cv.float_,
-                    cv.Optional(CONF_TIME_CONSTANT, default=0): cv.int_,
-                }
             ),
             cv.Optional(CONF_TEMPERATURE_ACCELERATION): cv.Schema(
                 {
@@ -340,7 +333,7 @@ async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     await i2c.register_i2c_device(var, config)
-    cg.add(var.set_type(SEN5X_TYPESS[config[CONF_TYPE]]))
+    cg.add(var.set_type(SEN6X_TYPES[config[CONF_TYPE]]))
     for key, funcName in SENSOR_MAP.items():
         if cfg := config.get(key):
             sens = await sensor.new_sensor(cfg)
@@ -449,20 +442,19 @@ async def sen6x_saph_to_code(config, action_id, template_arg, args):
 
 
 SEN5X_TEMPERATURE_COMPENSATION_SCHEMA = cv.Schema(
-        {
-            cv.GenerateID(): cv.use_id(SEN6XComponent),
-            cv.Optional(CONF_OFFSET, default=0.0): cv.templatable(
-                cv.float_range(min=-100.0, max=100.0)
-            ),
-            cv.Optional(CONF_NORMALIZED_OFFSET_SLOPE, default=0.0): cv.templatable(
-                cv.float_range(min=-3.0000, max=3.0000)
-            ),
-            cv.Optional(CONF_TIME_CONSTANT, default=0): cv.templatable(
-                cv.int_range(min=0, max=65535),
-            ),
-            cv.Optional(CONF_SLOT, default=0): cv.templatable(cv.int_range(0, 4)),
-        }
-
+    {
+        cv.GenerateID(): cv.use_id(SEN6XComponent),
+        cv.Optional(CONF_OFFSET, default=0.0): cv.templatable(
+            cv.float_range(min=-100.0, max=100.0)
+        ),
+        cv.Optional(CONF_NORMALIZED_OFFSET_SLOPE, default=0.0): cv.templatable(
+            cv.float_range(min=-3.0000, max=3.0000)
+        ),
+        cv.Optional(CONF_TIME_CONSTANT, default=0): cv.templatable(
+            cv.int_range(min=0, max=65535),
+        ),
+        cv.Optional(CONF_SLOT, default=0): cv.templatable(cv.int_range(0, 4)),
+    }
 )
 
 

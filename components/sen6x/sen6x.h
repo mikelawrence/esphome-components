@@ -10,23 +10,26 @@
 namespace esphome {
 namespace sen6x {
 
-enum Sen6xType : uint8_t { SEN50, SEN54, SEN55, 
-  SEN6X_SM_START,
-  SEN6X_SM_START_1,
-  SEN6X_SM_GET_SN,
-  SEN6X_SM_GET_PN,
-  SEN6X_SM_GET_FW,
-  SEN6X_SM_SET_ACCEL,
-  SEN6X_SM_SET_VOCB,
-  SEN6X_SM_SET_VOCT,
-  SEN6X_SM_SET_NOXT,
-  SEN6X_SM_SET_TP,
-  SEN6X_SM_SET_CO2ASC,
-  SEN6X_SM_SET_CO2AC,
-  SEN6X_SM_SENSOR_CHECK,
-  SEN6X_SM_START_MEAS,
-  SEN6X_SM_DONE
+enum class Sen6xStates : uint8_t {
+  SM_START,
+  SM_START_1,
+  SM_GET_SN,
+  SM_GET_SN_1,
+  SM_GET_PN,
+  SM_GET_FW,
+  SM_SET_ACCEL,
+  SM_SET_VOCB,
+  SM_SET_VOCT,
+  SM_SET_NOXT,
+  SM_SET_TP,
+  SM_SET_CO2ASC,
+  SM_SET_CO2AC,
+  SM_SENSOR_CHECK,
+  SM_START_MEAS,
+  SM_DONE
 };
+
+enum class Sen6xType : uint8_t { SEN62, SEN63C, SEN65, SEN66, SEN68, SEN69C, UNKNOWN };
 
 struct GasTuning {
   uint16_t index_offset;
@@ -70,7 +73,7 @@ struct TemperatureAcceleration {
 // Prevents wear of the flash because of too many write operations
 static const uint32_t SHORTEST_BASELINE_STORE_INTERVAL = 2 * 60 * 60 * 1000;
 
-class SEN6XComponent : public PollingComponent, public sensirion_common::SensirionI2CDevice {
+class Sen6xComponent : public PollingComponent, public sensirion_common::SensirionI2CDevice {
   SUB_SENSOR(pm_1_0_sensor)
   SUB_SENSOR(pm_2_5_sensor)
   SUB_SENSOR(pm_4_0_sensor)
@@ -129,7 +132,7 @@ class SEN6XComponent : public PollingComponent, public sensirion_common::Sensiri
   void perform_forced_co2_recalibration(uint16_t co2);
 
  protected:
-  void internal_setup_(Sen6xSetupStates state);
+  void internal_setup_(Sen6xStates state);
   bool start_measurements_();
   bool stop_measurements_();
   bool write_tuning_parameters_(uint16_t i2c_command, const GasTuning &tuning);
