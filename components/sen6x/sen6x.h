@@ -10,7 +10,7 @@
 namespace esphome {
 namespace sen6x {
 
-enum class Sen6xStates : uint8_t {
+enum class SetupStates : uint8_t {
   SM_START,
   SM_START_1,
   SM_GET_SN,
@@ -74,24 +74,26 @@ struct TemperatureAcceleration {
 static const uint32_t SHORTEST_BASELINE_STORE_INTERVAL = 2 * 60 * 60 * 1000;
 
 class Sen6xComponent : public PollingComponent, public sensirion_common::SensirionI2CDevice {
-  SUB_SENSOR(pm_1_0_sensor)
-  SUB_SENSOR(pm_2_5_sensor)
-  SUB_SENSOR(pm_4_0_sensor)
-  SUB_SENSOR(pm_10_0_sensor)
-  SUB_SENSOR(temperature_sensor)
-  SUB_SENSOR(humidity_sensor)
-  SUB_SENSOR(voc_sensor)
-  SUB_SENSOR(nox_sensor)
-  SUB_SENSOR(co2_sensor)
-  SUB_SENSOR(hcho_sensor)
+  SUB_SENSOR(pm_1_0)
+  SUB_SENSOR(pm_2_5)
+  SUB_SENSOR(pm_4_0)
+  SUB_SENSOR(pm_10_0)
+  SUB_SENSOR(temperature)
+  SUB_SENSOR(humidity)
+  SUB_SENSOR(voc)
+  SUB_SENSOR(nox)
+  SUB_SENSOR(co2)
+  SUB_SENSOR(hcho)
   SUB_SENSOR(co2_ambient_pressure_source)
 
  public:
   void setup() override;
   void dump_config() override;
   void update() override;
-  void set_store_voc_baseline(bool store_voc_baseline) { this->store_voc_baseline_ = store_voc_baseline; }
-  void set_type(Sen5xType type) { this->type_ = type; }
+  void set_store_voc_algorithm_state(bool store_voc_algorithm_state) {
+    this->store_voc_algorithm_state_ = store_voc_algorithm_state;
+  }
+  void set_type(Sen6xType type) { this->type_ = type; }
   void set_voc_algorithm_tuning(uint16_t index_offset, uint16_t learning_time_offset_hours,
                                 uint16_t learning_time_gain_hours, uint16_t gating_max_duration_minutes,
                                 uint16_t std_initial, uint16_t gain_factor) {
@@ -132,18 +134,18 @@ class Sen6xComponent : public PollingComponent, public sensirion_common::Sensiri
   void perform_forced_co2_recalibration(uint16_t co2);
 
  protected:
-  void internal_setup_(Sen6xStates state);
+  void internal_setup_(SetupStates state);
   bool start_measurements_();
   bool stop_measurements_();
   bool write_tuning_parameters_(uint16_t i2c_command, const GasTuning &tuning);
   bool write_temperature_compensation_(const TemperatureCompensation &compensation);
-  bool write_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
   bool write_temperature_acceleration_();
   bool write_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
 
   char serial_number_[17] = "UNKNOWN";
-  uint16_t voc_baseline_state_[4]{0};
-  uint32_t voc_baseline_time_;
+  uint16_t voc_algorithm_state_[4]{0};
+  sensor::Sensor *ambient_pressure_compensation_source_;
+  uint32_t voc_algorithm_time_;
   uint16_t ambient_pressure_compensation_{0};
   uint8_t firmware_major_{0xFF};
   uint8_t firmware_minor_{0xFF};
@@ -151,16 +153,16 @@ class Sen6xComponent : public PollingComponent, public sensirion_common::Sensiri
   bool running_{false};
   bool updating_{false};
   bool busy_{false};
-  bool baseline_error_{false};
-  
+  bool voc_algorithm_error_{false};
+
   optional<Sen6xType> type_;
   optional<GasTuning> voc_tuning_params_;
   optional<GasTuning> nox_tuning_params_;
   optional<TemperatureCompensation> temperature_compensation_;
+  optional<TemperatureAcceleration> temperature_acceleration_;
   optional<bool> auto_self_calibration_;
   optional<uint16_t> altitude_compensation_;
-  optional<uint16_t> ambient_pressure_compensation_;
-  optional<bool> store_algorithm_state_;
+  optional<bool> store_voc_algorithm_state_;
 
   ESPPreferenceObject pref_;
 };

@@ -55,10 +55,10 @@ DEPENDENCIES = ["i2c"]
 AUTO_LOAD = ["sensirion_common"]
 
 sen6x_ns = cg.esphome_ns.namespace("sen6x")
-SEN6XComponent = sen6x_ns.class_(
-    "SEN6XComponent", cg.PollingComponent, sensirion_common.SensirionI2CDevice
+Sen6xComponent = sen6x_ns.class_(
+    "Sen6xComponent", cg.PollingComponent, sensirion_common.SensirionI2CDevice
 )
-SEN6XType = sen6x_ns.enum("SEN6XType", is_class=True)
+Sen6xType = sen6x_ns.enum("Sen6xType", is_class=True)
 
 
 CONF_K = "k"
@@ -92,12 +92,12 @@ SEN68 = "SEN68"
 SEN69C = "SEN69C"
 
 SEN6X_TYPES = {
-    SEN62: SEN6XType.SEN62,
-    SEN63C: SEN6XType.SEN63C,
-    SEN65: SEN6XType.SEN65,
-    SEN66: SEN6XType.SEN66,
-    SEN68: SEN6XType.SEN68,
-    SEN69C: SEN6XType.SEN69C,
+    SEN62: Sen6xType.SEN62,
+    SEN63C: Sen6xType.SEN63C,
+    SEN65: Sen6xType.SEN65,
+    SEN66: Sen6xType.SEN66,
+    SEN68: Sen6xType.SEN68,
+    SEN69C: Sen6xType.SEN69C,
 }
 
 
@@ -148,7 +148,7 @@ GROUP_COMPENSATION = "Compensation Group: 'altitude_compensation' and 'ambient_p
 BASE_SCHEMA = (
     cv.Schema(
         {
-            cv.GenerateID(): cv.declare_id(SEN6XComponent),
+            cv.GenerateID(): cv.declare_id(Sen6xComponent),
             cv.Optional(CONF_PM_1_0): sensor.sensor_schema(
                 unit_of_measurement=UNIT_MICROGRAMS_PER_CUBIC_METER,
                 icon=ICON_CHEMICAL_WEAPON,
@@ -323,7 +323,7 @@ CO2_SETTING_MAP = {
 
 
 def final_validate(config):
-    i2c.final_validate_device_schema("sen5x", max_frequency="100kHz")(config)
+    i2c.final_validate_device_schema("sen6x", max_frequency="100kHz")(config)
 
 
 FINAL_VALIDATE_SCHEMA = final_validate
@@ -350,7 +350,7 @@ async def to_code(config):
             )
         )
     if cfg := config.get(CONF_VOC, {}).get(CONF_STORE_ALGORITHM_STATE):
-        cg.add(var.set_store_voc_baseline(cfg))
+        cg.add(var.set_store_voc_algorithm_state(cfg))
     if cfg := config.get(CONF_NOX, {}).get(CONF_ALGORITHM_TUNING):
         cg.add(
             var.set_nox_algorithm_tuning(
@@ -386,7 +386,7 @@ async def to_code(config):
             cg.add(var.set_ambient_pressure_compensation_source(sens))
 
 
-SEN6X_ACTION_SCHEMA = maybe_simple_id({cv.GenerateID(): cv.use_id(SEN6XComponent)})
+SEN6X_ACTION_SCHEMA = maybe_simple_id({cv.GenerateID(): cv.use_id(Sen6xComponent)})
 
 
 @automation.register_action(
@@ -409,7 +409,7 @@ async def sen6x_ah_to_code(config, action_id, template_arg, args):
 
 SEN6X_VALUE_ACTION_SCHEMA = maybe_simple_id(
     {
-        cv.GenerateID(): cv.use_id(SEN6XComponent),
+        cv.GenerateID(): cv.use_id(Sen6xComponent),
         cv.Required(CONF_VALUE): cv.templatable(cv.positive_int),
     }
 )
@@ -441,9 +441,9 @@ async def sen6x_saph_to_code(config, action_id, template_arg, args):
     return var
 
 
-SEN5X_TEMPERATURE_COMPENSATION_SCHEMA = cv.Schema(
+SEN6X_TEMPERATURE_COMPENSATION_SCHEMA = cv.Schema(
     {
-        cv.GenerateID(): cv.use_id(SEN6XComponent),
+        cv.GenerateID(): cv.use_id(Sen6xComponent),
         cv.Optional(CONF_OFFSET, default=0.0): cv.templatable(
             cv.float_range(min=-100.0, max=100.0)
         ),
@@ -459,11 +459,11 @@ SEN5X_TEMPERATURE_COMPENSATION_SCHEMA = cv.Schema(
 
 
 @automation.register_action(
-    "sen5x.set_temperature_compensation",
+    "sen6x.set_temperature_compensation",
     SetTemperatureCompensationAction,
-    SEN5X_TEMPERATURE_COMPENSATION_SCHEMA,
+    SEN6X_TEMPERATURE_COMPENSATION_SCHEMA,
 )
-async def sen5x_stc_to_code(config, action_id, template_arg, args):
+async def sen6x_stc_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
     if cfg := config.get(CONF_OFFSET):

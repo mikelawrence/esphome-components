@@ -7,18 +7,18 @@
 namespace esphome {
 namespace sen6x {
 
-template<typename... Ts> class StartFanAction : public Action<Ts...>, public Parented<SEN6XComponent> {
+template<typename... Ts> class StartFanCleaningAction : public Action<Ts...>, public Parented<Sen6xComponent> {
  public:
   void play(const Ts &...x) override { this->parent_->start_fan_cleaning(); }
 };
 
-template<typename... Ts> class ActivateHeaterAction : public Action<Ts...>, public Parented<SEN6XComponent> {
+template<typename... Ts> class ActivateHeaterAction : public Action<Ts...>, public Parented<Sen6xComponent> {
  public:
   void play(const Ts &...x) override { this->parent_->activate_heater(); }
 };
 
 template<typename... Ts>
-class SetAmbientPressureCompensationAction : public Action<Ts...>, public Parented<SEN6XComponent> {
+class SetAmbientPressureCompensationAction : public Action<Ts...>, public Parented<Sen6xComponent> {
  public:
   void play(const Ts &...x) override {
     auto value = this->value_.value(x...);
@@ -30,7 +30,7 @@ class SetAmbientPressureCompensationAction : public Action<Ts...>, public Parent
 };
 
 template<typename... Ts>
-class PerformForcedCo2RecalibrationAction : public Action<Ts...>, public Parented<SEN5XComponent> {
+class PerformForcedCo2RecalibrationAction : public Action<Ts...>, public Parented<Sen6xComponent> {
  public:
   void play(const Ts &...x) override {
     auto value = this->value_.value(x...);
@@ -42,7 +42,7 @@ class PerformForcedCo2RecalibrationAction : public Action<Ts...>, public Parente
 };
 
 template<typename... Ts>
-class SetTemperatureCompensationAction : public Action<Ts...>, public Parented<SEN5XComponent> {
+class SetTemperatureCompensationAction : public Action<Ts...>, public Parented<Sen6xComponent> {
  public:
   void play(const Ts &...x) override {
     auto offset = this->offset_.value(x...);
