@@ -2,8 +2,8 @@ substitutions:
   ref: main
 
 esphome:
-  name: test-sen6x-rp2040
-  friendly_name: Test SEN6X Component with RP2040
+  name: test-sen5x-rp2040
+  friendly_name: Test SEN5X Component with RP2040
 
 rp2040:
   board: rpipicow

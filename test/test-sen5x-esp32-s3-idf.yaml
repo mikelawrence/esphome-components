@@ -2,8 +2,8 @@ substitutions:
   ref: main
 
 esphome:
-  name: test-sen6x-esp32-s3-idf
-  friendly_name: Test SEN6X Component with ESP32-S3 and ESP-IDF Framework
+  name: test-sen5x-esp32-s3-idf
+  friendly_name: Test SEN5X Component with ESP32-S3 and ESP-IDF Framework
 
 esp32:
   variant: ESP32S3
@@ -73,6 +73,7 @@ sensor:
     voc:
       name: "VOC"
       accuracy_decimals: 0
+      store_algorithm_state: true
       algorithm_tuning:
         index_offset: 100
         learning_time_offset_hours: 12
