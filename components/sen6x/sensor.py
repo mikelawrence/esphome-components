@@ -120,22 +120,22 @@ def _gas_sensor(
             cv.Optional(CONF_ALGORITHM_TUNING): cv.Schema(
                 {
                     cv.Optional(CONF_INDEX_OFFSET, default=index_offset): cv.int_range(
-                        1, 250
+                        min=1, max=250
                     ),
                     cv.Optional(
                         CONF_LEARNING_TIME_OFFSET_HOURS, default=learning_time_offset
-                    ): cv.int_range(1, 1000),
+                    ): cv.int_range(min=1, max=1000),
                     cv.Optional(
                         CONF_LEARNING_TIME_GAIN_HOURS, default=learning_time_gain
-                    ): cv.int_range(1, 1000),
+                    ): cv.int_range(min=1, max=1000),
                     cv.Optional(
                         CONF_GATING_MAX_DURATION_MINUTES, default=gating_max_duration
-                    ): cv.int_range(0, 3000),
+                    ): cv.int_range(min=0, max=3000),
                     cv.Optional(CONF_STD_INITIAL, default=std_initial): cv.int_range(
-                        10, 5000
+                        min=10, max=5000
                     ),
                     cv.Optional(CONF_GAIN_FACTOR, default=gain_factor): cv.int_range(
-                        1, 1000
+                        min=1, max=1000
                     ),
                 }
             )
@@ -190,6 +190,15 @@ BASE_SCHEMA = (
                 device_class=DEVICE_CLASS_HUMIDITY,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
+            cv.Optional(CONF_TEMPERATURE_COMPENSATION): cv.Schema(
+                {
+                    cv.Required(CONF_OFFSET): cv.float_range(min=-100.0, max=100.0),
+                    cv.Required(CONF_NORMALIZED_OFFSET_SLOPE): cv.float_range(
+                        min=-3.2768, max=3.2767
+                    ),
+                    cv.Required(CONF_TIME_CONSTANT): cv.int_range(min=0, max=65565),
+                }
+            ),
             cv.Optional(CONF_TEMPERATURE_ACCELERATION): cv.Schema(
                 {
                     cv.Required(CONF_K): cv.float_range(min=0.0, max=6535.5),
@@ -202,6 +211,33 @@ BASE_SCHEMA = (
     )
     .extend(cv.polling_component_schema("60s"))
     .extend(i2c.i2c_device_schema(0x6B))
+)
+
+CO2_SCHEMA = cv.Schema(
+    {
+        cv.Optional(CONF_CO2): sensor.sensor_schema(
+            unit_of_measurement=UNIT_PARTS_PER_MILLION,
+            icon=ICON_MOLECULE_CO2,
+            accuracy_decimals=0,
+            device_class=DEVICE_CLASS_CARBON_DIOXIDE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ).extend(
+            cv.Schema(
+                {
+                    cv.Optional(
+                        CONF_AUTOMATIC_SELF_CALIBRATION, default=True
+                    ): cv.boolean,
+                    cv.Exclusive(
+                        CONF_ALTITUDE_COMPENSATION, GROUP_COMPENSATION
+                    ): cv.int_range(min=0, max=3000),
+                    cv.Exclusive(
+                        CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE,
+                        GROUP_COMPENSATION,
+                    ): cv.use_id(sensor.Sensor),
+                }
+            )
+        ),
+    }
 )
 
 VOC_SCHEMA = cv.Schema(
@@ -241,41 +277,13 @@ HCHO_SCHEMA = cv.Schema(
         cv.Optional(CONF_HCHO): sensor.sensor_schema(
             unit_of_measurement=UNIT_PARTS_PER_BILLION,
             icon=ICON_MOLECULE,
-            accuracy_decimals=1,
-            state_class=STATE_CLASS_MEASUREMENT,
-        ),
-    }
-)
-
-CO2_SCHEMA = cv.Schema(
-    {
-        cv.Optional(CONF_CO2): sensor.sensor_schema(
-            unit_of_measurement=UNIT_PARTS_PER_MILLION,
-            icon=ICON_MOLECULE_CO2,
             accuracy_decimals=0,
-            device_class=DEVICE_CLASS_CARBON_DIOXIDE,
             state_class=STATE_CLASS_MEASUREMENT,
-        ).extend(
-            cv.Schema(
-                {
-                    cv.Optional(
-                        CONF_AUTOMATIC_SELF_CALIBRATION, default=True
-                    ): cv.boolean,
-                    cv.Exclusive(
-                        CONF_ALTITUDE_COMPENSATION, GROUP_COMPENSATION
-                    ): cv.int_range(min=0, max=3000),
-                    cv.Exclusive(
-                        CONF_AMBIENT_PRESSURE_COMPENSATION_SOURCE,
-                        GROUP_COMPENSATION,
-                    ): cv.use_id(sensor.Sensor),
-                }
-            )
         ),
     }
 )
 
 SEN65_SCHEMA = BASE_SCHEMA.extend(VOC_SCHEMA).extend(NOX_SCHEMA)
-
 
 CONFIG_SCHEMA = cv.Schema(
     cv.typed_schema(

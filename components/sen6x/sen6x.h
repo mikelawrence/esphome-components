@@ -111,9 +111,9 @@ class Sen6xComponent : public PollingComponent, public sensirion_common::Sensiri
     GasTuning tuning_params;
     tuning_params.index_offset = index_offset;
     tuning_params.learning_time_offset_hours = learning_time_offset_hours;
-    tuning_params.learning_time_gain_hours = 12;
+    tuning_params.learning_time_gain_hours = 12;  // set to default per datasheet, not used
     tuning_params.gating_max_duration_minutes = gating_max_duration_minutes;
-    tuning_params.std_initial = 50;
+    tuning_params.std_initial = 50;  // set to default per datasheet, not used
     tuning_params.gain_factor = gain_factor;
     this->nox_tuning_params_ = tuning_params;
   }
@@ -132,9 +132,11 @@ class Sen6xComponent : public PollingComponent, public sensirion_common::Sensiri
   void start_fan_cleaning();
   void activate_heater();
   void perform_forced_co2_recalibration(uint16_t co2);
+  bool busy() { return this->busy_ || this->updating_; };
 
  protected:
   void internal_setup_(SetupStates state);
+  bool has_co2_() const;
   bool start_measurements_();
   bool stop_measurements_();
   bool write_tuning_parameters_(uint16_t i2c_command, const GasTuning &tuning);
