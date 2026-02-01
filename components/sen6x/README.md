@@ -209,58 +209,98 @@ sensor:
 
 ## Actions
 
-Multiple actions are available with this component and all are mutually exclusive. Actions take time to complete.
-While an individual action is running the sensor is otherwise occupied and cannot be accessed. Attempting to run
-an action while another action is already running results in a 'Sensor is busy' log warning. Several actions also
-require the sensor to be in the idle state with no measurements running.
+Several [actions](https://esphome.io/automations/actions/) are available with this component. All are
+mutually exclusive and take time to complete. While an action is running the sensor is otherwise occupied
+and cannot be accessed. Attempting to run another action while another is already running results in a
+'Sensor is busy' log warning. Some actions will stop measurements before executing. All actions are also
+available as Lambda calls.
 
 ### Fan Cleaning
 
-Both sensor families support manual running of the fan cleaning cycle by using the
-`sen6x.start_fan_cleaning` action. Only available with the SEN62, SEN63C, SEN65, SEN66, SEN68 or SEN69C.
+This sensor supports manual running of the fan cleaning cycle by using `start_fan_cleaning`. During the fan
+cleaning process sensor measurements are stopped. The entire fan cleaning sequence takes 12 seconds.
 
-#### `sen6x.start_fan_cleaning` Action
+Note: The Lambda call returns false when the sensor is busy.
 
-This [action](https://esphome.io/automations/actions/) manually starts fan cleaning. During the fan cleaning
-process sensor measurements are paused or stopped, depending on the sensor, while the fan is running at
-the elevated rate. The entire fan cleaning sequence takes 12 seconds.
+#### `start_fan_cleaning`
 
 ```yaml
-on_...:
-  then:
-    - sen6x.start_fan_cleaning: sen54
-```
+button:
+  - platform: template
+    name: "Start Fan Cleaning Action"
+    entity_category: CONFIG
+    on_press: # Action
+      sen6x.start_fan_cleaning: sen66_sensor
+  - platform: template
+    name: "Start Fan Cleaning Template"
+    entity_category: CONFIG
+    on_press: # Lambda call 
+      lambda: !lambda |-
+        id(sen66_sensor).start_fan_cleaning();
+sensor:
+  - platform: sen6x
+    type: SEN66
+    id: sen66_sensor
+    humidity:
+      humidity: "Humidity"
+ ```
 
-You can emulate the SEN5X automatic fan cleaning on a SEN6X sensor by calling the `sen6x.start_fan_cleaning:`
-action periodically.
+You can emulate the SEN5X automatic fan cleaning on this sensor by calling `start_fan_cleaning` periodically.
 
 For example, to clean the fan every 7 days while the device is on, as recommended by the manufacturer, the
 following configuration can be added:
 
 ```yaml
+sensor:
+  - platform: sen6x
+    type: SEN66
+    id: sen66_sensor
+    pm_1_0:
+      name: "PM <1µm Mass concentration"
 interval:
   - interval: 7d
-    then:
-      - sen6x.start_fan_cleaning: my_sen66
+    then: # Action
+      - sen6x.start_fan_cleaning: sen66_sensor
+  - interval: 7d
+    then: # Lambda call
+      lambda: !lambda |-
+        id(sen66_sensor).start_fan_cleaning();
 ```
+
+You should use only one of the intervals in the above yaml.
 
 ### Humidity Sensor Heater
 
 The SEN6X humidity sensor can develop an offset in the humidity reading when exposed to high levels of
 humidity for extended periods of time. It supports a heater similar to the one in the SHT4X. The
-difference is no automatic mode. Instead you have to trigger `sen6x.activate_heater` action occasionally.
+difference is no automatic mode. Instead you have to call `activate_heater` occasionally.
 
-#### `activate_heater` Action
+#### `activate_heater`
 
-This [action](https://esphome.io/automations/actions/) manually starts the heater. First all measurements are
-stopped, then the heater is turned on at 200mW for 1s, finally there is a 20 second delay before
-reenabling the measurements. This is to ensure the heating effects are gone before temperature measurements
-resume. The entire activate heater sequence takes 22 seconds.
+This action manually starts the heater. First measurements are stopped, then the heater is turned on
+at 200mW for 1s, finally there is a 20 second delay before reenabling the measurements. This is to
+ensure the heating effects are gone before temperature measurements resume. The entire activate
+heater sequence takes 22 seconds.
 
 ```yaml
-on_...:
-  then:
-    - sen6x.activate_heater: my_sen66
+button:
+  - platform: template
+    name: "Activate Heater Action"
+    entity_category: CONFIG
+    on_press:
+      sen6x.activate_heater: sen66_sensor
+  - platform: template
+    name: "Activate Heater Template"
+    entity_category: CONFIG
+    on_press:
+      lambda: !lambda |-
+        id(sen66_sensor).activate_heater();
+sensor:
+  - platform: sen6x
+    type: SEN66
+    id: sen66_sensor
+    humidity:
+      humidity: "Humidity"
 ```
 
 ### CO₂ Re-calibration
@@ -275,14 +315,14 @@ take the sensor outside for 5 minutes and then force a manual CO₂ calibration 
 Be sure to watch the log output of your device when you perform this action. If the sensor reports an error
 during the recalibration process it will be reported in the log.
 
-#### `perform_forced_co2_recalibration` Action
+#### `perform_forced_co2_recalibration`
 
 This [action](https://esphome.io/automations/actions/) forces a manual calibration on the CO₂ sensor. Measurements
 are stopped before issuing the forced co2 recalibrate command to the sensor. The entire perform forced co2
 recalibration action takes 2 seconds.
 
-The example below will recalibrate the CO₂ sensor when the "CO₂ Calibrate" button is pressed using the
-"CO₂ Calibration Value" number's current value.
+The example below will recalibrate the CO₂ sensor when either button is pressed using the "CO₂ Calibration Value"
+number's current value.
 
 ```yaml
 number:
@@ -298,12 +338,18 @@ number:
     initial_value: 420
 button:
   - platform: template
-    name: "CO₂ Calibrate"
+    name: "CO₂ Calibrate Action"
     entity_category: CONFIG
     on_press:
-      - sen6x.perform_forced_co2_recalibration:
-          value: !lambda "return id(co2_forced_cal_value).state;"
-          id: sen66_sensor
+      sen6x.perform_forced_co2_recalibration:
+        value: !lambda "return id(co2_forced_cal_value).state;"
+        id: sen66_sensor
+  - platform: template
+    name: "CO₂ Calibrate Template"
+    entity_category: CONFIG
+    on_press:
+      lambda: !lambda |-
+        id(sen66_sensor).perform_forced_co2_recalibration(id(co2_forced_cal_value).state);
 sensor:
   - platform: sen6x
     type: SEN66
@@ -328,9 +374,9 @@ sensor:
     pressure:
       id: pressure_hpa
       filters:
-        - lambda: |-
-            // convert Pa to hPa (or mBar)
-            return x * 0.01;
+        lambda: |-
+          // convert Pa to hPa (or mBar)
+          return x * 0.01;
   - platform: sen6x
     type: SEN69C
     co2:
@@ -338,7 +384,7 @@ sensor:
       ambient_pressure_compensation_source: pressure_hpa
 ```
 
-#### Dynamic example `set_ambient_pressure_compensation` Action
+#### Dynamic example `set_ambient_pressure_compensation`
 
 This [action](https://esphome.io/automations/actions/) updates the current pressure used in CO₂ pressure compensation.
 Must be in hPa or mBar. Note: Once `set_ambient_pressure_compensation` is called `altitude_compensation`, if
@@ -346,14 +392,14 @@ set in the configuration, will be ignored. Only available with SEN63C, SEN66 or 
 
 ```yaml
 sensor:
-  - platform: bmp581
+  - platform: bmp581_i2c
     id: bmp581_sensor
     pressure:
       id: pressure_hpa
       filters:
-        - lambda: |-
-            // convert Pa to hPa (or mBar)
-            return x * 0.01;
+        lambda: |-
+          // convert Pa to hPa (or mBar)
+          return x * 0.01;
     on_value:
       then:
         - lambda: !lambda |-
@@ -363,7 +409,6 @@ sensor:
     id: sen66_sensor
     co2:
       name: "CO₂"
-
 ```
 
 #### Static example with altitude
