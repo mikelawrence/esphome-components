@@ -4,8 +4,7 @@ The `sen6x` sensor platform allows you to use Sensirion
 [SEN6X Series](https://sensirion.com/sen6x-air-quality-sensor-platform)
 Environmental sensors with ESPHome.
 
-The [I²C Bus](/components/i2c) is required in your configuration for this sensor to work.
-This sensor supports both UART and I²C communication. Only I²C communication is implemented in this component.
+The [I²C Bus](/https://esphome.io/components/i2c) is required in your configuration for this sensor to work.
 
 <img src="https://sensirion.com/_next/image?url=https%3A%2F%2Fsensirion.com%2Fmedia%2Fportfolio%2Fseries%2Fimage%2Fa3c23126-f3f9-47a8-98e0-2b8dbda727a5.webp&w=1920&q=75">
 
@@ -128,12 +127,12 @@ sensor:
   - **auto_self_calibration** (*Optional*, boolean): True enables automatic CO₂ self calibration.
   False disables automatic CO₂ calibration. Default is `true`.
   - **altitude_compensation** (*Optional*, integer): When set to altitude (in meters), the CO₂ sensor will be
-  statically compensated for deviations due to current altitude. See [CO₂ Compensation](#co₂-compensation) section below
+  statically compensated for deviations due to current altitude. See [CO₂ Compensation](#co-compensation) section below
   for more information.
   - **ambient_pressure_compensation_source** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#config-id)):
   Sets an external pressure sensor ID (must report in hPA). This will compensate the CO₂ sensor for deviations
   due to current pressure. This correction is applied with each update of the CO₂ sensor. See
-  [CO₂ Compensation](#co₂-compensation) section below for more information.
+  [CO₂ Compensation](#co-compensation) section below for more information.
   - All options from [Sensor](https://esphome.io/components/sensor).
 
 - **voc** (*Optional*): The information for the VOC Index sensor. Only available with SEN65, SEN66, SEN69 or SEN69C.
