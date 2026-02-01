@@ -117,7 +117,7 @@ class Sen6xComponent : public PollingComponent, public sensirion_common::Sensiri
     tuning_params.gain_factor = gain_factor;
     this->nox_tuning_params_ = tuning_params;
   }
-  void set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
+  bool set_temperature_compensation(float offset, float normalized_offset_slope, uint16_t time_constant,
                                     uint8_t slot = 0);
   void set_temperature_acceleration(float k, float p, float t1, float t2) {
     TemperatureAcceleration accel(k, p, t1, t2);
@@ -128,10 +128,10 @@ class Sen6xComponent : public PollingComponent, public sensirion_common::Sensiri
   void set_ambient_pressure_compensation_source(sensor::Sensor *pressure) {
     this->ambient_pressure_compensation_source_ = pressure;
   }
-  void set_ambient_pressure_compensation(uint16_t pressure_in_hpa);
-  void start_fan_cleaning();
-  void activate_heater();
-  void perform_forced_co2_recalibration(uint16_t co2);
+  bool set_ambient_pressure_compensation(uint16_t pressure_in_hpa);
+  bool start_fan_cleaning();
+  bool activate_heater();
+  bool perform_forced_co2_recalibration(uint16_t co2);
   bool busy() { return this->busy_ || this->updating_; };
 
  protected:

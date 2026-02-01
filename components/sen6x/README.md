@@ -369,7 +369,7 @@ you can dynamically adjust pressure compensation by either adding `ambient_press
 configuration for automatic updates or you can periodically call the `sen6x.set_ambient_pressure_compensation`
 action with the current ambient pressure. You can also statically define `altitude_compensation`.
 
-#### Dynamic example with a local sensor
+#### Dynamic example with a sensor
 
 ```yaml
 sensor:
