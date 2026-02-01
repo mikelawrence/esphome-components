@@ -282,6 +282,8 @@ at 200mW for 1s, finally there is a 20 second delay before reenabling the measur
 ensure the heating effects are gone before temperature measurements resume. The entire activate
 heater sequence takes 22 seconds.
 
+Note: The Lambda call returns false when the sensor is busy.
+
 ```yaml
 button:
   - platform: template
@@ -323,6 +325,8 @@ recalibration action takes 2 seconds.
 
 The example below will recalibrate the CO₂ sensor when either button is pressed using the "CO₂ Calibration Value"
 number's current value.
+
+Note: The Lambda call returns false when the sensor is busy or does not have a CO₂ sensor.
 
 ```yaml
 number:
