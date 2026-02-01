@@ -4,7 +4,7 @@ The `sen6x` sensor platform allows you to use Sensirion
 [SEN6X Series](https://sensirion.com/sen6x-air-quality-sensor-platform)
 Environmental sensors with ESPHome.
 
-The [I²C Bus](/https://esphome.io/components/i2c) is required in your configuration for this sensor to work.
+The [I²C Bus](https://esphome.io/components/i2c) is required in your configuration for this sensor to work.
 
 <img src="https://sensirion.com/_next/image?url=https%3A%2F%2Fsensirion.com%2Fmedia%2Fportfolio%2Fseries%2Fimage%2Fa3c23126-f3f9-47a8-98e0-2b8dbda727a5.webp&w=1920&q=75">
 
@@ -218,8 +218,6 @@ require the sensor to be in the idle state with no measurements running.
 
 Both sensor families support manual running of the fan cleaning cycle by using the
 `sen6x.start_fan_cleaning` action. Only available with the SEN62, SEN63C, SEN65, SEN66, SEN68 or SEN69C.
-
-{{< anchor "start_fan_cleaning_action" >}}
 
 #### `sen6x.start_fan_cleaning` Action
 
