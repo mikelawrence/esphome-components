@@ -16,10 +16,14 @@ sensor:
     id: my_sen66
     type: SEN66
     temperature_compensation:
-      offset: 0.0
-      normalized_offset_slope: 0.0
+      offset: 0
+      normalized_offset_slope: 0
       time_constant: 0
-    store_baseline: true
+    temperature_acceleration:
+      k: 20
+      p: 20
+      t1: 100
+      t2: 300
     pm_1_0:
       name: "PM <1µm Mass concentration"
     pm_2_5:
@@ -34,10 +38,25 @@ sensor:
       name: "Humidity"
     voc:
       name: "VOC"
+      store_algorithm_state: true
+      algorithm_tuning:
+        index_offset: 100
+        learning_time_offset_hours: 12
+        learning_time_gain_hours: 12
+        gating_max_duration_minutes: 180
+        std_initial: 50
+        gain_factor: 230
     nox:
       name: "NOx"
+      algorithm_tuning:
+        index_offset: 1
+        learning_time_offset_hours: 12
+        gating_max_duration_minutes: 720
+        gain_factor: 230
     co2:
       name: "CO₂"
+      automatic_self_calibration: false
+      ambient_pressure_compensation_source: pressure_hpa
 ```
 
 ## Configuration variables
@@ -45,7 +64,33 @@ sensor:
 - **type** (*Required*, enum): The type of the connected sensor. Must be one of the following:
   SEN62, SEN63C, SEN65, SEN66, SEN68 or SEN69C.
 
-  - All options from [Sensor](https://esphome.io/components/sensor).
+- **temperature_compensation** (*Optional*, sequence): These parameters allow the user to compensate temperature
+  effects of the customer design by applying custom temperature offsets to the ambient temperature. Only available
+  with SEN62, SEN63C, SEN65, SEN66, SEN69 or SEN69C.
+  See [Temperature Compensation and Acceleration](#temperature-and-acceleration-compensation) section below for more information.
+
+  - **offset** (*Optional*, float): Temperature offset, in °C. Defaults to `0`.
+  - **normalized_offset_slope** (*Optional*, float): Normalized temperature offset slope. Defaults to `0`.
+  - **time_constant** (*Optional*, positive int): Time constant in seconds. Defaults to `0`.
+
+- **temperature_acceleration** (*Optional*): This command allows user to set custom temperature acceleration
+  parameters. Only available with SEN62, SEN63C, SEN65, SEN66, SEN68 or SEN69C.
+
+  - **k** (*Optional*): Filter constant K.
+  - **p** (*Optional*): Filter constant P.
+  - **t1** (*Optional*): Time constant T1 in seconds.
+  - **t2** (*Optional*): Time constant T2 in seconds.
+
+  This is a good starting point for these values.
+
+  | Acceleration Level     |   T1    |   T1    |   K    |   P    |
+  | -----------------------|:-------:|:-------:|:------:|:------:|
+  | Light (IAQM)           |   100   |   300   |   20   |   20   |
+  | Middle                 |   100   |   300   |   50   |   20   |
+  | Strong (Air Purifier)  |   250   |   300   |  150   |   20   |
+
+  For more information see
+  [Temperature Compensation and Acceleration](#temperature-and-acceleration-compensation) section below.
 
 - **pm_1_0** (*Optional*): The information for the **Mass Concentration** sensor for fine particles up to
   1μm in size. Readings in µg/m³.
@@ -93,6 +138,10 @@ sensor:
 
 - **voc** (*Optional*): The information for the VOC Index sensor. Only available with SEN65, SEN66, SEN69 or SEN69C.
 
+  - **store_algorithm_state** (*Optional*, boolean): When set to `true` the VOC algorithm state is saved to flash every
+    2 hours. During setup of the sensor the previously saved algorithm state is loaded and the VOC sensor will
+    skip the initial learning phase.
+    Only available with SEN65, SEN66, SEN68 or SEN69C.
   - **algorithm_tuning** (*Optional*): The VOC algorithm can be customized by tuning 6 different parameters.
     For more details see
     [Engineering Guidelines for SEN5x](https://sensirion.com/media/documents/25AB572C/62B463AA/Sensirion_Engineering_Guidelines_SEN5x.pdf).
@@ -114,16 +163,13 @@ sensor:
     - **gain_factor** (*Optional*): Gain factor to amplify or to attenuate the VOC index output.
       Allowed values are in range 1..1000. The default value is 230.
 
-  - **store_algorithm_state** (*Optional*, boolean): When set to `true` the VOC algorithm state is saved to flash every
-    2 hours. During setup of the sensor the previously saved algorithm state is loaded and the VOC sensor will
-    skip the initial learning phase.
-    Only available with SEN65, SEN66, SEN68 or SEN69C.
-
   - All options from [Sensor](https://esphome.io/components/sensor).
 
 - **nox** (*Optional*): NOx Index. Only available with SEN65, SEN66, SEN69 or SEN69C.
 
   - **algorithm_tuning** (*Optional*): Like VOC the NOx algorithm can be customized by tuning 5 different parameters.
+    For more details see
+    [Engineering Guidelines for SEN5x](https://sensirion.com/media/documents/25AB572C/62B463AA/Sensirion_Engineering_Guidelines_SEN5x.pdf).
 
     - **index_offset** (*Optional*): NOx index representing typical (average) conditions.
       Allowed values are in range 1..250. The default value is 100.
@@ -144,34 +190,6 @@ sensor:
   SEN68 or SEN69C.
   
   - All options from [Sensor](https://esphome.io/components/sensor).
-
-- **temperature_compensation** (*Optional*, sequence): These parameters allow the user to compensate temperature
-  effects of the customer design by applying custom temperature offsets to the ambient temperature. Only available
-  with SEN62, SEN63C, SEN65, SEN66, SEN69 or SEN69C.
-  See [Temperature Compensation](#temperature-compensation) section below for more information.
-
-  - **offset** (*Optional*, float): Temperature offset, in °C. Defaults to `0`.
-  - **normalized_offset_slope** (*Optional*, float): Normalized temperature offset slope. Defaults to `0`.
-  - **time_constant** (*Optional*, positive int): Time constant in seconds. Defaults to `0`.
-
-- **temperature_acceleration** (*Optional*): This command allows user to set custom temperature acceleration
-  parameters. Only available with SEN62, SEN63C, SEN65, SEN66, SEN68 or SEN69C.
-
-  - **k** (*Optional*): Filter constant K.
-  - **p** (*Optional*): Filter constant P.
-  - **t1** (*Optional*): Time constant T1 in seconds.
-  - **t2** (*Optional*): Time constant T2 in seconds.
-
-  This is a good starting point for these values.
-
-  | Acceleration Level     |   T1    |   T1    |   K    |   P    |
-  | -----------------------|:-------:|:-------:|:------:|:------:|
-  | Light (IAQM)           |   100   |   300   |   20   |   20   |
-  | Middle                 |   100   |   300   |   50   |   20   |
-  | Strong (Air Purifier)  |   250   |   300   |  150   |   20   |
-
-  For more information see
-  [SEN6x – Temperature Acceleration and Compensation Instructions](https://sensirion.com/media/documents/C964FCC8/693FD554/PS_AN_SEN6x_Temperature_Compensation_and_Acceleration_Application_No.pdf).
 
 - **address** (*Optional*, int): Manually specify the I²C address of the sensor. Defaults to `0x6B`.
 
@@ -362,7 +380,7 @@ sensor:
       altitude_compensation: 427m
 ```
 
-## Temperature Compensation and Acceleration
+## Temperature and Acceleration Compensation
 
 The SEN6X sensors contain an internal temperature compensation mechanism. The compensated ambient temperature
 is calculated as follows:
