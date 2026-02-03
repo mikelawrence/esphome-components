@@ -107,7 +107,7 @@ void Sen6xComponent::setup() {
     auto start1 = millis();
     uint16_t raw_string[8];
     // Check if measurement is ready before reading the value
-    if (!get_register_retry_(CMD_GET_DATA_READY_STATUS, raw_string, 1, 5)) {
+    if (!this->get_register_retry_(CMD_GET_DATA_READY_STATUS, raw_string, 1, 5)) {
       ESP_LOGE(TAG, "Get Data Ready Status failed");
       this->mark_failed(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
       return;
@@ -124,7 +124,7 @@ void Sen6xComponent::setup() {
     }
 
     // Serial numbers are currently only 16 chars long, same on label, this could change
-    if (!get_register_retry_(CMD_GET_SERIAL_NUMBER, raw_string, 8, 5)) {
+    if (!this->get_register_retry_(CMD_GET_SERIAL_NUMBER, raw_string, 8, 5)) {
       ESP_LOGE(TAG, "Get Serial Number failed");
       this->mark_failed(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
       return;
@@ -135,7 +135,7 @@ void Sen6xComponent::setup() {
     ESP_LOGV(TAG, "Read Serial Number: %s", this->serial_number_);
 
     // 16 chars is more than enough room for the at most 6 chars plus null
-    if (!get_register_retry_(CMD_GET_PRODUCT_NAME, raw_string, 8, 5)) {
+    if (!this->get_register_retry_(CMD_GET_PRODUCT_NAME, raw_string, 8, 5)) {
       ESP_LOGE(TAG, "Get Product Name failed");
       this->mark_failed(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
       return;
@@ -155,7 +155,7 @@ void Sen6xComponent::setup() {
     ESP_LOGV(TAG, "Read Product Name: %.32s", product_name);
 
     uint16_t firmware;
-    if (!get_register_retry_(CMD_GET_FIRMWARE_VERSION, &firmware, 1, 5)) {
+    if (!this->get_register_retry_(CMD_GET_FIRMWARE_VERSION, &firmware, 1, 5)) {
       ESP_LOGE(TAG, "Get Firmware failed");
       this->mark_failed(LOG_STR(ESP_LOG_MSG_COMM_FAIL));
       return;
