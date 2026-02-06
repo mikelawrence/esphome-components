@@ -64,13 +64,11 @@ sensor:
     nox:
       name: "NOₓ"
       accuracy_decimals: 0
-      store_algorithm_state: true
       algorithm_tuning:
         index_offset: 1
         learning_time_offset_hours: 12
         gating_max_duration_minutes: 720
         gain_factor: 230
-    store_baseline: true
     voc:
       name: "VOC"
       accuracy_decimals: 0

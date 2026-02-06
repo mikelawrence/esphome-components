@@ -30,6 +30,7 @@ sensor:
     i2c_id: i2c1_bus
     update_interval: 1s
     type: SEN69C
+    store_baseline: true
     temperature_compensation:
       offset: 0
       normalized_offset_slope: 0
@@ -73,7 +74,6 @@ sensor:
     voc:
       name: "VOC"
       accuracy_decimals: 0
-      store_algorithm_state: true
       algorithm_tuning:
         index_offset: 100
         learning_time_offset_hours: 12
