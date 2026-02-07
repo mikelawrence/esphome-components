@@ -18,7 +18,6 @@ bool SensirionI2CDevice::read_data(uint16_t *data, const uint8_t len, const uint
   this->retry_count_ = 0;
   while ((this->last_error_ = this->read(buf, num_bytes)) != i2c::ERROR_OK) {
     if (this->retry_count_ >= retries) {
-      ESP_LOGE(TAG, "Read failed: err=%d retries=%d", this->last_error_, this->retry_count_);
       return false;
     }
     this->retry_count_++;
@@ -68,8 +67,6 @@ bool SensirionI2CDevice::write_command_(uint16_t command, CommandLen command_len
   this->retry_count_ = 0;
   while ((this->last_error_ = this->write(temp, raw_idx)) != i2c::ERROR_OK) {
     if (this->retry_count_ >= retries) {
-      ESP_LOGE(TAG, "Write failed: reg=0x%X (%d) err=%d retries=%d", command, command_len, this->last_error_,
-               this->retry_count_);
       return false;
     }
     this->retry_count_++;
@@ -81,11 +78,16 @@ bool SensirionI2CDevice::write_command_(uint16_t command, CommandLen command_len
 bool SensirionI2CDevice::get_register_(uint16_t reg, CommandLen command_len, uint16_t *data, const uint8_t len,
                                        const uint8_t delay_ms, const uint8_t retries) {
   if (!this->write_command_(reg, command_len, nullptr, 0, retries)) {
-      return false;
-    }
+    ESP_LOGE(TAG, "Write failed: reg=0x%X (%d) err=%d retries=%d", reg, command_len, this->last_error_,
+             this->retry_count_);
+    return false;
+  }
   uint8_t retry_count = this->retry_count_;
   delay(delay_ms);
   bool result = this->read_data(data, len, retries);
+  if (!result) {
+    ESP_LOGE(TAG, "Read failed: len=%d err=%d retries=%d", len, this->last_error_, this->retry_count_);
+  }
   this->retry_count_ += retry_count;
   return result;
 }

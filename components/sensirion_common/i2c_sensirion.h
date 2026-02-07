@@ -64,10 +64,11 @@ class SensirionI2CDevice : public i2c::I2CDevice {
    * @param data pointer to raw result
    * @param len number of words to read
    * @param delay milliseconds to to wait between sending the I2C command and reading the result
+   * @param retries the number of times to retry the write operation before giving up
    * @return true if reading succeeded
    */
-  bool get_8bit_register(uint8_t i2c_register, uint16_t *data, uint8_t len, uint8_t delay = 0) {
-    return get_register_(i2c_register, ADDR_8_BIT, data, len, delay);
+  bool get_8bit_register(uint8_t i2c_register, uint16_t *data, uint8_t len, uint8_t delay = 0, uint8_t retries = 0)) {
+    return get_register_(i2c_register, ADDR_8_BIT, data, len, delay, retries);
   }
 
   /** Read 1 data word from 8 bit I2C register.
