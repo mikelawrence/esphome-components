@@ -72,6 +72,7 @@ sensor:
     voc:
       name: "VOC"
       accuracy_decimals: 0
+      store_algorithm_state: true
       algorithm_tuning:
         index_offset: 100
         learning_time_offset_hours: 12
