@@ -67,7 +67,7 @@ class SensirionI2CDevice : public i2c::I2CDevice {
    * @param retries the number of times to retry the write operation before giving up
    * @return true if reading succeeded
    */
-  bool get_8bit_register(uint8_t i2c_register, uint16_t *data, uint8_t len, uint8_t delay = 0, uint8_t retries = 0)) {
+  bool get_8bit_register(uint8_t i2c_register, uint16_t *data, uint8_t len, uint8_t delay = 0, uint8_t retries = 0) {
     return get_register_(i2c_register, ADDR_8_BIT, data, len, delay, retries);
   }
 
