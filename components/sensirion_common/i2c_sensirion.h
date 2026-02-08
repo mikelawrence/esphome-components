@@ -14,6 +14,9 @@ namespace sensirion_common {
  * (Applies to read and write - note the I2C command code doesn't need a CRC)
  * Format:
  *   | 16 Bit Command Code | 16 bit Data word 1 | CRC of DW 1 | 16 bit Data word 1 | CRC of DW 2 | ..
+ * Many Sensirion sensors will NACK when busy so using retries instead of delays is an option.
+ * Very your device will NACK when busy before using retries. If you need more than 10 retries it
+ * probably means you need a different approach.
  */
 static const uint8_t CRC_POLYNOMIAL = 0x31;  // default for Sensirion
 

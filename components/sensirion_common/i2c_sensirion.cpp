@@ -86,7 +86,7 @@ bool SensirionI2CDevice::get_register_(uint16_t reg, CommandLen command_len, uin
   delay(delay_ms);
   bool result = this->read_data(data, len, retries);
   if (!result) {
-    ESP_LOGE(TAG, "Read failed: len=%d err=%d retries=%d", len, this->last_error_, this->retry_count_);
+    ESP_LOGE(TAG, "Read failed: (%d) err=%d retries=%d", len, this->last_error_, this->retry_count_);
   }
   this->retry_count_ += retry_count;
   return result;
