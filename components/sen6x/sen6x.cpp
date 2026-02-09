@@ -265,9 +265,13 @@ void Sen6xComponent::internal_setup_(SetupStates state) {
           return;
         }
       }
-      auto delay = if App.get_loop_component_start_time() - this->start_time_ + 1400;
-      ESP_LOGE(TAG, "Delay :%ums", delay);
-      this->set_timeout(delay, [this]() { this->internal_setup_(SetupStates::SM_START_MEAS); });
+
+      ESP_LOGE(TAG, "Current: %ums", App.get_loop_component_start_time());
+      auto delay = 1400 - static_cast<int32_t>(App.get_loop_component_start_time() - this->start_time_);
+      // auto udelay = static_cast<uint32_t>(std::clamp(delay, 0, 1400));
+      ESP_LOGE(TAG, "Delay: %dms", static_cast<uint32_t>(std::clamp(delay, 0l, 1400l)));
+      this->set_timeout(static_cast<uint32_t>(std::clamp(delay, 0l, 1400l)),
+                        [this]() { this->internal_setup_(SetupStates::SM_START_MEAS); });
       return;
     case SetupStates::SM_START_MEAS:
       if (!this->start_measurements_()) {
