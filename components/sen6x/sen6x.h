@@ -2,34 +2,71 @@
 
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
+#include "esphome/components/time/real_time_clock.h"
 #include "esphome/components/sensirion_common/i2c_sensirion.h"
 #include "esphome/core/application.h"
 #include "esphome/core/preferences.h"
 #include <algorithm>
+#include <cstdint>
 
 namespace esphome {
 namespace sen6x {
 
 enum class SetupStates : uint8_t {
-  SM_START,
-  SM_START_1,
-  SM_GET_SN,
-  SM_GET_SN_1,
-  SM_GET_PN,
-  SM_GET_FW,
-  SM_SET_ACCEL,
-  SM_SET_VOCB,
-  SM_SET_VOCT,
-  SM_SET_NOXT,
-  SM_SET_TP,
-  SM_SET_CO2ASC,
-  SM_SET_CO2AC,
-  SM_SENSOR_CHECK,
-  SM_START_MEAS,
-  SM_DONE
+  SM_IDLE,
+  SM_MEAS_INIT,
+  SM_MEAS_GET,
+  SM_MEAS_VOCA,
+  SM_MEAS_PRES,
+  SM_MEAS_DONE,
+  SM_HEAT_INIT,
+  SM_HEAT_ON,
+  SM_HEAT_START,
+  SM_HEAT_DONE,
+  SM_CO2_RECAL_INIT,
+  SM_CO2_RECAL_ON,
+  SM_CO2_RECAL_WAIT,
+  SM_CO2_RECAL_START,
+  SM_CO2_RECAL_DONE,
+  SM_CO2_PRESS_INIT,
+  SM_CO2_PRESS_DONE,
+  SM_FAN_INIT,
+  SM_FAN_ON,
+  SM_FAN_WAIT,
+  SM_FAN_START,
+  SM_FAN_DONE,
+  SM_TEMP_COMP_INIT,
+  SM_TEMP_COMP_DONE,
+  SM_VOC_STATE_INIT,
+  SM_VOC_STATE_DONE,
+  SM_VOC_CHECK_INIT,
+  SM_VOC_CHECK_DONE,
+  SM_SETUP_INIT,
+  SM_SETUP_INIT_WAIT,
+  SM_SETUP_GET_STATUS,
+  SM_SETUP_GET_SN,
+  SM_SETUP_GET_SN_1,
+  SM_SETUP_GET_PN,
+  SM_SETUP_GET_FW,
+  SM_SETUP_SET_ACCEL,
+  SM_SETUP_SET_VOCA,
+  SM_SETUP_SET_VOCT,
+  SM_SETUP_SET_NOXT,
+  SM_SETUP_SET_TP,
+  SM_SETUP_SET_CO2ASC,
+  SM_SETUP_SET_CO2AC,
+  SM_SETUP_SENSOR_CHECK,
+  SM_SETUP_START_MEAS,
+  SM_SETUP_DONE,
 };
 
 enum class Sen6xType : uint8_t { SEN62, SEN63C, SEN65, SEN66, SEN68, SEN69C, UNKNOWN };
+enum class Sen6xVocStatus : uint8_t { NOTHING, WAITING, RESTORED, RESTORED_TIME, UPDATED, NO_PREF, TOO_OLD, ERROR };
+
+struct Sen6xVocBaseline {
+  uint16_t state[4];  // algorithm state is actually uint8_t[8] but uint16_t[4] is the transaction format
+  time_t epoch;       // Used to determine age of algorithm state
+};
 
 struct GasTuning {
   uint16_t index_offset;
@@ -69,9 +106,10 @@ struct TemperatureAcceleration {
   }
 };
 
-// Shortest time interval of 2H (in milliseconds) for storing baseline values.
-// Prevents wear of the flash because of too many write operations
-static const uint32_t SHORTEST_BASELINE_STORE_INTERVAL = 2 * 60 * 60 * 1000;
+// Time interval of 2 hours (in milliseconds) for storing algorithm state
+static const uint32_t ALGORITHM_STATE_STORE_INTERVAL_MS = 2 * 60 * 60 * 1000;
+// Time interval of 2 hours 15 minutes (in seconds) for max age of algorithm state
+static const time_t ALGORITHM_STATE_MAX_AGE = 2 * 60 * 60 + 15 * 60;
 
 class Sen6xComponent : public PollingComponent, public sensirion_common::SensirionI2CDevice {
   SUB_SENSOR(pm_1_0)
@@ -90,10 +128,11 @@ class Sen6xComponent : public PollingComponent, public sensirion_common::Sensiri
   void setup() override;
   void dump_config() override;
   void update() override;
+  void loop() override;
   void set_store_voc_algorithm_state(bool store_voc_algorithm_state) {
     this->store_voc_algorithm_state_ = store_voc_algorithm_state;
   }
-  void set_type(Sen6xType type) { this->type_ = type; }
+  void set_type(Sen6xType type);
   void set_voc_algorithm_tuning(uint16_t index_offset, uint16_t learning_time_offset_hours,
                                 uint16_t learning_time_gain_hours, uint16_t gating_max_duration_minutes,
                                 uint16_t std_initial, uint16_t gain_factor) {
@@ -129,14 +168,15 @@ class Sen6xComponent : public PollingComponent, public sensirion_common::Sensiri
     this->ambient_pressure_compensation_source_ = pressure;
   }
   bool set_ambient_pressure_compensation(uint16_t pressure_in_hpa);
+  void set_time_source(time::RealTimeClock *time) { this->time_source_ = time; }
   bool start_fan_cleaning();
   bool activate_heater();
   bool perform_forced_co2_recalibration(uint16_t co2);
-  bool busy() { return this->busy_ || this->updating_; };
+  bool set_voc_algorithm_state(int32_t epoch);
+  bool is_initialized() const;
 
  protected:
-  void internal_setup_(SetupStates state);
-  bool has_co2_() const;
+  // void internal_setup_(SetupStates state);
   bool start_measurements_();
   bool stop_measurements_();
   bool write_tuning_parameters_(uint16_t i2c_command, const GasTuning &tuning);
@@ -145,17 +185,24 @@ class Sen6xComponent : public PollingComponent, public sensirion_common::Sensiri
   bool write_ambient_pressure_compensation_(uint16_t pressure_in_hpa);
 
   char serial_number_[17] = "UNKNOWN";
-  uint16_t voc_algorithm_state_[4]{0};
+  Sen6xVocBaseline voc_algorithm_state_{0};
   sensor::Sensor *ambient_pressure_compensation_source_;
-  uint32_t start_time_{0};
+  time::RealTimeClock *time_source_;
+  uint32_t voc_algorithm_state_time_{0};
+  uint32_t stop_time_{0};
+  uint32_t state_time_{0};
+  uint32_t state_wait_time_{0};
   uint16_t ambient_pressure_compensation_{0};
+  uint16_t co2_reference_{0};
+  uint16_t ambient_pressure_{0};
+  uint16_t measurement_cmd_;
+  uint8_t measurement_cmd_len_;
   uint8_t firmware_major_{0xFF};
   uint8_t firmware_minor_{0xFF};
-  bool initialized_{false};
-  bool running_{false};
-  bool updating_{false};
-  bool busy_{false};
-  bool voc_algorithm_error_{false};
+  uint8_t command_flag_{0};
+  uint8_t meas_warning_{0};
+  SetupStates loop_state_{SetupStates::SM_SETUP_INIT};
+  Sen6xVocStatus voc_algorithm_state_status_{Sen6xVocStatus::NOTHING};
 
   optional<Sen6xType> type_;
   optional<GasTuning> voc_tuning_params_;

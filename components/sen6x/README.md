@@ -37,7 +37,8 @@ sensor:
       name: "Humidity"
     voc:
       name: "VOC"
-      store_algorithm_state: true
+      algorithm_state_recovery: true
+      algorithm_state_time_source: homeassistant_time
       algorithm_tuning:
         index_offset: 100
         learning_time_offset_hours: 12
@@ -111,7 +112,7 @@ sensor:
 
   - All options from [Sensor](https://esphome.io/components/sensor).
 
-- **temperature** (*Optional*): The information for the Temperature sensor. Only available with SEN62, SEN63C, 
+- **temperature** (*Optional*): The information for the Temperature sensor. Only available with SEN62, SEN63C,
   SEN65, SEN66, SEN68 or SEN69C.
 
   - All options from [Sensor](https://esphome.io/components/sensor).
@@ -125,24 +126,26 @@ sensor:
   SEN63C, SEN66 or SEN69C.
 
   - **auto_self_calibration** (*Optional*, boolean): True enables automatic CO₂ self calibration.
-  False disables automatic CO₂ calibration. Default is `true`.
+    False disables automatic CO₂ calibration. Default is `true`.
   - **altitude_compensation** (*Optional*, integer): When set to altitude (in meters), the CO₂ sensor will be
-  statically compensated for deviations due to current altitude. See [CO₂ Compensation](#co-compensation) section below
-  for more information.
+    statically compensated for deviations due to current altitude. See [CO₂ Compensation](#co-compensation) section below
+    for more information.
   - **ambient_pressure_compensation_source** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#config-id)):
-  Sets an external pressure sensor ID (must report in hPA). This will compensate the CO₂ sensor for deviations
-  due to current pressure. This correction is applied with each update of the CO₂ sensor. See
-  [CO₂ Compensation](#co-compensation) section below for more information.
+    Sets an external pressure sensor ID (must report in hPA). This will compensate the CO₂ sensor for deviations
+    due to current pressure. This correction is applied with each update of the CO₂ sensor. See
+    [CO₂ Compensation](#co-compensation) section below for more information.
   - All options from [Sensor](https://esphome.io/components/sensor).
 
 - **voc** (*Optional*): The information for the VOC Index sensor. Only available with SEN65, SEN66, SEN69 or SEN69C.
 
-  - **store_algorithm_state** (*Optional*, boolean): When set to `true` the VOC algorithm state is saved to flash every
+  - **algorithm_state_recovery** (*Optional*, boolean): When set to `true` the VOC algorithm state is saved to flash every
     2 hours. During setup of the sensor the previously saved algorithm state is loaded and the VOC sensor will
-    skip the initial learning phase.
-    Only available with SEN65, SEN66, SEN68 or SEN69C.
+    skip the initial learning phase. Only available with SEN65, SEN66, SEN68 or SEN69C.
+  - **algorithm_state_time_source** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#config-id)):
+    A time source ID which is used to verify the age of the saved Algorithm State. If Algorithm State is older than 2 hours
+    and 15 minutes the states is dropped. Any older and the benefits of saving the Algorithm State between boots is negated.
   - **algorithm_tuning** (*Optional*): The VOC algorithm can be customized by tuning 6 different parameters.
-    For more details see
+  `algorithm_state_recovery` must defined in conjunction with the variable. For more details see
     [Engineering Guidelines for SEN5x](https://sensirion.com/media/documents/25AB572C/62B463AA/Sensirion_Engineering_Guidelines_SEN5x.pdf).
 
     - **index_offset** (*Optional*): VOC index representing typical (average) conditions.
@@ -424,6 +427,28 @@ sensor:
     co2:
       name: "CO₂"
       altitude_compensation: 427m
+```
+
+### Temperature Compensation
+
+This [action](https://esphome.io/automations/actions/) provides the only to access the other 4 slots in temperature
+compensation. Further information about temperature compensation is available the 
+[Temperature and Acceleration Compensation](#temperature-and-acceleration-compensation) section.
+
+#### `set_temperature_compensation`
+
+```yaml
+button:
+  - platform: template
+    name: "Set Temperature Compensation"
+    entity_category: config
+    on_press:
+      - sen6x.set_temperature_compensation:
+          id: test_sensor
+          offset: 1.2
+          normalized_offset_slope: 0.0
+          time_constant: 30
+          slot: 0
 ```
 
 ## Temperature and Acceleration Compensation
