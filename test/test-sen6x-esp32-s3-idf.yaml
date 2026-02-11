@@ -19,6 +19,10 @@ external_components:
     ref: ${ref}
   components: [sen6x]
 
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
 i2c:
   - id: i2c1_bus
     sda: GPIO48
@@ -72,7 +76,8 @@ sensor:
     voc:
       name: "VOC"
       accuracy_decimals: 0
-      store_algorithm_state: true
+      algorithm_state_recovery: true
+      algorithm_state_time_source: homeassistant_time
       algorithm_tuning:
         index_offset: 100
         learning_time_offset_hours: 12
