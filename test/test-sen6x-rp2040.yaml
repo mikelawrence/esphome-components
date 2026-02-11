@@ -15,6 +15,8 @@ external_components:
     ref: ${ref}
   components: [sen6x]
 
+api:
+
 time:
   - platform: homeassistant
     id: homeassistant_time
