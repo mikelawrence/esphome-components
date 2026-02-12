@@ -15,6 +15,10 @@ external_components:
     ref: ${ref}
   components: [sen6x]
 
+wifi:
+  ssid: MyHomeNetwork
+  password: VerySafePassword
+
 api:
 
 time:
