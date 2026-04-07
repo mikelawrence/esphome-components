@@ -41,9 +41,7 @@ DEPENDENCIES = ["i2c"]
 MULTI_CONF = True
 
 stusb4500_ns = cg.esphome_ns.namespace("stusb4500")
-STUSB4500Hub = stusb4500_ns.class_(
-    "STUSB4500Hub", cg.Component, i2c.I2CDevice
-)
+STUSB4500Hub = stusb4500_ns.class_("STUSB4500Hub", cg.Component, i2c.I2CDevice)
 
 CONF_STUSB4500_HUB_ID = "stusb4500_hub_id"
 
@@ -107,6 +105,7 @@ def validate_disch_time_pdo(value):
     if rvalue != value:
         raise cv.Invalid("VBUS Discharge time to PDO must be a multiple of 24 ms")
     return value
+
 
 HUB_CHILD_SCHEMA = cv.Schema(
     {
@@ -276,10 +275,10 @@ STUSB4500_ACTION_SCHEMA = maybe_simple_id(
 
 
 @automation.register_action(
-    "stusb4500.turn_gpio_on", TurnGpioOn, STUSB4500_ACTION_SCHEMA
+    "stusb4500.turn_gpio_on", TurnGpioOn, STUSB4500_ACTION_SCHEMA, synchronous=True
 )
 @automation.register_action(
-    "stusb4500.turn_gpio_off", TurnGpioOff, STUSB4500_ACTION_SCHEMA
+    "stusb4500.turn_gpio_off", TurnGpioOff, STUSB4500_ACTION_SCHEMA, synchronous=True
 )
 async def stusb4500_fan_to_code(config, action_id, template_arg, args):
     paren = await cg.get_variable(config[CONF_ID])

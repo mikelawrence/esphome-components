@@ -410,10 +410,16 @@ SEN6X_ACTION_SCHEMA = maybe_simple_id({cv.GenerateID(): cv.use_id(Sen6xComponent
 
 
 @automation.register_action(
-    "sen6x.start_fan_cleaning", StartFanCleaningAction, SEN6X_ACTION_SCHEMA
+    "sen6x.start_fan_cleaning",
+    StartFanCleaningAction,
+    SEN6X_ACTION_SCHEMA,
+    synchronous=False,
 )
 @automation.register_action(
-    "sen6x.activate_heater", ActivateHeaterAction, SEN6X_ACTION_SCHEMA
+    "sen6x.activate_heater",
+    ActivateHeaterAction,
+    SEN6X_ACTION_SCHEMA,
+    synchronous=False,
 )
 async def sen6x_action_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -433,11 +439,13 @@ SEN6X_VALUE_ACTION_SCHEMA = maybe_simple_id(
     "sen6x.perform_forced_co2_recalibration",
     PerformForcedCo2RecalibrationAction,
     SEN6X_VALUE_ACTION_SCHEMA,
+    synchronous=False,
 )
 @automation.register_action(
     "sen6x.set_ambient_pressure_compensation",
     SetAmbientPressureCompensationAction,
     SEN6X_VALUE_ACTION_SCHEMA,
+    synchronous=False,
 )
 async def sen6x_uint16_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -468,6 +476,7 @@ SEN6X_TEMPERATURE_COMPENSATION_SCHEMA = cv.Schema(
     "sen6x.set_temperature_compensation",
     SetTemperatureCompensationAction,
     SEN6X_TEMPERATURE_COMPENSATION_SCHEMA,
+    synchronous=False,
 )
 async def sen6x_stc_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)

@@ -428,7 +428,7 @@ SEN5X_ACTION_SCHEMA = maybe_simple_id({cv.GenerateID(): cv.use_id(SEN5XComponent
 
 
 @automation.register_action(
-    "sen5x.start_fan_autoclean", StartFanAction, SEN5X_ACTION_SCHEMA
+    "sen5x.start_fan_autoclean", StartFanAction, SEN5X_ACTION_SCHEMA, synchronous=False
 )
 async def sen5x_fan_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -437,7 +437,10 @@ async def sen5x_fan_to_code(config, action_id, template_arg, args):
 
 
 @automation.register_action(
-    "sen5x.activate_heater", ActivateHeaterAction, SEN5X_ACTION_SCHEMA
+    "sen5x.activate_heater",
+    ActivateHeaterAction,
+    SEN5X_ACTION_SCHEMA,
+    synchronous=False,
 )
 async def sen5x_ah_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
