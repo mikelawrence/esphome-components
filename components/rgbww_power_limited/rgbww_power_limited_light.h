@@ -35,7 +35,6 @@ class RGBWWPowerLimitedLight : public light::LightOutput, public Component {
 
  protected:
   float compute_scale_(float red, float green, float blue, float cw, float ww);
-  void clamp_remote_values_(light::LightState *state, float scale);
 
   output::FloatOutput *red_{nullptr};
   output::FloatOutput *green_{nullptr};
@@ -56,6 +55,8 @@ class RGBWWPowerLimitedLight : public light::LightOutput, public Component {
   float weight_warm_white_{1.0f};
 
   light::LightState *light_state_{nullptr};
+  float requested_brightness_{1.0f};
+  bool internal_call_{false};
 };
 
 }  // namespace rgbww_power_limited

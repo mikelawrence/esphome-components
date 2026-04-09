@@ -1,5 +1,6 @@
 #include "rgbww_power_limited_light.h"
 #include "esphome/core/log.h"
+#include <cmath>
 
 namespace esphome {
 namespace rgbww_power_limited {
@@ -40,27 +41,15 @@ float RGBWWPowerLimitedLight::compute_scale_(float red, float green, float blue,
   return 1.0f;
 }
 
-void RGBWWPowerLimitedLight::clamp_remote_values_(light::LightState *state, float scale) {
-  if (scale >= 0.999f)
-    return;
-
-  float brightness = state->remote_values.get_brightness();
-  if (brightness <= 0.0f)
-    return;
-
-  float new_brightness = brightness * scale;
-  if (new_brightness < 0.01f)
-    new_brightness = 0.01f;
-
-  state->remote_values.set_brightness(new_brightness);
-  state->publish_state();
-
-  ESP_LOGD(TAG, "HA brightness: %.3f -> %.3f (scale=%.3f)", brightness, new_brightness, scale);
-}
-
 void RGBWWPowerLimitedLight::write_state(light::LightState *state) {
   if (this->light_state_ == nullptr)
     this->light_state_ = state;
+
+  // If this is NOT a self-triggered call (from update_max_power or
+  // clamp_remote_values_), capture the user's requested brightness.
+  if (!this->internal_call_) {
+    this->requested_brightness_ = state->remote_values.get_brightness();
+  }
 
   float red, green, blue, cw, ww;
   state->current_values_as_rgbww(&red, &green, &blue, &cw, &ww, this->constant_brightness_);
@@ -87,8 +76,17 @@ void RGBWWPowerLimitedLight::write_state(light::LightState *state) {
 
     ESP_LOGD(TAG, "Power limited: scale=%.3f", scale);
 
-    if (!state->is_transformer_active()) {
-      this->clamp_remote_values_(state, scale);
+    if (!state->is_transformer_active() && !this->internal_call_) {
+      float new_brightness = this->requested_brightness_ * scale;
+      if (new_brightness < 0.01f)
+        new_brightness = 0.01f;
+
+      this->internal_call_ = true;
+      state->remote_values.set_brightness(new_brightness);
+      state->publish_state();
+      this->internal_call_ = false;
+
+      ESP_LOGD(TAG, "HA brightness: requested=%.3f clamped=%.3f", this->requested_brightness_, new_brightness);
     }
   }
 
@@ -109,7 +107,31 @@ void RGBWWPowerLimitedLight::update_max_power(float value) {
   ESP_LOGD(TAG, "Updated max_power to %.3f", this->max_power_);
 
   if (this->light_state_ != nullptr) {
+    // Restore the original requested brightness before re-evaluating,
+    // so compute_scale_ works against the true user request.
+    this->light_state_->remote_values.set_brightness(this->requested_brightness_);
+
+    this->internal_call_ = true;
     this->write_state(this->light_state_);
+    this->internal_call_ = false;
+
+    // Now clamp and publish with the new max_power
+    float red, green, blue, cw, ww;
+    this->light_state_->current_values_as_rgbww(&red, &green, &blue, &cw, &ww, this->constant_brightness_);
+    const float scale = this->compute_scale_(red, green, blue, cw, ww);
+
+    float new_brightness = this->requested_brightness_;
+    if (scale < 0.999f) {
+      new_brightness = this->requested_brightness_ * scale;
+      if (new_brightness < 0.01f)
+        new_brightness = 0.01f;
+    }
+
+    this->light_state_->remote_values.set_brightness(new_brightness);
+    this->light_state_->publish_state();
+
+    ESP_LOGD(TAG, "max_power changed: requested=%.3f displayed=%.3f scale=%.3f", this->requested_brightness_,
+             new_brightness, scale);
   }
 }
 
