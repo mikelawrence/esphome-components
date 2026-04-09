@@ -59,6 +59,9 @@ void RGBWWPowerLimitedLight::clamp_remote_values_(light::LightState *state, floa
 }
 
 void RGBWWPowerLimitedLight::write_state(light::LightState *state) {
+  if (this->light_state_ == nullptr)
+    this->light_state_ = state;
+
   float red, green, blue, cw, ww;
   state->current_values_as_rgbww(&red, &green, &blue, &cw, &ww, this->constant_brightness_);
 
@@ -104,6 +107,10 @@ void RGBWWPowerLimitedLight::update_max_power(float value) {
 
   this->max_power_ = value;
   ESP_LOGD(TAG, "Updated max_power to %.3f", this->max_power_);
+
+  if (this->light_state_ != nullptr) {
+    this->write_state(this->light_state_);
+  }
 }
 
 }  // namespace rgbww_power_limited

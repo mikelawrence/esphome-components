@@ -68,6 +68,7 @@ SET_MAX_POWER_ACTION_SCHEMA = cv.Schema(
     "rgbww_power_limited.set_max_power",
     SetMaxPowerAction,
     SET_MAX_POWER_ACTION_SCHEMA,
+    synchronous=True,
 )
 async def set_max_power_action_to_code(config, action_id, template_arg, args):
     parent = await cg.get_variable(config[CONF_ID])

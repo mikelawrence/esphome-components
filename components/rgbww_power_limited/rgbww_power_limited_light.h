@@ -54,6 +54,8 @@ class RGBWWPowerLimitedLight : public light::LightOutput, public Component {
   float weight_blue_{1.0f};
   float weight_cold_white_{1.0f};
   float weight_warm_white_{1.0f};
+
+  light::LightState *light_state_{nullptr};
 };
 
 }  // namespace rgbww_power_limited
