@@ -1,17 +1,19 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
+from esphome import automation
 from esphome.components import light, output
 from esphome.const import (
-    CONF_OUTPUT_ID,
-    CONF_RED,
-    CONF_GREEN,
     CONF_BLUE,
     CONF_COLD_WHITE,
-    CONF_WARM_WHITE,
     CONF_COLD_WHITE_COLOR_TEMPERATURE,
-    CONF_WARM_WHITE_COLOR_TEMPERATURE,
-    CONF_CONSTANT_BRIGHTNESS,
     CONF_COLOR_INTERLOCK,
+    CONF_CONSTANT_BRIGHTNESS,
+    CONF_GREEN,
+    CONF_ID,
+    CONF_OUTPUT_ID,
+    CONF_RED,
+    CONF_WARM_WHITE,
+    CONF_WARM_WHITE_COLOR_TEMPERATURE,
 )
 
 CONF_MAX_POWER = "max_power"
@@ -22,8 +24,13 @@ CONF_WEIGHT_COLD_WHITE = "weight_cold_white"
 CONF_WEIGHT_WARM_WHITE = "weight_warm_white"
 
 rgbww_power_limited_ns = cg.esphome_ns.namespace("rgbww_power_limited")
+
 RGBWWPowerLimitedLight = rgbww_power_limited_ns.class_(
     "RGBWWPowerLimitedLight", light.LightOutput, cg.Component
+)
+
+SetMaxPowerAction = rgbww_power_limited_ns.class_(
+    "SetMaxPowerAction", automation.Action
 )
 
 CONFIG_SCHEMA = cv.All(
@@ -48,6 +55,26 @@ CONFIG_SCHEMA = cv.All(
         }
     ).extend(cv.COMPONENT_SCHEMA),
 )
+
+SET_MAX_POWER_ACTION_SCHEMA = cv.Schema(
+    {
+        cv.Required(CONF_ID): cv.use_id(RGBWWPowerLimitedLight),
+        cv.Required(CONF_MAX_POWER): cv.templatable(cv.float_range(min=0.01, max=1.0)),
+    }
+)
+
+
+@automation.register_action(
+    "rgbww_power_limited.set_max_power",
+    SetMaxPowerAction,
+    SET_MAX_POWER_ACTION_SCHEMA,
+)
+async def set_max_power_action_to_code(config, action_id, template_arg, args):
+    parent = await cg.get_variable(config[CONF_ID])
+    var = cg.new_Pvariable(action_id, template_arg, parent)
+    template_ = await cg.templatable(config[CONF_MAX_POWER], args, cg.float_)
+    cg.add(var.set_max_power(template_))
+    return var
 
 
 async def to_code(config):

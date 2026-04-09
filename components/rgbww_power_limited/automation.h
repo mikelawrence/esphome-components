@@ -9,6 +9,7 @@ namespace rgbww_power_limited {
 template<typename... Ts> class SetMaxPowerAction : public Action<Ts...> {
  public:
   explicit SetMaxPowerAction(RGBWWPowerLimitedLight *parent) : parent_(parent) {}
+
   TEMPLATABLE_VALUE(float, max_power)
 
   void play(Ts... x) override { this->parent_->update_max_power(this->max_power_.value(x...)); }

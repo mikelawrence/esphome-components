@@ -25,32 +25,35 @@ class RGBWWPowerLimitedLight : public light::LightOutput, public Component {
   void set_weight_blue(float v) { this->weight_blue_ = v; }
   void set_weight_cold_white(float v) { this->weight_cold_white_ = v; }
   void set_weight_warm_white(float v) { this->weight_warm_white_ = v; }
-  void set_light_state(light::LightState *state) { this->light_state_ = state; }
 
   float get_max_power() const { return this->max_power_; }
   float get_setup_priority() const override { return setup_priority::HARDWARE; }
+
   light::LightTraits get_traits() override;
   void write_state(light::LightState *state) override;
   void update_max_power(float value);
 
  protected:
+  float compute_scale_(float red, float green, float blue, float cw, float ww);
+  void clamp_remote_values_(light::LightState *state, float scale);
+
   output::FloatOutput *red_{nullptr};
   output::FloatOutput *green_{nullptr};
   output::FloatOutput *blue_{nullptr};
   output::FloatOutput *cold_white_{nullptr};
   output::FloatOutput *warm_white_{nullptr};
-  light::LightState *light_state_{nullptr};
+
   float cold_white_temperature_{0.0f};
   float warm_white_temperature_{0.0f};
   bool constant_brightness_{false};
   bool color_interlock_{false};
+
   float max_power_{1.0f};
   float weight_red_{1.0f};
   float weight_green_{1.0f};
   float weight_blue_{1.0f};
   float weight_cold_white_{1.0f};
   float weight_warm_white_{1.0f};
-  bool adjusting_{false};
 };
 
 }  // namespace rgbww_power_limited
