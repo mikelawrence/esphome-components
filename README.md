@@ -3,14 +3,17 @@
 The preferred method to add your own components to ESPHome is to use [External Components](https://esphome.io/components/external_components.html#external-components-git).
 
 If you want to make all components available use this config.
-```yaml
+
+``` yaml
 external_components:
   - source:
       type: git
       url: https://github.com/mikelawrence/esphome-components
 ```
+
 If you want to make specific components available use this config.
-```yaml
+
+``` yaml
 external_components:
   - source:
       type: git
@@ -28,7 +31,7 @@ TFMini Plus|TFMini-S| TFLuna
 :---------:|:------:|:-----:
 <img src="https://en.benewake.com/uploadfiles/2023/03/20230328182059608.png"> | <img src="https://en.benewake.com/uploadfiles/2023/03/20230328182039063.jpg"> | <img src="https://en.benewake.com/uploadfiles/2023/03/20230328182002559.jpg">
 
-```yaml
+``` yaml
 # Sample configuration entry example
 external_components:
   - source:
@@ -65,14 +68,17 @@ sensor:
         - throttle: 1s
 
 ```
+
 ### Configuration Variables
+
 + **model** (**Required**, string): The model of the Range Finder Sensor. Options are ```TFMINI_PLUS```, ```TFMINI_S``` or ```TF_LUNA```.
 + **uart_id** (*Optional*, string): Manually specify the ID of the [UART Bus](https://esphome.io/components/uart) if you use multiple UART buses.
-+ **sample_rate** (*Optional*, integer): The frame rate at which the sensor will output sensor data in samples per sec. For the TFMINI_PLUS and TFMINI_S the range is 1-1000. For the TFLuna the range is 1-500. Note when low_power mode is set to true for the TFMINI_S and the TFLuna model the is significantly lower from 1-10. Default is 100. 
-+ **config_pin** (*Optional*, [Pin Schema](https://esphome.io/guides/configuration-types#config-pin-schema)): This pin when connected will be set high to enable UART mode. (*TF_LUNA only*) 
-+ **low_power** (*Optional*, boolean): Turns on low power mode. This also requires sample_rate to be 10 or less. (*TF_LUNA, TFMini-S only*) 
++ **sample_rate** (*Optional*, integer): The frame rate at which the sensor will output sensor data in samples per sec. For the TFMINI_PLUS and TFMINI_S the range is 1-1000. For the TFLuna the range is 1-500. Note when low_power mode is set to true for the TFMINI_S and the TFLuna model the is significantly lower from 1-10. Default is 100.
++ **config_pin** (*Optional*, [Pin Schema](https://esphome.io/guides/configuration-types#config-pin-schema)): This pin when connected will be set high to enable UART mode. (*TF_LUNA only*)
++ **low_power** (*Optional*, boolean): Turns on low power mode. This also requires sample_rate to be 10 or less. (*TF_LUNA, TFMini-S only*)
 
 ### Sensors
+
 + **distance** (*Optional*): Distance in cm. For the TFMINI_PLUS and TFMINI_S the range is 10-1200cm. For the TFLuna the range is 20-800cm. A distance of 10000cm means the sensor is not receiving enough signal, most likely open air. A distance of 0cm means the sensor is saturated and there is no measurement possible. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 + **signal_strength** (*Optional*): Represents the signal strength with a range of 0-65535. The longer the measurement distance, the lower signal strength will be. The lower the reflectivity is, the lower the signal strength will be. When signal strength is less than 100 detection is unreliable and distance is set to 10000cm. When signal strength is 65535 detection is unreliable and distance is set to 0cm. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 + **temperature** (*Optional*): Internal temperature in °C. It's not clear how useful this sensor because it certainly does not measure room temperature. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
@@ -88,11 +94,11 @@ The STUSB4500 is a USB power delivery controller that supports sink up to 100 W 
 
 There are 3 PDOs that you can configure with PD1 fixed at 5V. You can vary PD1's current. If you have all three PDOs configured the STUSB4500 will try to negotiate a contract with the PDOs in the following order: PD3, PD2 and PD1. If you don't want PDO1 negotiated then set ```power_only_above_5v: true```.
 
-The configuration below the STUSB4500 will try to negotiate 12V @ 3A then 9V @ 3A. If neither are available then it won't negotiate at all. 
+The configuration below the STUSB4500 will try to negotiate 12V @ 3A then 9V @ 3A. If neither are available then it won't negotiate at all.
 
 It also creates a ```PD State``` and ```PD Status``` Text Sensor.
 
-```yaml
+``` yaml
 # Sample configuration entry example
 external_components:
   - source:
@@ -122,6 +128,7 @@ text_sensor:
 ```
 
 ### Configuration Variables
+
 + **flash_nvm** (*Optional*, boolean): When set to ```true``` the STUSB4500 NVM will be flashed with the current settings but only if different. To be on the safe side you should not leave this set to ```true```. A power cycle is required to renegotiate. Default is ```false```.
 + **default_nvm** (*Optional*, boolean): When set to ```true``` the STUSB4500 NVM will be flashed with default settings but only if different. To be on the safe side you should not leave this set to ```true```. A power cycle is required to renegotiate. Default is ```false```.
 + **snk_pdo_numb** (*Optional*, integer): Set the number of PDOs that should be negotiated. Range is 1 - 3. A value of 3 means PDO3, PDO2 and PDO1 can be negotiated. A value of 2 means PDO2 and PDO1 can be negotiated. A value of 1 means only PDO1 can be negotiated. Default is 3.
@@ -147,26 +154,32 @@ text_sensor:
 + **power_only_above_5v** (*Optional*, boolean): When set to ```true``` the STUSB4500 will enable V<sub>BUS</sub> only if PDO2 or PDO3 was negotiated. When ```false``` V<sub>BUS</sub> is enabled at 5V when connected to a non-PD charger. The available current is unknown. Default is ```false```.
 
 ### Sensors
+
 + **pd_state** (*Optional*): Current PD State as an integer. Range 0 to 3 where 0 is no PD negotiated. A value of 1, 2 or 3 indicates which PDO was negotiated. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
 ### Text Sensors
+
 + **pd_status** (*Optional*): Easy to read PD State (e.g. "12V @ 3A" ). All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
 ### Actions
-When the GPIO is configured for software control ```gpio_cfg: SW_CTRL_GPIO ``` these actions control the state of the output. 
+
+When the GPIO is configured for software control ```gpio_cfg: SW_CTRL_GPIO``` these actions control the state of the output.
 
 + **stusb4500.turn_gpio_on** Will pull the GPIO low.
 + **stusb4500.turn_gpio_off** Will set the output to High-Z.
 
 Example using automations...
-```
+
+``` yaml
 on_value_range:
   - below: 5.0
     then:
       - stusb4500.turn_gpio_on: pd_controller
 ```
+
 Example in lambdas...
-```
+
+``` yaml
 - lambda: |-
   id(pd_controller).turn_gpio_on();
 ```
@@ -181,30 +194,34 @@ Using the STUSB4500 ESPHome component requires the following steps:
 1. Set the configuration variables to match your requirements. The sample configuration above sets PDO3 to 12V @ 3A, PDO2 to 9V @3A and PDO1 is disabled because ```power_only_above_5v: true```. This means it will first try to negotiate 12V @ 3A. If unavailable then it will try 9V @ 3A. If is unavailable no PD will be negotiated. Either the ```pd_state``` or ```pd_status``` sensor will let you know if there is a problem.
 2. Add ```flash_nvm: true``` to the configuration.
    You should see the following messages in your log.
-     ```log
+
+     ``` log
      [00:10:03][C][stusb4500:112]: STUSB4500:
      [00:10:03][E][stusb4500:119]:   NVM has been flashed, power cycle the device to reload NVM
      ```
+
    If you forgot to add ```flash_nvm: true``` to the configuration you will see an error in the log.
-     ```log
+
+     ``` log
      [00:06:27][C][stusb4500:112]: STUSB4500:
      [00:06:27][E][stusb4500:114]:   NVM does not match current settings, you must set flash_nvm: true
      [00:06:27][C][stusb4500:130]:   PDO3 negotiated 9.00V @ 3.00A, 27.00W
      ```
+
 3. Power cycle your board. Make sure ```NVM matches settings``` is present in the log and that one of your PDOs was negotiated. Configuring the STUSB4500 can be a bit finicky, but keep at it.
-   ```log
+
+   ``` log
    [00:00:19][C][stusb4500:112]: STUSB4500:
    [00:00:19][C][stusb4500:116]:   NVM matches settings
    [00:00:19][C][stusb4500:130]:   PDO3 negotiated 12.00V @ 3.00A, 36.00W
    ```
-4. The STUSB4500 component does check that the NVM is indeed different before flashing it but it is prudent to remove the ```flash_nvm: true``` after it is clear the STUSB4500 is working as configured.
 
+4. The STUSB4500 component does check that the NVM is indeed different before flashing it but it is prudent to remove the ```flash_nvm: true``` after it is clear the STUSB4500 is working as configured.
 
 ## ESPHome C4001 External Component
 
 > [!NOTE]
 > This component is in the process of being added to ESPHome. ESPHome [PR#9327](https://github.com/esphome/esphome/pull/9327).
-
 
 The DFRobot C4001 (SEN0609 or SEN0610) is a millimeter-wave presence detector. The C4001 millimeter-wave presence sensor has the advantage of being able to detect both static and moving objects. It also has a relatively strong anti-interference ability, making it less susceptible to factors such as temperature changes, variations in ambient light, and environmental noise. Whether a person is sitting, sleeping, or in motion, the sensor can quickly detect their presence.
 
@@ -227,7 +244,7 @@ The C4001 sensor maintains settings in flash. When powered on these settings are
 
 More information on the C4001 (SEN0609) sensor is available [here](https://www.dfrobot.com/product-2793.html). Information on the C4001 (SEN0610) sensor is available [here](https://www.dfrobot.com/product-2795.html).
 
-```yaml
+``` yaml
 # Sample configuration entry example
 external_components:
   - source:
@@ -291,18 +308,22 @@ text_sensor:
 ```
 
 ### Configuration Variables
+
 + **mode** (*Required*, enumeration): This sets the operation mode of the sensor. Options are ```PRESENCE``` and ```SPEED_AND_DISTANCE```.
 
 ### Buttons
+
 + **config_save** (*Optional*): When you click this button the current configuration will be saved. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. All Options from [Button Component](https://esphome.io/components/button/index.html#base-button-configuration).
 + **factory_reset** (*Optional*): Clicking this button will perform a factory reset of the module and all configuration values will go back to default. All Options from [Button Component](https://esphome.io/components/button/index.html#base-button-configuration).
 + **restart** (*Optional*): When you click this button the module will restart and all configuration values will remains as previously set. All Options from [Button Component](https://esphome.io/components/button/index.html#base-button-configuration).
 
 ### Binary Sensors
+
 + **config_changed** (*Optional*): When ```true``` the current sensor configuration has been changed but not saved to the sensor. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
 + **occupancy** (*Optional*): In ```PRESENCE``` mode this indicates presence. In ```SPEED_AND_DISTANCE``` mode this indicates a target is being tracked. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
 
 ### Numbers
+
 + **min_range** (*Optional*): This is the minimum detection range. Default is 0.6 meters (m) with a range of 0.6 to 25.0 m. The manual recommends not changing this value. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```PRESENCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 + **max_range** (*Optional*): This is the maximum detection range. Default is 6 meters (m) with a range of 0.6 to 25.0 m. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```PRESENCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 + **trigger_range** (*Optional*): Sets the maximum range at which occupancy can switch to present. The range between max detection range and trigger detection range can NOT cause occupancy to switch to present. Default is 0.6 meters (m) with a range of 0.6 to 25.0 m. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```PRESENCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
@@ -314,24 +335,28 @@ text_sensor:
 + **threshold_factor** (*Optional*): The larger the number the larger the object and more motion is required to trigger the sensor to switch to target tracked state. Default is 5 with a range of 0 to 65535. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 
 ### Sensors
-+ **target_distance** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates distance to target in meters (m). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration). 
+
++ **target_distance** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates distance to target in meters (m). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
 + **target_speed** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates target speed in meters per second (m/s). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
 + **target_energy** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates target energy in no units. When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
 
 ### Switches
+
 + **led_enable** (*Optional*): When turned on the green LED will flash when the sensor has been started. The blue LED cannot be disabled with this command. All Options from [Switch Component](https://esphome.io/components/switch/index.html#base-switch-configuration).
 + **micro_motion_enable** (*Optional*): Turns on micro motion mode. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Switch Component](https://esphome.io/components/switch/index.html#base-switch-configuration).
 
 ### Sensors
-+ **target_distance** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates distance to target in meters (m). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration). 
+
++ **target_distance** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates distance to target in meters (m). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
 + **target_speed** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates target speed in meters per second (m/s). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
 
 ### Actions
+
 + **dfrobot_c4001.factory_reset** Will perform a factory reset of the module and all configuration values will go back to default. The module will restart with these defaults. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. This is much easier to do with a lambda that accidentally performs a factory reset every second.
 
 Example using automations...
 
-```yaml
+``` yaml
 button:
   - platform: template
     name: Factory Reset
@@ -340,8 +365,10 @@ button:
     entity_category: CONFIG
 
 ```
+
 Example in lambdas...
-```
+
+``` yaml
 - lambda: |-
   id(mmwave_sensor).factory_reset();
 ```
@@ -359,8 +386,10 @@ button:
     entity_category: CONFIG
 
 ```
+
 Example in lambdas...
-```
+
+``` yaml
 - lambda: |-
   id(mmwave_sensor).restart();
 ```
@@ -389,17 +418,17 @@ number:
 ```
 
 ### Configuration Variables
+
 + **flip_x_axis** (*Optional*, boolean): When the DL2450 is mounted upside down you can set this to ```true``` to flip the X axis.
 
 ### Numbers
+
 + **installation_angle** (*Optional*): Allows you to change the installation angle in °. Makes it easy to use when installed in a corner. Default is 0° with a range of ±45°. All Options from [Number](https://esphome.io/components/sensor/#config-number).
 
 ## SEN5X External Component
 
-
 > [!NOTE]
 > A Pull Request to change the sen5x component in ESPHome is in progress. ESPHome [PR#9254](https://github.com/esphome/esphome/pull/9254).
-
 
 This external component adds SEN60, SEN63C, SEN65, SEN66 and SEN68 support to the built-in sen5x component. This component extends [PR #8318](https://github.com/esphome/esphome/pull/8318). Only the differences from sen5x component are listed below.
 
@@ -482,24 +511,27 @@ sensor:
     voc:
       name: "VOC"
 ```
+
 ### Configuration Variables
+
 + **model** (**Optional**, string): The model of the Sensirion SEN5X or SEN6X sensor. Options are ```SEN50```, ```SEN54```, ```SEN55```, ```SEN60```, ```SEN63C```, ```SEN65```, ```SEN66``` or ```SEN68```. Use this if the model cannot be read from the sensor. There were reports of a blank model string on a SEN66 sensor.
 + **auto_cleaning_interval** (**Optional**, string): The interval in seconds of the periodic fan-cleaning. Only the SEN50, SEN55 and SEN56 models support automatic fan cleaning.
 
 ### Sensors
-+ **co2** (*Optional*): The Carbon Dioxide (CO₂) level in ppm. Only the SEN63C and SEN66 models have a CO₂ sensor. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
-  - **auto_self_calibration** (*Optional*, boolean): Enables automatic self-calibration (ASC) for the CO₂ sensor. Default is ```true```.
-  - **altitude_compensation** (*Optional*, int): Enable compensating deviations due to current altitude (in metres). Notice: setting altitude_compensation is ignored if ambient_pressure_compensation is set.
-  - **ambient_pressure_compensation_source** (*Optional*, ID): Set an external pressure sensor ID used for ambient pressure compensation. The pressure sensor must report pressure in hPa. The correction is applied before updating the state of the CO₂ sensor.
-+ **hcho** (*Optional*): The Formaldehyde (HCHO) level in ppb. Only the SEN68 model has a HCHO sensor. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
++ **co2** (*Optional*): The Carbon Dioxide (CO₂) level in ppm. Only the SEN63C and SEN66 models have a CO₂ sensor. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
+  + **auto_self_calibration** (*Optional*, boolean): Enables automatic self-calibration (ASC) for the CO₂ sensor. Default is ```true```.
+  + **altitude_compensation** (*Optional*, int): Enable compensating deviations due to current altitude (in metres). Notice: setting altitude_compensation is ignored if ambient_pressure_compensation is set.
+  + **ambient_pressure_compensation_source** (*Optional*, ID): Set an external pressure sensor ID used for ambient pressure compensation. The pressure sensor must report pressure in hPa. The correction is applied before updating the state of the CO₂ sensor.
++ **hcho** (*Optional*): The Formaldehyde (HCHO) level in ppb. Only the SEN68 model has a HCHO sensor. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
 ### Actions
 
 #### sen5x.perform_forced_co2_calibration Action
+
 This action manually calibrates the CO₂ sensor to the provided value in ppm. Let the CO₂ sensor operate normally for at least 3 minutes before performing a forced calibration.
 
-```
+``` yaml
 on_...:
   then:
     - sen5x.perform_forced_calibration:
@@ -510,9 +542,10 @@ on_...:
 ```
 
 #### sen5x.set_ambient_pressure_hpa Action
-This action sets the current pressure (hPa or mbar). Check the datasheet for CO₂ pressure compensation. You can also just set the ID of your pressure sensor with ```ambient_pressure_compensation_source```. Only the SEN63C and SEN66 models have a CO₂ sensor. 
 
-```
+This action sets the current pressure (hPa or mbar). Check the datasheet for CO₂ pressure compensation. You can also just set the ID of your pressure sensor with ```ambient_pressure_compensation_source```. Only the SEN63C and SEN66 models have a CO₂ sensor.
+
+``` yaml
 sensor:
   - platform: pressure_sensor
     on_value:
@@ -523,10 +556,67 @@ sensor:
 ```
 
 #### sen5x.activate_heater Action
+
 This action turns the humidity sensor's heater on for 1s at 200mW. This action only works for the SEN63C, SEN65, SEN66 and SEN68 models. Unlike the SHT4X there is no further configuration nor a way to setup automatic heating interval. I may need to add code to emulate the automatic nature built-in to the SHT4X for the heater.
 
-```
+``` yaml
 on_value:
   then:
     - lambda: !lambda "id(my_sen66)->activate_heater();"
 ```
+
+## ESPHome ESP32 RMT PWM Component
+
+PWM output using the ESP-IDF RMT driver for ESP32 devices.
+
+This component provides a continuous PWM output using an RMT TX channel in infinite loop mode. It exposes a standard ESPHome `output` platform and is suitable for driving loads like fans or LED drivers that expect a hardware PWM signal.
+
+> **Important:** This component has been **tested on ESP32-C3 only**. The implementation uses the generic ESP-IDF RMT driver API and is expected to work on other ESP32 variants with RMT support, but those targets are currently **untested**.
+
+```yaml
+# Sample configuration entry example
+external_components:
+  - source: github://mikelawrence/esphome-components
+    components:
+      - esp32_rmt_pwm
+
+output:
+  - platform: esp32_rmt_pwm
+    id: fan_pwm_output
+    pin: GPIO4
+    frequency: 25kHz
+    rmt_symbols: 96
+
+fan:
+  - platform: speed
+    name: "RMT PWM Fan"
+    output: fan_pwm_output
+    speed_count: 3
+```
+
+### Configuration Variables
+
++ **id** (*Required*, ID)
+  The ID of the output component. This is used to reference the output from other ESPHome components (lights, fans, custom components, etc.).
+
++ **pin** (*Required*, [Pin Schema](https://esphome.io/guides/configuration-types#config-pin-schema))
+  The GPIO pin used for the PWM output signal.
+
++ **frequency** (*Optional*, frequency, default: `25kHz`)
+  The PWM frequency.
+  Internally, the component:
+
+  + Uses an RMT resolution of 10 MHz (100 ns per tick).
+  + Computes the PWM period in ticks as:
+    + `period_ticks = resolution_hz / frequency`
+  + Validates that:
+    + `period_ticks >= 2` (to avoid absurdly high frequencies)
+    + `period_ticks <= 32767` (to fit the 15-bit RMT symbol duration field)
+
+  If the requested frequency falls outside these bounds, the component logs an error and marks itself as failed during setup rather than generating an invalid PWM signal.
+
++ **rmt_symbols** (*Optional*, integer, variant-specific default, minimum: `48`)
+
+  Number of RMT symbols allocated for the TX channel (`mem_block_symbols`).
+
+  This value controls how much RMT memory is reserved for this channel. The component itself uses a single symbol for the PWM period, but the allocation size still affects resource usage and plays more of a role if the implementation is later extended. You should override the default if you need to optimize RMT memory usage or are running multiple RMT-based components.
