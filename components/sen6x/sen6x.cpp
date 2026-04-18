@@ -633,6 +633,7 @@ void Sen6xComponent::loop() {
       ESP_LOGV(TAG, "SM_SETUP_SET_ACCEL State, requested_delay=%ums, actual=%ums", this->state_wait_time_,
                App.get_loop_component_start_time() - this->state_time_);
       if (this->temperature_acceleration_.has_value()) {
+        auto &accel = this->temperature_acceleration_.value();
         if (!this->write_temperature_acceleration_()) {
           this->mark_failed(LOG_STR("Set Temperature Acceleration failed"));
           return;
@@ -646,7 +647,8 @@ void Sen6xComponent::loop() {
       ESP_LOGV(TAG, "SM_SETUP_SET_VOCT State, requested_delay=%ums, actual=%ums", this->state_wait_time_,
                App.get_loop_component_start_time() - this->state_time_);
       if (this->voc_tuning_params_.has_value()) {
-        if (!this->write_tuning_parameters_(CMD_VOC_ALGORITHM_TUNING, this->voc_tuning_params_.value())) {
+        auto &tuning_params = this->voc_tuning_params_.value();
+        if (!this->write_tuning_parameters_(CMD_VOC_ALGORITHM_TUNING, tuning_params)) {
           this->mark_failed(LOG_STR("Set VOC Algorithm Tuning failed"));
           return;
         }
@@ -663,7 +665,8 @@ void Sen6xComponent::loop() {
       ESP_LOGV(TAG, "SM_SETUP_SET_NOXT State, requested_delay=%ums, actual=%ums", this->state_wait_time_,
                App.get_loop_component_start_time() - this->state_time_);
       if (this->nox_tuning_params_.has_value()) {
-        if (!this->write_tuning_parameters_(CMD_NOX_ALGORITHM_TUNING, this->nox_tuning_params_.value())) {
+        auto &tuning_params = this->nox_tuning_params_.value();
+        if (!this->write_tuning_parameters_(CMD_NOX_ALGORITHM_TUNING, tuning_params)) {
           this->mark_failed(LOG_STR("Set NOx Algorithm Tuning failed"));
           return;
         }
@@ -679,7 +682,8 @@ void Sen6xComponent::loop() {
       ESP_LOGV(TAG, "SM_SETUP_SET_TP State, requested_delay=%ums, actual=%ums", this->state_wait_time_,
                App.get_loop_component_start_time() - this->state_time_);
       if (this->temperature_compensation_.has_value()) {
-        if (!this->write_temperature_compensation_(this->temperature_compensation_.value())) {
+        auto &comp = this->temperature_compensation_.value();
+        if (!this->write_temperature_compensation_(comp)) {
           this->mark_failed(LOG_STR("Set Temperature Compensation failed"));
           return;
         }
