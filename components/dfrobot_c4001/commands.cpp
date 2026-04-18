@@ -20,12 +20,6 @@ uint8_t Command::execute(DFRobotC4001Hub *parent) {
     if (this->parent_->send_cmd_(this->cmd_.c_str(), this->cmd_duration_ms_)) {
       this->state_ = STATE_WAIT_ECHO;
     }
-    if (this->cmd_ == "resetSystem") {
-      // resetSystem command only returns prompt, bypass central part of state machine
-      on_message();
-      ESP_LOGV(TAG, "Send Cmd: Shortcutting Reset System Command");
-      this->state_ = STATE_WAIT_PROMPT;
-    }
     return 0;
   }
   // surround state machine with a successful read message
@@ -33,7 +27,12 @@ uint8_t Command::execute(DFRobotC4001Hub *parent) {
     this->read_buffer_ = this->parent_->read_buffer_;
     switch (this->state_) {
       case STATE_WAIT_ECHO:
-        if (strstr(this->read_buffer_, this->cmd_.c_str())) {
+        if (this->cmd_ == "resetSystem") {
+          // resetSystem command might return garbage, accept anything
+          ESP_LOGV(TAG, "Send Cmd: Complete: %s", this->cmd_.c_str());
+          this->state_ = STATE_DONE;
+          return this->error_count_ < 0 ? this->error_count_ : 1;
+        } else if (strstr(this->read_buffer_, this->cmd_.c_str())) {
           this->state_ = STATE_PROCESS;
         }
         break;
@@ -91,7 +90,13 @@ uint8_t Command::execute(DFRobotC4001Hub *parent) {
   }
   // check for timeout
   if (millis() - this->parent_->ts_last_cmd_sent_ > this->timeout_ms_) {
-    if (this->retries_left_ > 0) {
+    if (this->cmd_ == "resetSystem") {
+      // resetSystem command doesn't necessarily return anything, bypass retries
+      ESP_LOGV(TAG, "Send Cmd: Reset System Command Timeout Bypassed");
+      this->state_ = STATE_DONE;
+      // Command done
+      return this->error_count_ < 0 ? this->error_count_ : 1;
+    } else if (this->retries_left_ > 0) {
       this->retries_left_ -= 1;
       ESP_LOGD(TAG, "Command timeout: Retrying");
       this->state_ = STATE_CMD_SEND;
@@ -322,29 +327,28 @@ SetThrFactorCommand::SetThrFactorCommand(float threshold_factor) {
   this->cmd_ = str_sprintf("setThrFactor %.3f", threshold_factor);
 };
 
-SetLedModeCommand1::SetLedModeCommand1(bool led_mode) {
-  this->led_enable_ = led_mode;
-  this->cmd_ = led_mode ? "setLedMode 1 0" : "setLedMode 1 1";
-};
+SetLedModeCommand::SetLedModeCommand(bool value) { this->cmd_ = str_sprintf("setLedMode 1 %d", value ? 0 : 1); };
 
-void SetLedModeCommand1::on_message() {
-  // this command is not in Communication Protocol document it appears to be a leftover from similar products
-  // this command only controls the green LED which flashes when the sensor is running the blue LED is always on when
-  // powered
-  if (strcmp(this->read_buffer_, "Done") == 0) {
-    this->parent_->set_led_enable(this->led_enable_, false);
-    this->done_ = true;  // command is done
-  }
-}
+SetGpioModeCommand::SetGpioModeCommand(bool value) { this->cmd_ = str_sprintf("setGpioMode 1 %d", value ? 1 : 2); };
 
-SetLedModeCommand2::SetLedModeCommand2(bool led_mode) { this->cmd_ = led_mode ? "setLedMode 2 0" : "setLedMode 2 1"; };
+GetGpioModeCommand::GetGpioModeCommand() { this->cmd_ = "getGpioMode 1"; }
 
-void SetLedModeCommand2::on_message() {
-  // this command is not in Communication Protocol document it appears to be a leftover from similar products
-  // this command only controls the green LED which flashes when the sensor is running the blue LED is always on when
-  // powered
-  if (strcmp(this->read_buffer_, "Done") == 0) {
-    this->done_ = true;  // command is done
+void GetGpioModeCommand::on_message() {
+  char *token;
+
+  token = strtok(this->read_buffer_, " ");
+  if (strcmp(token, "Done") == 0) {
+    if (!this->value_.has_value()) {
+      ESP_LOGD(TAG, "Failed to parse response");
+      this->error_ = true;  // command is done
+    } else {
+      this->parent_->set_out_led_enable(this->value_.value() == 1, false);
+      this->done_ = true;  // command is done
+    }
+  } else if (strcmp(token, "Response") == 0) {
+    strtok(NULL, " ");  // ignore this value, always '1'
+    token = strtok(NULL, " ");
+    this->value_ = parse_number<uint8_t>(token);
   }
 }
 
@@ -385,7 +389,8 @@ FactoryResetCommand::FactoryResetCommand() { this->cmd_ = "resetCfg"; }
 void FactoryResetCommand::on_message() {
   if (strstr(this->read_buffer_, "Done")) {
     // reload settings
-    this->parent_->flash_led_enable();
+    this->parent_->set_run_led_enable(true);
+    this->parent_->flash_run_led_enable();
     this->parent_->setup_module();
     this->parent_->config_load();
     this->done_ = true;  // command is done
@@ -402,6 +407,7 @@ void ResetSystemCommand::on_message() {
   if (this->read_config_) {
     this->parent_->config_load();
   }
+  ESP_LOGV(TAG, "Send Cmd: %s received something", this->cmd_.c_str());
   this->done_ = true;  // command is done
 }
 
