@@ -20,8 +20,16 @@ external_components:
       url: https://github.com/mikelawrence/esphome-components
     components: [ tfmini ]
 ```
+## Available Components
 
-## ESPHome TFMini External Component
+* [TFMini](#tfmini-external-component)
+* [STUSB4500](#stusb4500-external-component)
+* [C4001](#c4001-external-component)
+* [LD2450](#ld2450-external-component)
+* [SEN5X](#sen5x-external-component)
+* [ESP32 RMT PWM](#esp32-rmt-pwm-external-component)
+
+## TFMini External Component
 
 These ToF (time of flight) range finder sensors are compact, self-contained range finders. They support both UART and I<sub>2</sub>C communication but this component only supports UART communication.
 
@@ -83,7 +91,7 @@ sensor:
 + **signal_strength** (*Optional*): Represents the signal strength with a range of 0-65535. The longer the measurement distance, the lower signal strength will be. The lower the reflectivity is, the lower the signal strength will be. When signal strength is less than 100 detection is unreliable and distance is set to 10000cm. When signal strength is 65535 detection is unreliable and distance is set to 0cm. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 + **temperature** (*Optional*): Internal temperature in °C. It's not clear how useful this sensor because it certainly does not measure room temperature. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
-## ESPHome STUSB4500 External Component
+## STUSB4500 External Component
 
 The STUSB4500 is a USB power delivery controller that supports sink up to 100 W (20V, 5A). It has Non-Volatile Memory that can be programmed with your PDO profile so when you connect to a USB-C Power Source it will immediately negotiate your power delivery contract.
 
@@ -218,7 +226,7 @@ Using the STUSB4500 ESPHome component requires the following steps:
 
 4. The STUSB4500 component does check that the NVM is indeed different before flashing it but it is prudent to remove the ```flash_nvm: true``` after it is clear the STUSB4500 is working as configured.
 
-## ESPHome C4001 External Component
+## C4001 External Component
 
 > [!NOTE]
 > This component is in the process of being added to ESPHome. ESPHome [PR#9327](https://github.com/esphome/esphome/pull/9327).
@@ -394,9 +402,9 @@ Example in lambdas...
   id(mmwave_sensor).restart();
 ```
 
-## ESPHome LD2450 External Component
+## LD2450 External Component
 
-This custom component adds some functionality to the built-in LD2450 Component. Only the differences are listed below.
+This custom component adds some functionality to the built-in LD2450 Component. Only the differences are listed below. This is a test componenet and may not be supported in the future.
 
 ```yaml
 # Sample configuration entry example
@@ -428,9 +436,9 @@ number:
 ## SEN5X External Component
 
 > [!NOTE]
-> A Pull Request to change the sen5x component in ESPHome is in progress. ESPHome [PR#9254](https://github.com/esphome/esphome/pull/9254).
+> ESPHome now has a SEN6X component. They decided to not use my pull request that supported the SEN6X sensors in the SEN5X component. I missed the comments in the other PR fromm the devs indicating their preference. Kinda sucked but it what it is. I ended up supporting the SEN6X component integration but it's not really the way I would have handled it. I may try to support ESPHome in the future but for now probably not.
 
-This external component adds SEN60, SEN63C, SEN65, SEN66 and SEN68 support to the built-in sen5x component. This component extends [PR #8318](https://github.com/esphome/esphome/pull/8318). Only the differences from sen5x component are listed below.
+This external component adds SEN60, SEN63C, SEN65, SEN66 and SEN68 support to the built-in sen5x component.
 
 Temperature compensation is not working for the SEN6x models. Still waiting on the Sensirion Application Note.
 
@@ -565,7 +573,7 @@ on_value:
     - lambda: !lambda "id(my_sen66)->activate_heater();"
 ```
 
-## ESPHome ESP32 RMT PWM Component
+## ESP32 RMT PWM External Component
 
 PWM output using the ESP-IDF RMT driver for ESP32 devices.
 
