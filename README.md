@@ -436,9 +436,9 @@ number:
 ## SEN5X External Component
 
 > [!NOTE]
-> A Pull Request to change the sen5x component in ESPHome is in progress. ESPHome [PR#9254](https://github.com/esphome/esphome/pull/9254).
+> ESPHome now has a SEN6X component. They decided to not use my pull request that supported the SEN6X sensors in the SEN5X component. I missed the comments in the other PR fromm the devs indicating their preference. Kinda sucked but it what it is. I ended up supporting the SEN6X component integration but it's not really the way I would have handled it. I may try to support ESPHome in the future but for now probably not.
 
-This external component adds SEN60, SEN63C, SEN65, SEN66 and SEN68 support to the built-in sen5x component. This component extends [PR #8318](https://github.com/esphome/esphome/pull/8318). Only the differences from sen5x component are listed below.
+This external component adds SEN60, SEN63C, SEN65, SEN66 and SEN68 support to the built-in sen5x component.
 
 Temperature compensation is not working for the SEN6x models. Still waiting on the Sensirion Application Note.
 
