@@ -131,7 +131,7 @@ jobs:
       - name: ESPHome ${{ matrix.esphome-version }}
         if: steps.test-conditions.outputs.run_test != 0
         # uses: mikelawrence/esphome-build-action@add-compile-args
-        uses: esphome/build-action@v7.3
+        uses: esphome/build-action@4ef4722a2935eac47b7e227fe0e1f8e0f8afcc42
         with:
           # substitutions: '{ "ref": "${{ github.ref_name }}" }'
           substitutions: |
