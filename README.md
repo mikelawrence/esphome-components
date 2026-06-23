@@ -25,6 +25,7 @@ external_components:
 * [TFMini](#tfmini-external-component)
 * [STUSB4500](#stusb4500-external-component)
 * [C4001](#c4001-external-component)
+* [LD2410S](#ld2410s-external-component)
 * [SEN5X](#sen5x-external-component)
 * [ESP32 RMT PWM](#esp32-rmt-pwm-external-component)
 
@@ -401,10 +402,138 @@ Example in lambdas...
   id(mmwave_sensor).restart();
 ```
 
+## LD2410S External Component
+
+This custom component is a direct copy of [PR #8486](https://github.com/esphome/esphome/pull/8486) on ESPHome. The only reason I've copied it here is I doubt it will be merged into ESPHome. So there is risk that it could disappear on ESPHome and it's not setup as an external component in [NovakIrs repository](https://github.com/NovakIrs/esphome/tree/ld2410s). This PR works just fine. Again all credit goes to [NovakIrs](https://github.com/NovakIrs) repository.
+
+```yaml
+# Sample configuration entry example
+external_components:
+  - source:
+      type: git
+      url: https://github.com/mikelawrence/esphome-components
+    components: [ ld2410s ]
+
+uart:
+  - id: ld2410s_uart
+    tx_pin: GPIO17
+    rx_pin: GPIO18
+    baud_rate: 115200
+    parity: NONE
+    stop_bits: 1
+
+ld2410s:
+  uart_id: ld2410s_uart
+
+binary_sensor:
+  - platform: ld2410s
+    has_target:
+      name: MMWAVE Presence
+    has_calibration_running:
+      name: LD2410S Calibration Running
+
+button:
+  - platform: ld2410s
+    calibration:
+      name: Cal Start Auto
+    factory_reset:
+      name: LD2410S Factory Reset
+
+number:
+  - platform: ld2410s
+    max_distance:
+      name: Max Detect Distance
+    min_distance:
+      name: Min Detect Distance
+    no_delay:
+      name: No detect Report Delay
+    status_reporting_frequency:
+      name: Status Reporting Frequency
+    distance_reporting_frequency:
+      name: Distance Reporting Frequency
+    threshold_trigger:
+      name: Threshold Trigger
+    threshold_hold:
+      name: Threshold Hold
+    threshold_snr:
+      name: Threshold SNR
+    threshold_selected_gate:
+      name: Threshold Selected Gate
+
+sensor:
+  - platform: ld2410s
+    target_distance:
+      name: Target Distance
+    calibration_progress:
+      name: Calibration Progress
+
+select:
+  - platform: ld2410s
+    response_speed:
+      name: Response Speed
+
+switch:
+  - platform: ld2410s
+    minimal_output:
+      name: Minimal Output
+
+text_sensor:
+  - platform: ld2410s
+    fw_version:
+      name: Firmware version
+    threshold_triggers:
+      name: Threshold Triggers
+    threshold_holds:
+      name: Threshold Holds
+    threshold_snrs:
+      name: Threshold SNRs
+    energy_values:
+      name: Energy Values
+
+```
+
+### Buttons
+
++ **calibration** (*Optional*): When you click this button the built-in LD2410S Auto-Calibration will start. Be sure to have the room in the idle state, i.e. no people, pets or robot vaccumes running. All Options from [Button Component](https://esphome.io/components/button/index.html#base-button-configuration).
++ **factory_reset** (*Optional*): Clicking this button will perform a factory reset of the module and all configuration values will go back to default. All Options from [Button Component](https://esphome.io/components/button/index.html#base-button-configuration).
+
+### Binary Sensors
++ **has_target** (*Optional*): When ```true``` the radar has detected a target either moving or still. This is effectivly presence. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
++ **occupancy** (*Optional*): When ```true``` Auto-Calibration is running and ```false``` when not. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
+
+### Numbers
+
++ **max_distance** (*Optional*): This is the maximum detection range. Default is ??? meters (m) with a range of 0.5 to 8.0 m. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **min_distance** (*Optional*): This is the minimum detection range. Default is ??? meters (m) with a range of 0.5 to 8.0 m. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **no_delay** (*Optional*): This is the no detection delay. Basically a delay off function. Default is ??? seconds (s) with a range of 0 to 120s. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **status_reporting_frequency** (*Optional*): This is ``has_target`` binary sensor reporting frequency. Default is ??? Hz with a range of 0.5 to Hz. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **distance_reporting_frequency** (*Optional*): This is ``target_distance`` binary sensor reporting frequency. Default is ??? Hz with a range of 0.5 to Hz. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **threshold_trigger** (*Optional*): This is ????. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **threshold_hold** (*Optional*): This is ????. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **threshold_snr** (*Optional*): This is ????. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **threshold_selected_gate** (*Optional*): This is ????. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+
+### Sensors
+
++ **target_distance** (*Optional*): This sensor indicates current distance to target in meters (m). All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
++ **calibration_progress** (*Optional*): This is the current Auto-Calibrtion Status. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
+
+### Selects
+
++ **response_speed** (*Optional*): Turns on micro motion mode. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Switch Component](https://esphome.io/components/switch/index.html#base-select-configuration).
+
+### Text Sensors
+
++ **fw_version** (*Optional*): The is the LD2410S firmware version. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-text-sensor-configuration).
++ **threshold_triggers** (*Optional*): The is the LD2410S firmware version. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-text-sensor-configuration).
++ **threshold_holds** (*Optional*): The is the LD2410S firmware version. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-text-sensor-configuration).
++ **threshold_snrs** (*Optional*): The is the LD2410S firmware version. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-text-sensor-configuration).
++ **fw_version** (*Optional*): The is the LD2410S firmware version. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-text-sensor-configuration).
+
 ## SEN5X External Component
 
 > [!NOTE]
-> ESPHome now has a SEN6X component. They decided to not use my pull request that supported the SEN6X sensors in the SEN5X component. I missed the comments in the other PR fromm the devs indicating their preference. Kinda sucked but it what it is. I ended up supporting the SEN6X component integration but it's not really the way I would have handled it. I may try to support ESPHome in the future but for now probably not.
+> ESPHome now has a SEN6X component. They decided to not use my pull request that supported the SEN6X sensors in the SEN5X component after 6 mounths of work. Kinda sucked but it what it is. I ended up supporting the SEN6X component integration but it's not really the way I would have handled it. I doubt I will support ESPHome directly in the future but I will release my components here.
 
 This external component adds SEN60, SEN63C, SEN65, SEN66 and SEN68 support to the built-in sen5x component.
 
