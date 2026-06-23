@@ -1,0 +1,92 @@
+substitutions:
+  ref: main
+
+esphome:
+  name: test-stusb4500-rp2040
+  friendly_name: Test TFMini Component with RP2040
+
+rp2040:
+  board: rpipicow
+
+external_components:
+  source:
+    type: git
+    url: https://github.com/mikelawrence/esphome-components
+    ref: ${ref}
+  components: [ ld2410s ]
+
+uart:
+  - id: ld2410s_uart
+    tx_pin: GPIO17
+    rx_pin: GPIO18
+    baud_rate: 115200
+    parity: NONE
+    stop_bits: 1
+
+ld2410s:
+  uart_id: ld2410s_uart
+
+binary_sensor:
+  - platform: ld2410s
+    has_target:
+      name: MMWAVE Presence
+    has_calibration_running:
+      name: LD2410S Calibration Running
+
+button:
+  - platform: ld2410s
+    calibration:
+      name: Cal Start Auto
+    factory_reset:
+      name: LD2410S Factory Reset
+
+number:
+  - platform: ld2410s
+    max_distance:
+      name: Max Detect Distance
+    min_distance:
+      name: Min Detect Distance
+    no_delay:
+      name: No detect Report Delay
+    status_reporting_frequency:
+      name: Status Reporting Frequency
+    distance_reporting_frequency:
+      name: Distance Reporting Frequency
+    threshold_trigger:
+      name: Threshold Trigger
+    threshold_hold:
+      name: Threshold Hold
+    threshold_snr:
+      name: Threshold SNR
+    threshold_selected_gate:
+      name: Threshold Selected Gate
+
+sensor:
+  - platform: ld2410s
+    target_distance:
+      name: Target Distance
+    calibration_progress:
+      name: Calibration Progress
+
+select:
+  - platform: ld2410s
+    response_speed:
+      name: Response Speed
+
+switch:
+  - platform: ld2410s
+    minimal_output:
+      name: Minimal Output
+
+text_sensor:
+  - platform: ld2410s
+    fw_version:
+      name: Firmware version
+    threshold_triggers:
+      name: Threshold Triggers
+    threshold_holds:
+      name: Threshold Holds
+    threshold_snrs:
+      name: Threshold SNRs
+    energy_values:
+      name: Energy Values
