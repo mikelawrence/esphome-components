@@ -24,6 +24,9 @@ jobs:
       matrix:
         #### Modify below here to match your project ####
         file:
+          - test/test-ld2410s-esp32-s3-idf
+          - test/test-ld2410s-esp32-s3-ard
+          - test/test-ld2410s-rp2040
           - test/test-sen5x-esp32-s3-idf
           - test/test-sen5x-esp32-s3-ard
           - test/test-sen5x-rp2040
