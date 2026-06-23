@@ -25,7 +25,6 @@ external_components:
 * [TFMini](#tfmini-external-component)
 * [STUSB4500](#stusb4500-external-component)
 * [C4001](#c4001-external-component)
-* [LD2450](#ld2450-external-component)
 * [SEN5X](#sen5x-external-component)
 * [ESP32 RMT PWM](#esp32-rmt-pwm-external-component)
 
@@ -401,37 +400,6 @@ Example in lambdas...
 - lambda: |-
   id(mmwave_sensor).restart();
 ```
-
-## LD2450 External Component
-
-This custom component adds some functionality to the built-in LD2450 Component. Only the differences are listed below. This is a test componenet and may not be supported in the future.
-
-```yaml
-# Sample configuration entry example
-external_components:
-  - source:
-      type: git
-      url: https://github.com/mikelawrence/esphome-components
-    components: [ ld2450 ]
-
-ld2450:
-  id: ld2450_radar
-  flip_x_axis: true
-number:
-  - platform: ld2450
-    ld2450_id: ld2450_radar
-    installation_angle:
-      name: Installation Angle
-
-```
-
-### Configuration Variables
-
-+ **flip_x_axis** (*Optional*, boolean): When the DL2450 is mounted upside down you can set this to ```true``` to flip the X axis.
-
-### Numbers
-
-+ **installation_angle** (*Optional*): Allows you to change the installation angle in °. Makes it easy to use when installed in a corner. Default is 0° with a range of ±45°. All Options from [Number](https://esphome.io/components/sensor/#config-number).
 
 ## SEN5X External Component
 
