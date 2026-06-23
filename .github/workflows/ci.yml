@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     branches:
-      - main           # PRs targeting main only
+      - main
 
   schedule:
     - cron: "0 0 * * 0"
