@@ -6,6 +6,7 @@ from esphome.const import CONF_HAS_TARGET, DEVICE_CLASS_OCCUPANCY
 from . import CONF_LD2410S_ID, LD2410S
 
 HAS_CALIBRATION_RUNNING = "has_calibration_running"
+
 CONFIG_SCHEMA = {
     cv.GenerateID(CONF_LD2410S_ID): cv.use_id(LD2410S),
     cv.Optional(HAS_CALIBRATION_RUNNING): binary_sensor.binary_sensor_schema(
