@@ -52,9 +52,9 @@ async def to_code(config):
     if threshold_hold_config := config.get(CONF_THRESHOLD_HOLDS):
         sens = await text_sensor.new_text_sensor(threshold_hold_config)
         cg.add(ld2410s.set_threshold_hold_text_sensor(sens))
-    if threshold_snr_config := config.get(CONF_THRESHOLD_SNRS):
-        sens = await text_sensor.new_text_sensor(threshold_snr_config)
-        cg.add(ld2410s.set_threshold_snr_text_sensor(sens))
+    # if threshold_snr_config := config.get(CONF_THRESHOLD_SNRS):
+    #     sens = await text_sensor.new_text_sensor(threshold_snr_config)
+    #     cg.add(ld2410s.set_threshold_snr_text_sensor(sens))
     if energy_values_config := config.get(CONF_ENERGY_VALUES):
         sens = await text_sensor.new_text_sensor(energy_values_config)
         cg.add(ld2410s.set_energy_values_text_sensor(sens))

@@ -84,28 +84,18 @@ static const uint16_t CFG_RESPONSE_SPEED_VALUE = 0x000B;
 static const std::string CFG_RESPONSE_SPEED_NORMAL = "Normal";
 static const std::string CFG_RESPONSE_SPEED_FAST = "Fast";
 
-static const uint16_t CFG_GATE_THRESHOLD_TRIGGER_READ_CMD = 0x0073;
-static const uint16_t CFG_GATE_THRESHOLD_TRIGGER_WRITE_CMD = 0x0072;
-static const uint32_t CFG_GATE_THRESHOLD_TRIGGER_WRITE_DATA[] = {
-    48, 42, 36, 34, 32, 31, 31, 31, 31,
-    31, 31, 31, 31, 31, 31, 31
-    // 10~95 dB
+static const uint16_t CFG_GATE_THRESHOLDS_READ_CMD = 0x0073;
+static const uint16_t CFG_GATE_THRESHOLDS_WRITE_CMD = 0x0072;
+static const uint32_t CFG_GATE_THRESHOLDS_WRITE_DATA[] = {
+    48, 42, 36, 34, 32, 31, 31, 31, // Distance Gate 0~7 Trigger Thresholds range 10~95 dB
+    31, 31, 31, 31, 31, 31, 31, 31  // Distance Gate 0~7 Holding Thresholds range 10~95 dB
 };
 
-static const uint16_t CFG_GATE_THRESHOLD_HOLD_READ_CMD = 0x0077;
-static const uint16_t CFG_GATE_THRESHOLD_HOLD_WRITE_CMD = 0x0076;
-static const uint32_t CFG_GATE_THRESHOLD_HOLD_WRITE_DATA[] = {
-    45, 42, 33, 32, 28, 28, 28, 28, 28,
-    28, 28, 28, 28, 28, 28, 28
-    // 10~95 dB
-};
-
-static const uint16_t CFG_GATE_THRESHOLD_SNR_READ_CMD = 0x0075;
-static const uint16_t CFG_GATE_THRESHOLD_SNR_WRITE_CMD = 0x0074;
-static const uint32_t CFG_GATE_THRESHOLD_SNR_WRITE_DATA[] = {
-    51, 50, 30, 28, 25, 25, 25, 25, 25,
-    25, 25, 25, 25, 22, 22, 22
-    // 5~63 dB
+static const uint16_t CFG_GATE_SNRS_READ_CMD = 0x0075;
+static const uint16_t CFG_GATE_SNRS_WRITE_CMD = 0x0074;
+static const uint32_t CFG_GATE_SNRS_WRITE_DATA[] = {
+    51, 50, 30, 28, 25, 25, 25, 25, // Distance Gate 8~15 Trigger Thresholds range 5~63 dB
+    25, 25, 25, 25, 25, 22, 22, 22  // Distance Gate 8~15 Holding Thresholds range 5~63 dB
 };
 
 // ToDo
@@ -261,7 +251,7 @@ class LD2410S : public Component, public uart::UARTDevice {
   void set_status_reporting_freq(float status_reporting_freq);
   void set_threshold_hold(float threshold_hold);
   void set_threshold_selected_gate(float threshold_selected_gate);
-  void set_threshold_snr(float threshold_snr);
+  // void set_threshold_snr(float threshold_snr);
   void set_threshold_trigger(float threshold_trigger);
   // select
   void set_response_speed_select(const std::string &response_speed_select);
@@ -277,9 +267,8 @@ class LD2410S : public Component, public uart::UARTDevice {
   uint16_t tx_frame_size_ = 0;
 
   // settings_;
-  uint32_t thresholds_trigger_[16] = {};
-  uint32_t thresholds_hold_[16] = {};
-  uint32_t thresholds_snr_[16] = {};
+  uint32_t trigger_thresholds_[16] = {};
+  uint32_t holding_thresholds_[16] = {};
   uint32_t max_dist_{0};
   uint32_t min_dist_{0};
   uint32_t delay_{0};
@@ -318,9 +307,9 @@ class LD2410S : public Component, public uart::UARTDevice {
   void parse_ack_config_read_(uint8_t *data);
   void parse_ack_fw_read_(const uint8_t *data);
   void parse_ack_minimal_output_(uint8_t *data);
-  void parse_ack_threshold_trigger_read_(uint8_t *data);
-  void parse_ack_threshold_hold_read_(uint8_t *data);
-  void parse_ack_threshold_snr_read_(uint8_t *data);
+  void parse_ack_thresholds_read_(uint8_t *data);
+  // void parse_ack_threshold_hold_read_(uint8_t *data);
+  void parse_ack_snrs_read_(uint8_t *data);
 
   void publish_distance_(uint16_t distance, bool force_publish = false);
   void publish_presence_(bool presence, bool force_publish = false);
@@ -330,7 +319,7 @@ class LD2410S : public Component, public uart::UARTDevice {
   void publish_fw_version_(const std::string &version, bool force_publish = false);
   void publish_threshold_trigger_(bool force_publish = false);
   void publish_threshold_hold_(bool force_publish = false);
-  void publish_threshold_snr_(bool force_publish = false);
+  // void publish_threshold_snr_(bool force_publish = false);
 
   static std::string format_int(uint32_t *in, uint8_t len, uint8_t min_w);
 
@@ -380,17 +369,50 @@ class LD2410S : public Component, public uart::UARTDevice {
            append_seq_data(data, insert_position, append_data, append_array_size, actual_size);
   }
 
-  static void append_gate_thresholds(uint8_t *data, uint16_t &insert_position, uint16_t sub_command,
-                                     const uint32_t *thresholds_array) {
+  void append_gate_thresholds(uint8_t *data, uint16_t &insert_position, uint16_t sub_command) {
     if (sub_command != NO_SUB_CMD) {
       if (sub_command >= 16)
         return;
-      append_seq_data(data, insert_position, &sub_command);
-      append_seq_data(data, insert_position, &thresholds_array[sub_command]);
+      if (sub_command < 8) {
+        append_seq_data(data, insert_position, &sub_command);
+        append_seq_data(data, insert_position, &this->trigger_thresholds_[sub_command]);
+      } else {
+        append_seq_data(data, insert_position, &sub_command);
+        append_seq_data(data, insert_position, &this->holding_thresholds_[sub_command-8]);
+      }
     } else {
       for (uint16_t i = 0; i < 16; i++) {
-        append_seq_data(data, insert_position, &i, 1);
-        append_seq_data(data, insert_position, &thresholds_array[i]);
+        if (i < 8) {
+          append_seq_data(data, insert_position, &i, 1);
+          append_seq_data(data, insert_position, &this->trigger_thresholds_[i]);
+        } else {
+          append_seq_data(data, insert_position, &i, 1);
+          append_seq_data(data, insert_position, &this->holding_thresholds_[i - 8]);
+        }
+      }
+    }
+  }
+
+  void append_gate_snrs(uint8_t *data, uint16_t &insert_position, uint16_t sub_command) {
+    if (sub_command != NO_SUB_CMD) {
+      if (sub_command >= 16)
+        return;
+      if (sub_command < 8) {
+        append_seq_data(data, insert_position, &sub_command);
+        append_seq_data(data, insert_position, &this->trigger_thresholds_[sub_command+8]);
+      } else {
+        append_seq_data(data, insert_position, &sub_command);
+        append_seq_data(data, insert_position, &this->holding_thresholds_[sub_command]);
+      }
+    } else {
+      for (uint16_t i = 0; i < 16; i++) {
+        if (i < 8) {
+          append_seq_data(data, insert_position, &i, 1);
+          append_seq_data(data, insert_position, &this->trigger_thresholds_[i+8]);
+        } else {
+          append_seq_data(data, insert_position, &i, 1);
+          append_seq_data(data, insert_position, &this->holding_thresholds_[i]);
+        }
       }
     }
   }

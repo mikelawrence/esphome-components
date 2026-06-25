@@ -32,9 +32,9 @@ LD2410SThresholdTriggerNumber = ld2410s_ns.class_(
 LD2410SThresholdHoldNumber = ld2410s_ns.class_(
     "LD2410SThresholdHoldNumber", number.Number
 )
-LD2410SThresholdSnrNumber = ld2410s_ns.class_(
-    "LD2410SThresholdSnrNumber", number.Number
-)
+# LD2410SThresholdSnrNumber = ld2410s_ns.class_(
+#     "LD2410SThresholdSnrNumber", number.Number
+# )
 LD2410SThresholdSelectedGateNumber = ld2410s_ns.class_(
     "LD2410SThresholdSelectedGateNumber", number.Number
 )
@@ -46,7 +46,7 @@ CONF_NO_DELAY = "no_delay"
 CONF_STATUS_REPORTING_FREQUENCY = "status_reporting_frequency"
 CONF_THRESHOLD_TRIGGER = "threshold_trigger"
 CONF_THRESHOLD_HOLD = "threshold_hold"
-CONF_THRESHOLD_SNR = "threshold_snr"
+# CONF_THRESHOLD_SNR = "threshold_snr"
 CONF_THRESHOLD_SELECTED_GATE = "threshold_selected_gate"
 
 CONFIG_SCHEMA = {
@@ -98,13 +98,13 @@ CONFIG_SCHEMA = {
         unit_of_measurement=UNIT_DECIBEL,
         icon="mdi:pencil",
     ),
-    cv.Optional(CONF_THRESHOLD_SNR): number.number_schema(
-        LD2410SThresholdSnrNumber,
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
-        entity_category=ENTITY_CATEGORY_CONFIG,
-        unit_of_measurement=UNIT_DECIBEL,
-        icon="mdi:pencil",
-    ),
+    # cv.Optional(CONF_THRESHOLD_SNR): number.number_schema(
+    #     LD2410SThresholdSnrNumber,
+    #     device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+    #     entity_category=ENTITY_CATEGORY_CONFIG,
+    #     unit_of_measurement=UNIT_DECIBEL,
+    #     icon="mdi:pencil",
+    # ),
     cv.Optional(CONF_THRESHOLD_SELECTED_GATE): number.number_schema(
         LD2410SThresholdSelectedGateNumber,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
@@ -157,12 +157,12 @@ async def to_code(config):
         )
         await cg.register_parented(n, config[CONF_LD2410S_ID])
         cg.add(LD2410S_component.set_threshold_hold_number(n))
-    if threshold_snr_config := config.get(CONF_THRESHOLD_SNR):
-        n = await number.new_number(
-            threshold_snr_config, min_value=5, max_value=63, step=1
-        )
-        await cg.register_parented(n, config[CONF_LD2410S_ID])
-        cg.add(LD2410S_component.set_threshold_snr_number(n))
+    # if threshold_snr_config := config.get(CONF_THRESHOLD_SNR):
+    #     n = await number.new_number(
+    #         threshold_snr_config, min_value=5, max_value=63, step=1
+    #     )
+    #     await cg.register_parented(n, config[CONF_LD2410S_ID])
+    #     cg.add(LD2410S_component.set_threshold_snr_number(n))
     if threshold_selected_gate_config := config.get(CONF_THRESHOLD_SELECTED_GATE):
         n = await number.new_number(
             threshold_selected_gate_config, min_value=0, max_value=15, step=1

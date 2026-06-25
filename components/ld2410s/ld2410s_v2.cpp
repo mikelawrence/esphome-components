@@ -42,9 +42,9 @@ void LD2410S::read_all_() {
   this->tx_schedule_.append(OUTPUT_MODE_SWITCH_CMD);
   this->tx_schedule_.append(CFG_FW_READ_CMD);
   this->tx_schedule_.append(CFG_PARAMS_READ_CMD);
-  this->tx_schedule_.append(CFG_GATE_THRESHOLD_TRIGGER_READ_CMD);
-  this->tx_schedule_.append(CFG_GATE_THRESHOLD_HOLD_READ_CMD);
-  this->tx_schedule_.append(CFG_GATE_THRESHOLD_SNR_READ_CMD);
+  this->tx_schedule_.append(CFG_GATE_THRESHOLDS_READ_CMD);
+  // this->tx_schedule_.append(CFG_GATE_THRESHOLD_HOLD_READ_CMD);
+  this->tx_schedule_.append(CFG_GATE_SNRS_READ_CMD);
 }
 
 // button
@@ -62,23 +62,22 @@ void LD2410S::factory_reset() {
 
   this->resp_speed_ = 5;
 
-  for (uint8_t i = 0; i < 16; i++) {
-    this->thresholds_trigger_[i] = CFG_GATE_THRESHOLD_TRIGGER_WRITE_DATA[i];
-    this->thresholds_hold_[i] = CFG_GATE_THRESHOLD_HOLD_WRITE_DATA[i];
-    this->thresholds_snr_[i] = CFG_GATE_THRESHOLD_SNR_WRITE_DATA[i];
+  for (uint8_t i = 0; i < 8; i++) {
+    this->trigger_thresholds_[i] = CFG_GATE_THRESHOLDS_WRITE_DATA[i];
+    this->holding_thresholds_[i] = CFG_GATE_THRESHOLDS_WRITE_DATA[i+8];
+    this->trigger_thresholds_[i+8] = CFG_GATE_SNRS_WRITE_DATA[i];
+    this->holding_thresholds_[i+8] = CFG_GATE_SNRS_WRITE_DATA[i+8];
   }
-
+  
   this->tx_schedule_.append(OUTPUT_MODE_SWITCH_CMD);
 
   this->tx_schedule_.append(CFG_PARAMS_WRITE_CMD);
-  this->tx_schedule_.append(CFG_GATE_THRESHOLD_TRIGGER_WRITE_CMD);
-  this->tx_schedule_.append(CFG_GATE_THRESHOLD_HOLD_WRITE_CMD);
-  this->tx_schedule_.append(CFG_GATE_THRESHOLD_SNR_WRITE_CMD);
+  this->tx_schedule_.append(CFG_GATE_THRESHOLDS_WRITE_CMD);
+  this->tx_schedule_.append(CFG_GATE_SNRS_WRITE_CMD);
 
   this->tx_schedule_.append(CFG_PARAMS_READ_CMD);
-  this->tx_schedule_.append(CFG_GATE_THRESHOLD_TRIGGER_READ_CMD);
-  this->tx_schedule_.append(CFG_GATE_THRESHOLD_HOLD_READ_CMD);
-  this->tx_schedule_.append(CFG_GATE_THRESHOLD_SNR_READ_CMD);
+  this->tx_schedule_.append(CFG_GATE_THRESHOLDS_READ_CMD);
+  this->tx_schedule_.append(CFG_GATE_SNRS_READ_CMD);
 }
 // number
 void LD2410S::set_delay(float delay) {
@@ -107,9 +106,9 @@ void LD2410S::set_status_reporting_freq(float status_reporting_freq) {
   this->status_reporting_freq_number_->publish_state(static_cast<float>(this->status_freq_) / 10);
 }
 void LD2410S::set_threshold_hold(float threshold_hold) {
-  this->thresholds_hold_[this->thresholds_selected_gate_] = threshold_hold;
-  this->tx_schedule_.append(CFG_GATE_THRESHOLD_HOLD_WRITE_CMD, this->thresholds_selected_gate_);
-  this->threshold_hold_number_->publish_state(this->thresholds_hold_[this->thresholds_selected_gate_]);
+  this->holding_thresholds_[this->thresholds_selected_gate_] = threshold_hold;
+  this->tx_schedule_.append(CFG_GATE_THRESHOLDS_WRITE_CMD, this->thresholds_selected_gate_);
+  this->threshold_hold_number_->publish_state(this->holding_thresholds_[this->thresholds_selected_gate_]);
   this->publish_threshold_hold_();
 }
 void LD2410S::set_threshold_selected_gate(float threshold_selected_gate) {
@@ -118,21 +117,21 @@ void LD2410S::set_threshold_selected_gate(float threshold_selected_gate) {
   this->thresholds_selected_gate_ = static_cast<uint8_t>(threshold_selected_gate);
 #ifdef USE_NUMBER
   this->threshold_selected_gate_number_->publish_state(this->thresholds_selected_gate_);
-  this->threshold_trigger_number_->publish_state(this->thresholds_trigger_[this->thresholds_selected_gate_]);
-  this->threshold_hold_number_->publish_state(this->thresholds_hold_[this->thresholds_selected_gate_]);
-  this->threshold_snr_number_->publish_state(this->thresholds_snr_[this->thresholds_selected_gate_]);
+  this->threshold_trigger_number_->publish_state(this->trigger_thresholds_[this->thresholds_selected_gate_]);
+  this->threshold_hold_number_->publish_state(this->holding_thresholds_[this->thresholds_selected_gate_]);
+  // this->threshold_snr_number_->publish_state(this->thresholds_snr_[this->thresholds_selected_gate_]);
 #endif
 }
-void LD2410S::set_threshold_snr(float threshold_snr) {
-  this->thresholds_snr_[this->thresholds_selected_gate_] = threshold_snr;
-  this->tx_schedule_.append(CFG_GATE_THRESHOLD_SNR_WRITE_CMD, this->thresholds_selected_gate_);
-  this->threshold_snr_number_->publish_state(this->thresholds_snr_[this->thresholds_selected_gate_]);
-  this->publish_threshold_snr_();
-}
+// void LD2410S::set_threshold_snr(float threshold_snr) {
+//   this->thresholds_snr_[this->thresholds_selected_gate_] = threshold_snr;
+//   this->tx_schedule_.append(CFG_GATE_THRESHOLD_SNR_WRITE_CMD, this->thresholds_selected_gate_);
+//   // this->threshold_snr_number_->publish_state(this->thresholds_snr_[this->thresholds_selected_gate_]);
+//   this->publish_threshold_snr_();
+// }
 void LD2410S::set_threshold_trigger(float threshold_trigger) {
-  this->thresholds_trigger_[this->thresholds_selected_gate_] = threshold_trigger;
-  this->tx_schedule_.append(CFG_GATE_THRESHOLD_TRIGGER_WRITE_CMD, this->thresholds_selected_gate_);
-  this->threshold_trigger_number_->publish_state(this->thresholds_trigger_[this->thresholds_selected_gate_]);
+  this->trigger_thresholds_[this->thresholds_selected_gate_] = threshold_trigger;
+  this->tx_schedule_.append(CFG_GATE_THRESHOLDS_WRITE_CMD, this->thresholds_selected_gate_);
+  this->threshold_trigger_number_->publish_state(this->trigger_thresholds_[this->thresholds_selected_gate_]);
   this->publish_threshold_trigger_();
 }
 // select
@@ -157,9 +156,8 @@ void LD2410S::set_minimal_output(bool state) {
 
 // PROTECTED
 void LD2410S::read_all_thresholds_() {
-  this->tx_schedule_.append(CFG_GATE_THRESHOLD_TRIGGER_READ_CMD);
-  this->tx_schedule_.append(CFG_GATE_THRESHOLD_HOLD_READ_CMD);
-  this->tx_schedule_.append(CFG_GATE_THRESHOLD_SNR_READ_CMD);
+  this->tx_schedule_.append(CFG_GATE_THRESHOLDS_READ_CMD);
+  this->tx_schedule_.append(CFG_GATE_SNRS_READ_CMD);
 }
 
 void LD2410S::parse_data_energy_values_read_(uint8_t *data) {
@@ -168,14 +166,15 @@ void LD2410S::parse_data_energy_values_read_(uint8_t *data) {
   for (uint32_t &energy_value : this->energy_values_) {
     uint32_t val = 0;
     read_seq_data(data, read_position, &val);
-
-    uint32_t db = 0;
+    // uint32_t db = 0;
     if (val > 0) {
-      db = 10 * log10(val);
+      energy_value = 10 * log10(val);
+    } else {
+      energy_value = 0;
     }
-    if (db > energy_value) {
-      energy_value = db;
-    }
+    // if (db > energy_value) {
+    //   energy_value = db;
+    // }
   }
   this->publish_energy_values_();
 }
@@ -236,33 +235,40 @@ void LD2410S::parse_ack_fw_read_(const uint8_t *data) {
 
   this->publish_fw_version_(version);
 }
-void LD2410S::parse_ack_threshold_trigger_read_(uint8_t *data) {
+void LD2410S::parse_ack_thresholds_read_(uint8_t *data) {
   uint16_t read_position = 0;
-  read_seq_data(data, read_position, &this->thresholds_trigger_, 16, 4);
-
+  read_seq_data(data, read_position, &this->trigger_thresholds_, 8, 4);
+  read_seq_data(data, read_position, &this->holding_thresholds_, 8, 4);
 #ifdef USE_NUMBER
-  this->threshold_trigger_number_->publish_state(this->thresholds_trigger_[this->thresholds_selected_gate_]);
+  this->threshold_trigger_number_->publish_state(this->trigger_thresholds_[this->thresholds_selected_gate_]);
+  this->threshold_hold_number_->publish_state(this->holding_thresholds_[this->thresholds_selected_gate_]);
 #endif
 
   this->publish_threshold_trigger_();
-}
-void LD2410S::parse_ack_threshold_hold_read_(uint8_t *data) {
-  uint16_t read_position = 0;
-  read_seq_data(data, read_position, &this->thresholds_hold_, 16, 4);
-#ifdef USE_NUMBER
-  this->threshold_hold_number_->publish_state(this->thresholds_hold_[this->thresholds_selected_gate_]);
-#endif
-
   this->publish_threshold_hold_();
 }
-void LD2410S::parse_ack_threshold_snr_read_(uint8_t *data) {
+// void LD2410S::parse_ack_threshold_hold_read_(uint8_t *data) {
+//   uint16_t read_position = 0;
+//   read_seq_data(data, read_position, &this->holding_thresholds_, 16, 4);
+// #ifdef USE_NUMBER
+//   this->threshold_hold_number_->publish_state(this->holding_thresholds_[this->thresholds_selected_gate_]);
+// #endif
+
+//   this->publish_threshold_hold_();
+// }
+void LD2410S::parse_ack_snrs_read_(uint8_t *data) {
   uint16_t read_position = 0;
-  read_seq_data(data, read_position, &this->thresholds_snr_, 16, 4);
+  read_seq_data(data, read_position, &this->trigger_thresholds_[8], 8, 4);
+  read_seq_data(data, read_position, &this->holding_thresholds_[8], 8, 4);
 #ifdef USE_NUMBER
-  this->threshold_snr_number_->publish_state(this->thresholds_snr_[this->thresholds_selected_gate_]);
+  this->threshold_trigger_number_->publish_state(this->trigger_thresholds_[this->thresholds_selected_gate_]);
+  this->threshold_hold_number_->publish_state(this->holding_thresholds_[this->thresholds_selected_gate_]);
+  // this->threshold_snr_number_->publish_state(this->thresholds_snr_[this->thresholds_selected_gate_]);
 #endif
 
-  this->publish_threshold_snr_();
+  // this->publish_threshold_snr_();
+  this->publish_threshold_trigger_();
+  this->publish_threshold_hold_();
 }
 
 void LD2410S::publish_distance_(uint16_t distance, bool force_publish) {
@@ -317,7 +323,7 @@ void LD2410S::publish_fw_version_(const std::string &version, bool force_publish
 #endif
 }
 void LD2410S::publish_threshold_trigger_(bool force_publish) {
-  std::string vals = format_int(this->thresholds_trigger_, 16, 2);
+  std::string vals = format_int(this->trigger_thresholds_, 16, 2);
 
 #ifdef USE_TEXT_SENSOR
   if (this->threshold_trigger_text_sensor_ != nullptr) {
@@ -328,7 +334,7 @@ void LD2410S::publish_threshold_trigger_(bool force_publish) {
 #endif
 }
 void LD2410S::publish_threshold_hold_(bool force_publish) {
-  std::string vals = format_int(this->thresholds_hold_, 16, 2);
+  std::string vals = format_int(this->holding_thresholds_, 16, 2);
 
 #ifdef USE_TEXT_SENSOR
   if (this->threshold_hold_text_sensor_ != nullptr) {
@@ -338,17 +344,17 @@ void LD2410S::publish_threshold_hold_(bool force_publish) {
   }
 #endif
 }
-void LD2410S::publish_threshold_snr_(bool force_publish) {
-  std::string vals = format_int(this->thresholds_snr_, 16, 2);
+// void LD2410S::publish_threshold_snr_(bool force_publish) {
+//   std::string vals = format_int(this->thresholds_snr_, 16, 2);
 
-#ifdef USE_TEXT_SENSOR
-  if (this->threshold_snr_text_sensor_ != nullptr) {
-    if (this->threshold_snr_text_sensor_->state != vals || force_publish) {
-      this->threshold_snr_text_sensor_->publish_state(vals);
-    }
-  }
-#endif
-}
+// #ifdef USE_TEXT_SENSOR
+//   if (this->threshold_snr_text_sensor_ != nullptr) {
+//     if (this->threshold_snr_text_sensor_->state != vals || force_publish) {
+//       this->threshold_snr_text_sensor_->publish_state(vals);
+//     }
+//   }
+// #endif
+// }
 void LD2410S::publish_energy_values_(bool force_publish) {
   this->energy_values_str_ = format_int(this->energy_values_, 16, 2);
 
