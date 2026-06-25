@@ -404,7 +404,9 @@ Example in lambdas...
 
 ## LD2410S External Component
 
-This custom component is a direct copy of [PR #8486](https://github.com/esphome/esphome/pull/8486) on ESPHome. The only reason I've copied it here is I doubt it will be merged into ESPHome. So there is risk that it could disappear on ESPHome and it's not setup as an external component in [NovakIrs repository](https://github.com/NovakIrs/esphome/tree/ld2410s). This PR works just fine. Again all credit goes to [NovakIrs](https://github.com/NovakIrs) repository.
+This custom component is based on [PR #8486](https://github.com/esphome/esphome/pull/8486) on ESPHome. I've copied it here since I doubt it will be merged into ESPHome. There is risk that it could disappear on ESPHome and it's not setup as an external component in [NovakIrs repository](https://github.com/NovakIrs/esphome/tree/ld2410s). This PR works just fine. Again all credit goes to [NovakIrs](https://github.com/NovakIrs) repository.
+
+I have made changes to this component. Specifically a recent update to the documentation indicates the older serial documentation may be out of date. The new documentation indicates the Threshold command now contains the Trigger and Hold Thresholds for the first 8 gates and the SNR command contains the Trigger and Hold Thresholds for the last 8 gates. The first 8 gates have a rang of 10 to 95dB and the last 8 gates have a range of 5 to 63dB. It's worth noting that the documentation implies the sensor is only good at tracking Moving AND Still targets in the first 8 gates. The last 8 gates may only work for Moving targets and possibly with dimenishing results as you get close to the last gate.
 
 ```yaml
 # Sample configuration entry example
