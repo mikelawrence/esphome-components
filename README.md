@@ -77,7 +77,7 @@ sensor:
 
 ```
 
-### Configuration Variables
+### TFMini Configuration Variables
 
 + **model** (**Required**, string): The model of the Range Finder Sensor. Options are ```TFMINI_PLUS```, ```TFMINI_S``` or ```TF_LUNA```.
 + **uart_id** (*Optional*, string): Manually specify the ID of the [UART Bus](https://esphome.io/components/uart) if you use multiple UART buses.
@@ -85,7 +85,7 @@ sensor:
 + **config_pin** (*Optional*, [Pin Schema](https://esphome.io/guides/configuration-types#config-pin-schema)): This pin when connected will be set high to enable UART mode. (*TF_LUNA only*)
 + **low_power** (*Optional*, boolean): Turns on low power mode. This also requires sample_rate to be 10 or less. (*TF_LUNA, TFMini-S only*)
 
-### Sensors
+### TFMini Sensors
 
 + **distance** (*Optional*): Distance in cm. For the TFMINI_PLUS and TFMINI_S the range is 10-1200cm. For the TFLuna the range is 20-800cm. A distance of 10000cm means the sensor is not receiving enough signal, most likely open air. A distance of 0cm means the sensor is saturated and there is no measurement possible. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 + **signal_strength** (*Optional*): Represents the signal strength with a range of 0-65535. The longer the measurement distance, the lower signal strength will be. The lower the reflectivity is, the lower the signal strength will be. When signal strength is less than 100 detection is unreliable and distance is set to 10000cm. When signal strength is 65535 detection is unreliable and distance is set to 0cm. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
@@ -135,7 +135,7 @@ text_sensor:
       name: "PD Status"
 ```
 
-### Configuration Variables
+### STUSB4500 Configuration Variables
 
 + **flash_nvm** (*Optional*, boolean): When set to ```true``` the STUSB4500 NVM will be flashed with the current settings but only if different. To be on the safe side you should not leave this set to ```true```. A power cycle is required to renegotiate. Default is ```false```.
 + **default_nvm** (*Optional*, boolean): When set to ```true``` the STUSB4500 NVM will be flashed with default settings but only if different. To be on the safe side you should not leave this set to ```true```. A power cycle is required to renegotiate. Default is ```false```.
@@ -161,15 +161,15 @@ text_sensor:
 + **gpio_cfg** (*Optional*, enumeration): Selects the GPIO configuration. Options are ```SW_CTRL_GPIO```, ```ERROR_RECOVERY```, ```DEBUG``` or ```SINK_POWER```. Default is ```ERROR_RECOVERY```.
 + **power_only_above_5v** (*Optional*, boolean): When set to ```true``` the STUSB4500 will enable V<sub>BUS</sub> only if PDO2 or PDO3 was negotiated. When ```false``` V<sub>BUS</sub> is enabled at 5V when connected to a non-PD charger. The available current is unknown. Default is ```false```.
 
-### Sensors
+### STUSB4500 Sensors
 
 + **pd_state** (*Optional*): Current PD State as an integer. Range 0 to 3 where 0 is no PD negotiated. A value of 1, 2 or 3 indicates which PDO was negotiated. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
-### Text Sensors
+### STUSB4500 Text Sensors
 
 + **pd_status** (*Optional*): Easy to read PD State (e.g. "12V @ 3A" ). All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
-### Actions
+### STUSB4500 Actions
 
 When the GPIO is configured for software control ```gpio_cfg: SW_CTRL_GPIO``` these actions control the state of the output.
 
@@ -192,7 +192,7 @@ Example in lambdas...
   id(pd_controller).turn_gpio_on();
 ```
 
-### NVM Configuration
+### STUSB4500 NVM Configuration
 
 > [!CAUTION]
 > When configuring the STUSB4500 for the first time you should realize the default configuration will allow up to 20V on V<sub>BUS</sub>. Make sure your circuit can either support 20V or configure the NVM using a Power Source that will NOT produce 20V like USB 2.0 or a non-PD USB-C charger.
@@ -315,22 +315,22 @@ text_sensor:
 
 ```
 
-### Configuration Variables
+### C4001 Configuration Variables
 
 + **mode** (*Required*, enumeration): This sets the operation mode of the sensor. Options are ```PRESENCE``` and ```SPEED_AND_DISTANCE```.
 
-### Buttons
+### C4001 Buttons
 
-+ **config_save** (*Optional*): When you click this button the current configuration will be saved. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. All Options from [Button Component](https://esphome.io/components/button/index.html#base-button-configuration).
-+ **factory_reset** (*Optional*): Clicking this button will perform a factory reset of the module and all configuration values will go back to default. All Options from [Button Component](https://esphome.io/components/button/index.html#base-button-configuration).
-+ **restart** (*Optional*): When you click this button the module will restart and all configuration values will remains as previously set. All Options from [Button Component](https://esphome.io/components/button/index.html#base-button-configuration).
++ **config_save** (*Optional*): When you click this button the current configuration will be saved. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. All Options from [Button Component](https://esphome.io/components/button/#base-button-configuration).
++ **factory_reset** (*Optional*): Clicking this button will perform a factory reset of the module and all configuration values will go back to default. All Options from [Button Component](https://esphome.io/components/button/#base-button-configuration).
++ **restart** (*Optional*): When you click this button the module will restart and all configuration values will remains as previously set. All Options from [Button Component](https://esphome.io/components/button/#base-button-configuration).
 
-### Binary Sensors
+### C4001 Binary Sensors
 
 + **config_changed** (*Optional*): When ```true``` the current sensor configuration has been changed but not saved to the sensor. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
 + **occupancy** (*Optional*): In ```PRESENCE``` mode this indicates presence. In ```SPEED_AND_DISTANCE``` mode this indicates a target is being tracked. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
 
-### Numbers
+### C4001 Numbers
 
 + **min_range** (*Optional*): This is the minimum detection range. Default is 0.6 meters (m) with a range of 0.6 to 25.0 m. The manual recommends not changing this value. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```PRESENCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 + **max_range** (*Optional*): This is the maximum detection range. Default is 6 meters (m) with a range of 0.6 to 25.0 m. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```PRESENCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
@@ -342,23 +342,23 @@ text_sensor:
 + **inhibit_time** (*Optional*): The dead-time after switching to the not present state before presence can be detected again. Default is 1 (seconds) with a range of 0.1 to 255.0. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```PRESENCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 + **threshold_factor** (*Optional*): The larger the number the larger the object and more motion is required to trigger the sensor to switch to target tracked state. Default is 5 with a range of 0 to 65535. The ```config_save``` button must be clicked to save the sensor configuration to flash and make operational. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 
-### Sensors
+### C4001 Sensors
 
-+ **target_distance** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates distance to target in meters (m). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
-+ **target_speed** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates target speed in meters per second (m/s). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
-+ **target_energy** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates target energy in no units. When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
++ **target_distance** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates distance to target in meters (m). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
++ **target_speed** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates target speed in meters per second (m/s). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
++ **target_energy** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates target energy in no units. When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
 
-### Switches
+### C4001 Switches
 
-+ **led_enable** (*Optional*): When turned on the green LED will flash when the sensor has been started. The blue LED cannot be disabled with this command. All Options from [Switch Component](https://esphome.io/components/switch/index.html#base-switch-configuration).
-+ **micro_motion_enable** (*Optional*): Turns on micro motion mode. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Switch Component](https://esphome.io/components/switch/index.html#base-switch-configuration).
++ **led_enable** (*Optional*): When turned on the green LED will flash when the sensor has been started. The blue LED cannot be disabled with this command. All Options from [Switch Component](https://esphome.io/components/switch/#base-switch-configuration).
++ **micro_motion_enable** (*Optional*): Turns on micro motion mode. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Switch Component](https://esphome.io/components/switch/#base-switch-configuration).
 
-### Sensors
+### C4001 Sensors
 
-+ **target_distance** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates distance to target in meters (m). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
-+ **target_speed** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates target speed in meters per second (m/s). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
++ **target_distance** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates distance to target in meters (m). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
++ **target_speed** (*Optional*): When **occupancy** binary sensor is ```true``` this sensor indicates target speed in meters per second (m/s). When **occupancy** binary sensor is ```false``` this sensor switches to 0.0 indicating invalid data. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
 
-### Actions
+### C4001 Actions
 
 + **dfrobot_c4001.factory_reset** Will perform a factory reset of the module and all configuration values will go back to default. The module will restart with these defaults. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. This is much easier to do with a lambda that accidentally performs a factory reset every second.
 
@@ -492,43 +492,46 @@ text_sensor:
 
 ```
 
-### Buttons
+### LD2410S Buttons
 
-+ **calibration** (*Optional*): When you click this button the built-in LD2410S Auto-Calibration will start. Be sure to have the room in the idle state, i.e. no people, pets or robot vaccumes running. All Options from [Button Component](https://esphome.io/components/button/index.html#base-button-configuration).
-+ **factory_reset** (*Optional*): Clicking this button will perform a factory reset of the module and all configuration values will go back to default. All Options from [Button Component](https://esphome.io/components/button/index.html#base-button-configuration).
++ **calibration** (*Optional*): When you click this button the built-in LD2410S Auto-Calibration will start. Be sure to have the room in the idle state, i.e. no people, pets or robot vaccumes running. All Options from [Button Component](https://esphome.io/components/button/#base-button-configuration).
++ **factory_reset** (*Optional*): Clicking this button will perform a factory reset of the module and all configuration values will go back to default. All Options from [Button Component](https://esphome.io/components/button/#base-button-configuration).
 
-### Binary Sensors
+### LD2410S Binary Sensors
 + **has_target** (*Optional*): When ```true``` the radar has detected a target either moving or still. This is effectivly presence. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
 + **occupancy** (*Optional*): When ```true``` Auto-Calibration is running and ```false``` when not. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
 
-### Numbers
+### LD2410S Numbers
 
-+ **max_distance** (*Optional*): This is the maximum detection range. Default is ??? meters (m) with a range of 0.5 to 8.0 m. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
-+ **min_distance** (*Optional*): This is the minimum detection range. Default is ??? meters (m) with a range of 0.5 to 8.0 m. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
-+ **no_delay** (*Optional*): This is the no detection delay. Basically a delay off function. Default is ??? seconds (s) with a range of 0 to 120s. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
-+ **status_reporting_frequency** (*Optional*): This is ``has_target`` binary sensor reporting frequency. Default is ??? Hz with a range of 0.5 to Hz. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
-+ **distance_reporting_frequency** (*Optional*): This is ``target_distance`` binary sensor reporting frequency. Default is ??? Hz with a range of 0.5 to Hz. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
-+ **threshold_trigger** (*Optional*): This is ????. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
-+ **threshold_hold** (*Optional*): This is ????. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
-+ **threshold_snr** (*Optional*): This is ????. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
-+ **threshold_selected_gate** (*Optional*): This is ????. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **max_distance** (*Optional*): This is the maximum detection range. Default is 11.2 meters (m) with a range of 0.7 to 8.4m in steps of 0.7m. The underlying command expects a bin number and this is altomatically computed. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **min_distance** (*Optional*): This is the minimum detection range. Default is 0.0 meters (m) with a range of 0.0 to 8.4m in steps of 0.7m. The underlying command expects a bin number and this is altomatically computed. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **no_delay** (*Optional*): This is the no detection delay. Basically a delay off function. Default is 10 seconds (s) with a range of 0 to 120s in steps of 1s. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **status_reporting_frequency** (*Optional*): This is ``has_target`` binary sensor reporting frequency. Default is 8.0Hz with a range of 0.5 to 8.0Hz. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **distance_reporting_frequency** (*Optional*): This is ``target_distance`` binary sensor reporting frequency. Default is 8.0Hz with a range of 0.5 to 8.0Hz. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **threshold_hold** (*Optional*): This is current Hold Threshold. Which gate is determined by Threshold Selected Gate number. Default is gate specific and range is 10 to 95dB in steps of 1dB. There is no consensus All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **threshold_selected_gate** (*Optional*): There are 16 gates in the radar sensor. Each gate has is own Threshold Trigger, Threshold Hold and Threshold SNR setting. This number allows you to select which of the 16 gates you wish to configure. Range is 0 to 15 in steps of one. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
++ **threshold_trigger** (*Optional*): This is current Trigger Threshold. Which gate is determined by Threshold Selected Gate number. Default is gate specific and range is 10 to 95dB in steps of 1dB. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 
-### Sensors
+### LD2410S Selects
 
-+ **target_distance** (*Optional*): This sensor indicates current distance to target in meters (m). All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
-+ **calibration_progress** (*Optional*): This is the current Auto-Calibrtion Status. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-sensor-configuration).
++ **response_speed** (*Optional*): Turns on micro motion mode. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Select Component](https://esphome.io/components/select/#base-select-configuration).
 
-### Selects
+### LD2410S Sensors
 
-+ **response_speed** (*Optional*): Turns on micro motion mode. Available only in ```SPEED_AND_DISTANCE``` mode. All Options from [Switch Component](https://esphome.io/components/switch/index.html#base-select-configuration).
++ **target_distance** (*Optional*): This sensor indicates current distance to target in meters (m). All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
++ **calibration_progress** (*Optional*): This is the current Auto-Calibration Status. All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
 
-### Text Sensors
+### LD2410S Switches
 
-+ **fw_version** (*Optional*): The is the LD2410S firmware version. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-text-sensor-configuration).
-+ **threshold_triggers** (*Optional*): The is the LD2410S firmware version. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-text-sensor-configuration).
-+ **threshold_holds** (*Optional*): The is the LD2410S firmware version. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-text-sensor-configuration).
-+ **threshold_snrs** (*Optional*): The is the LD2410S firmware version. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-text-sensor-configuration).
-+ **fw_version** (*Optional*): The is the LD2410S firmware version. All Options from [Sensor Component](https://esphome.io/components/sensor/index.html#base-text-sensor-configuration).
++ **minimal_output** (*Optional*): When turned on the unit stops sending detailed target parameters like individual gate data and only streams simple presence states over the serial port . All Options from [Switch Component](https://esphome.io/components/switch/#base-switch-configuration).
+
+### LD2410S Text Sensors
+
++ **fw_version** (*Optional*): The is the LD2410S firmware version. All Options from [Sensor Component](https://esphome.io/components/text_sensor/#base-text-sensor-configuration).
++ **threshold_triggers** (*Optional*): This is the current state of all Trigger Thresholds. All Options from [Sensor Component](https://esphome.io/components/text_sensor/#base-text-sensor-configuration).
++ **threshold_holds** (*Optional*): This is the current state of all Hold Thresholds. All Options from [Sensor Component](https://esphome.io/components/text_sensor/#base-text-sensor-configuration).
++ **threshold_snrs** (*Optional*): This is the current state of all SNR Thresholds. All Options from [Sensor Component](https://esphome.io/components/text_sensor/#base-text-sensor-configuration).
++ **fw_version** (*Optional*): This is the current state of all Thresholds. All Options from [Sensor Component](https://esphome.io/components/text_sensor/#base-text-sensor-configuration).
 
 ## SEN5X External Component
 
@@ -617,12 +620,12 @@ sensor:
       name: "VOC"
 ```
 
-### Configuration Variables
+### SEN5X Configuration Variables
 
 + **model** (**Optional**, string): The model of the Sensirion SEN5X or SEN6X sensor. Options are ```SEN50```, ```SEN54```, ```SEN55```, ```SEN60```, ```SEN63C```, ```SEN65```, ```SEN66``` or ```SEN68```. Use this if the model cannot be read from the sensor. There were reports of a blank model string on a SEN66 sensor.
 + **auto_cleaning_interval** (**Optional**, string): The interval in seconds of the periodic fan-cleaning. Only the SEN50, SEN55 and SEN56 models support automatic fan cleaning.
 
-### Sensors
+### SEN5X Sensors
 
 + **co2** (*Optional*): The Carbon Dioxide (CO₂) level in ppm. Only the SEN63C and SEN66 models have a CO₂ sensor. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
   + **auto_self_calibration** (*Optional*, boolean): Enables automatic self-calibration (ASC) for the CO₂ sensor. Default is ```true```.
@@ -630,7 +633,7 @@ sensor:
   + **ambient_pressure_compensation_source** (*Optional*, ID): Set an external pressure sensor ID used for ambient pressure compensation. The pressure sensor must report pressure in hPa. The correction is applied before updating the state of the CO₂ sensor.
 + **hcho** (*Optional*): The Formaldehyde (HCHO) level in ppb. Only the SEN68 model has a HCHO sensor. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
-### Actions
+### SEN5X Actions
 
 #### sen5x.perform_forced_co2_calibration Action
 
@@ -699,7 +702,7 @@ fan:
     speed_count: 3
 ```
 
-### Configuration Variables
+### ESP32 RMT PWM Configuration Variables
 
 + **id** (*Required*, ID)
   The ID of the output component. This is used to reference the output from other ESPHome components (lights, fans, custom components, etc.).
