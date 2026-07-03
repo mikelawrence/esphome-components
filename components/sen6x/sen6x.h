@@ -9,8 +9,7 @@
 #include <algorithm>
 #include <cstdint>
 
-namespace esphome {
-namespace sen6x {
+namespace esphome::sen6x {
 
 enum class SetupStates : uint8_t {
   SM_IDLE,
@@ -32,13 +31,10 @@ enum class SetupStates : uint8_t {
   SM_CO2_PRESS_DONE,
   SM_FAN_INIT,
   SM_FAN_ON,
-  SM_FAN_WAIT,
   SM_FAN_START,
   SM_FAN_DONE,
   SM_TEMP_COMP_INIT,
   SM_TEMP_COMP_DONE,
-  SM_VOC_STATE_INIT,
-  SM_VOC_STATE_DONE,
   SM_VOC_CHECK_INIT,
   SM_VOC_CHECK_DONE,
   SM_SETUP_INIT,
@@ -55,12 +51,11 @@ enum class SetupStates : uint8_t {
   SM_SETUP_SET_TP,
   SM_SETUP_SET_CO2ASC,
   SM_SETUP_SET_CO2AC,
-  SM_SETUP_SENSOR_CHECK,
   SM_SETUP_START_MEAS,
   SM_SETUP_DONE,
 };
 
-enum class Sen6xType : uint8_t { SEN62, SEN63C, SEN65, SEN66, SEN68, SEN69C, UNKNOWN };
+enum class Sen6xType : uint8_t { SEN62, SEN63C, SEN65, SEN66, SEN68, SEN69C };
 enum class Sen6xVocStatus : uint8_t { NOTHING, WAITING, RESTORED, RESTORED_TIME, UPDATED, NO_PREF, TOO_OLD, ERROR };
 
 struct Sen6xVocBaseline {
@@ -215,5 +210,6 @@ class Sen6xComponent : public PollingComponent, public sensirion_common::Sensiri
 
   ESPPreferenceObject pref_;
 };
-}  // namespace sen6x
-}  // namespace esphome
+
+}  // namespace esphome::ld2410s
+
