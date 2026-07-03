@@ -549,14 +549,14 @@ void Sen6xComponent::loop() {
     }
     case SetupStates::SM_SETUP_GET_PN: {
       // 8 chars is enough room for the at most 7 chars plus null
-      uint16_t raw_product_name[4];
+      uint16_t raw_product_name[16];
       ESP_LOGV(TAG, "SM_SETUP_GET_PN State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
                App.get_loop_component_start_time() - this->state_time_);
-      if (!this->read_data(raw_product_name, 4)) {
+      if (!this->read_data(raw_product_name, 16)) {
         this->mark_failed(LOG_STR("Get Product Name failed"));
         return;
       }
-      const char *product_name = sensirion_convert_to_string_in_place(raw_product_name, 4);
+      const char *product_name = sensirion_convert_to_string_in_place(raw_product_name, 16);
       if (strlen(product_name) == 0) {
         // Can't verify configuration type matches connected sensor
         ESP_LOGW(TAG, "Product Name is empty");
