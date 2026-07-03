@@ -3,18 +3,19 @@ from esphome.components import switch
 import esphome.config_validation as cv
 from esphome.const import DEVICE_CLASS_SWITCH, ENTITY_CATEGORY_CONFIG
 
-from .. import CONF_LD2410S_ID, LD2410S, ld2410s_ns
+from .. import CONF_ID, CONF_LD2410S_ID, LD2410SComponent, ld2410s_ns
 
-LD2410SMinimalOutputSwitch = ld2410s_ns.class_(
-    "LD2410SMinimalOutputSwitch", switch.Switch
+MinimalOutputSwitch = ld2410s_ns.class_(
+    "MinimalOutputSwitch", switch.Switch
 )
 
 CONF_MINIMAL_OUTPUT = "minimal_output"
 
 CONFIG_SCHEMA = {
-    cv.GenerateID(CONF_LD2410S_ID): cv.use_id(LD2410S),
+    cv.GenerateID(CONF_ID): cv.declare_id(cg.EntityBase),
+    cv.GenerateID(CONF_LD2410S_ID): cv.use_id(LD2410SComponent),
     cv.Optional(CONF_MINIMAL_OUTPUT): switch.switch_schema(
-        LD2410SMinimalOutputSwitch,
+        MinimalOutputSwitch,
         device_class=DEVICE_CLASS_SWITCH,
         entity_category=ENTITY_CATEGORY_CONFIG,
         icon="mdi:arrow-collapse-horizontal",

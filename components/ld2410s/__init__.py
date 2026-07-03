@@ -1,23 +1,24 @@
 import esphome.codegen as cg
 from esphome.components import uart
 import esphome.config_validation as cv
-from esphome.const import CONF_ID
+from esphome.const import (
+    CONF_ID,
+)
 
+AUTO_LOAD = ["ld24xx"]
 CODEOWNERS = ["@NovakIrs"]
-
 DEPENDENCIES = ["uart"]
-
 MULTI_CONF = True
 
 ld2410s_ns = cg.esphome_ns.namespace("ld2410s")
-LD2410S = ld2410s_ns.class_("LD2410S", cg.Component, uart.UARTDevice)
+LD2410SComponent = ld2410s_ns.class_("LD2410SComponent", cg.Component, uart.UARTDevice)
 
 CONF_LD2410S_ID = "ld2410s_id"
 
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
-            cv.GenerateID(): cv.declare_id(LD2410S),
+            cv.GenerateID(): cv.declare_id(LD2410SComponent),
         }
     )
     .extend(uart.UART_DEVICE_SCHEMA)

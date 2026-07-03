@@ -1,7 +1,5 @@
 #pragma once
 
-#define LD2410S_V2
-
 // core
 #include "esphome/core/application.h"
 #include "esphome/core/component.h"
@@ -10,10 +8,6 @@
 #include "esphome/core/log.h"
 
 // components
-#include "esphome/components/uart/uart.h"
-
-#ifdef LD2410S_V2
-
 #ifdef USE_SENSOR
 #include "esphome/components/sensor/sensor.h"
 #endif
@@ -35,8 +29,8 @@
 #ifdef USE_SELECT
 #include "esphome/components/select/select.h"
 #endif
-
-#endif
+#include "esphome/components/ld24xx/ld24xx.h"
+#include "esphome/components/uart/uart.h"
 
 // std
 #include <cstddef>
@@ -44,70 +38,13 @@
 
 namespace esphome::ld2410s {
 
-#pragma region ld2410s specific Constants
-
-// Constants
-static const char *const TAG = "ld2410s";
-
-static const uint16_t CMD_CONFIRMATION = 0x0100;  // Command confirmation response code
-
-static const uint8_t SHORT_DATA_FRAME_HEADER = 0x6E;
-static const uint8_t SHORT_DATA_FRAME_FOOTER = 0x62;
-static const uint32_t STD_DATA_FRAME_HEADER = 0xF1F2F3F4;
-static const uint32_t STD_DATA_FRAME_FOOTER = 0xF5F6F7F8;
-static const uint32_t CMD_FRAME_HEADER = 0xFAFBFCFD;
-static const uint32_t CMD_FRAME_FOOTER = 0x01020304;
-
-static const uint16_t CONFIG_MODE_START_CMD = 0x00FF;
-static const uint16_t CONFIG_MODE_START_VALUE = 0x0001;
-static const uint16_t CONFIG_MODE_END_CMD = 0x00FE;
-
-static const uint16_t OUTPUT_MODE_SWITCH_CMD = 0x007A;
-static const uint8_t OUTPUT_MODE_VALUE_STD[] = {0x00, 0x00, 0x01, 0x00, 0x00, 0x00};
-static const uint8_t OUTPUT_MODE_VALUE_MIN[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
-static const uint16_t CALIBRATION_CMD = 0x0009;
-static const uint16_t CALIBRATION_TRIGGER_VALUE = 0x0002;
-static const uint16_t CALIBRATION_RETENTION_VALUE = 0x0001;
-static const uint16_t CALIBRATION_TIME_VALUE = 0x0078;
-
-static const uint16_t CFG_FW_READ_CMD = 0x0000;
-
-static const uint16_t CFG_PARAMS_READ_CMD = 0x0071;
-static const uint16_t CFG_PARAMS_WRITE_CMD = 0x0070;
-static const uint16_t CFG_MAX_DETECTION_VALUE = 0x0005;
-static const uint16_t CFG_MIN_DETECTION_VALUE = 0x000A;
-static const uint16_t CFG_NO_DELAY_VALUE = 0x0006;
-static const uint16_t CFG_STATUS_FREQ_VALUE = 0x0002;
-static const uint16_t CFG_DISTANCE_FREQ_VALUE = 0x000C;
-static const uint16_t CFG_RESPONSE_SPEED_VALUE = 0x000B;
-static const std::string CFG_RESPONSE_SPEED_NORMAL = "Normal";
-static const std::string CFG_RESPONSE_SPEED_FAST = "Fast";
-
-static const uint16_t CFG_GATE_THRESHOLDS_READ_CMD = 0x0073;
-static const uint16_t CFG_GATE_THRESHOLDS_WRITE_CMD = 0x0072;
-static const uint32_t CFG_GATE_THRESHOLDS_WRITE_DATA[] = {
-    48, 42, 36, 34, 32, 31, 31, 31, // Distance Gate 0~7 Trigger Thresholds range 10~95 dB
-    31, 31, 31, 31, 31, 31, 31, 31  // Distance Gate 0~7 Holding Thresholds range 10~95 dB
-};
-
-static const uint16_t CFG_GATE_SNRS_READ_CMD = 0x0075;
-static const uint16_t CFG_GATE_SNRS_WRITE_CMD = 0x0074;
-static const uint32_t CFG_GATE_SNRS_WRITE_DATA[] = {
-    51, 50, 30, 28, 25, 25, 25, 25, // Distance Gate 8~15 Trigger Thresholds range 5~63 dB
-    25, 25, 25, 25, 25, 22, 22, 22  // Distance Gate 8~15 Holding Thresholds range 5~63 dB
-};
-
-// ToDo
-// static const uint16_t SN_READ_CMD = 0x0011;
-// static const uint16_t SN_WRITE_CMD = 0x0010;
-
-#pragma endregion
+using namespace ld24xx;
 
 #pragma region Constants
+static constexpr uint8_t TOTAL_GATES = 16;  // Total number of gates supported by the LD2410S
+
 static const uint16_t NO_SUB_CMD = 0xffff;
 static const uint16_t FRAME_DATA_LENGTH_SIZE = 2;
-
 static const size_t RX_TX_BUFFER_SIZE = 128;
 static const uint16_t RX_MAX_BYTES_PER_LOOP = 128;
 static const uint8_t TX_SCHEDULE_BUFFER_SIZE = 32;
@@ -121,6 +58,7 @@ static const uint32_t TX_PAUSE_TIMEOUT = 100;          // pause after receiving 
 enum class TxCmdState { IDLE, SCHEDULED, SEND, SENT, FAILED };
 enum class RxFrameType { UNKNOWN, SHORT_DATA_FRAME, STD_DATA_FRAME, CMD_FRAME, NOK };
 enum class RxEvaluationResult { UNKNOWN, OK, NOK };
+enum class ResponseSpeed : uint8_t { NORMAL = 0, FAST };
 #pragma endregion
 
 #pragma region struct
@@ -181,110 +119,78 @@ class LD2410Sschedule {
   uint32_t time_started_{0};
   uint8_t retry_count_{0};
   uint8_t restart_count_{0};
-  uint8_t active_{0};
   uint8_t last_{0};
+  uint8_t active_{0};
   TxCmdState state_ = TxCmdState::IDLE;
   bool config_mode_{true};
 };
 
-class LD2410S : public Component, public uart::UARTDevice {
-#ifdef LD2410S_V2
-#ifdef USE_SENSOR
-  SUB_SENSOR(distance)
-#endif
+class LD2410SComponent final : public Component, public uart::UARTDevice {
 #ifdef USE_BINARY_SENSOR
-  SUB_BINARY_SENSOR(presence)
-#endif
-
-#ifdef USE_SENSOR
-  SUB_SENSOR(calibration_progress)
-#endif
-#ifdef USE_BINARY_SENSOR
-  SUB_BINARY_SENSOR(calibration_running)
-#endif
-#ifdef USE_TEXT_SENSOR
-  SUB_TEXT_SENSOR(fw_version)
-  SUB_TEXT_SENSOR(threshold_trigger)
-  SUB_TEXT_SENSOR(threshold_hold)
-  SUB_TEXT_SENSOR(threshold_snr)
-  SUB_TEXT_SENSOR(energy_values)
+  SUB_BINARY_SENSOR(cal_running)
+  SUB_BINARY_SENSOR(has_target)
 #endif
 #ifdef USE_BUTTON
-  SUB_BUTTON(calibration)
+  SUB_BUTTON(cal_start)
   SUB_BUTTON(factory_reset)
 #endif
-#ifdef USE_SWITCH
-  SUB_SWITCH(minimal_output)
+#ifdef USE_NUMBER
+  SUB_NUMBER(max_detect_gate)
+  SUB_NUMBER(min_detect_gate)
+  SUB_NUMBER(no_delay)
+  SUB_NUMBER(status_reporting_freq)
+  SUB_NUMBER(distance_reporting_freq)
 #endif
 #ifdef USE_SELECT
   SUB_SELECT(response_speed)
 #endif
-#ifdef USE_NUMBER
-  SUB_NUMBER(max_distance)
-  SUB_NUMBER(min_distance)
-  SUB_NUMBER(no_delay)
-  SUB_NUMBER(status_reporting_freq)
-  SUB_NUMBER(distance_reporting_freq)
-  SUB_NUMBER(threshold_trigger)
-  SUB_NUMBER(threshold_hold)
-  SUB_NUMBER(threshold_snr)
-  SUB_NUMBER(threshold_selected_gate)
+#ifdef USE_SENSOR
+  SUB_SENSOR_WITH_DEDUP(target_distance, uint16_t)
+  SUB_SENSOR_WITH_DEDUP(cal_progress, uint16_t)
 #endif
+#ifdef USE_SWITCH
+  SUB_SWITCH(minimal_output)
+#endif
+#ifdef USE_TEXT_SENSOR
+  SUB_TEXT_SENSOR(fw_version)
 #endif
 
  public:
   void setup() override;
+  void dump_config() override;
   void loop() override;
   float get_setup_priority() const override;
 
-#ifdef LD2410S_V2
-  void dump_config() override;
-
   // button
-  void calibration();
+#ifdef USE_BUTTON
+  void cal_start();
   void factory_reset();
-  // number
-  void set_delay(float delay);
+#endif
+#ifdef USE_NUMBER
+  // set number component, arrays prevent use of SUB_NUMBER
+  void set_gate_trig_threshold_number(uint8_t gate, number::Number *n) { this->gate_trig_threshold_number_[gate] = n; }
+  // set number component, arrays prevent use of SUB_NUMBER
+  void set_gate_hold_threshold_number(uint8_t gate, number::Number *n) { this->gate_hold_threshold_number_[gate] = n; }
+  // set number values
+  void set_gate_trig_threshold(uint8_t gate, float trigger_threshold);
+  void set_gate_hold_threshold(uint8_t gate, float hold_threshold);
+  void set_max_detect_gate(float max_detect_gate);
+  void set_min_detect_gate(float min_detect_gate);
+  void set_no_delay(float delay);
   void set_distance_reporting_freq(float distance_reporting_freq);
-  void set_max_distance(float max_distance);
-  void set_min_distance(float min_distance);
   void set_status_reporting_freq(float status_reporting_freq);
-  void set_threshold_hold(float threshold_hold);
-  void set_threshold_selected_gate(float threshold_selected_gate);
-  // void set_threshold_snr(float threshold_snr);
-  void set_threshold_trigger(float threshold_trigger);
-  // select
-  void set_response_speed_select(const std::string &response_speed_select);
-  // switch
+#endif
+#ifdef USE_SELECT
+  void set_response_speed(size_t index);
+#endif
+#ifdef USE_SENSOR
+  void set_gate_energy_sensor(uint8_t gate, sensor::Sensor *s) { this->gate_energy_sensor_[gate].set_sensor(s); }
+#endif
+#ifdef USE_SWITCH
   void set_minimal_output(bool state);
 #endif
 
  protected:
-  LD2410Sschedule tx_schedule_;
-  LD2410Srx rx_;
-
-  uint8_t tx_frame_[RX_TX_BUFFER_SIZE] = {};
-  uint16_t tx_frame_size_ = 0;
-
-  // settings_;
-  uint32_t trigger_thresholds_[16] = {};
-  uint32_t holding_thresholds_[16] = {};
-  uint32_t max_dist_{0};
-  uint32_t min_dist_{0};
-  uint32_t delay_{0};
-  uint32_t status_freq_{0};
-  uint32_t dist_freq_{0};
-  uint32_t resp_speed_{0};
-  uint8_t thresholds_selected_gate_{0};
-  bool pause_tx_{false};
-  bool minimal_output_{true};
-
-  uint32_t loop_count_{0};
-  bool init_done_{false};
-
-  uint32_t energy_values_[16] = {};
-  std::string energy_values_str_ = "";
-
   void send_();
   void build_cmd_frame_(uint16_t command, uint16_t sub_command = NO_SUB_CMD);
   void sending_pause_();
@@ -295,8 +201,6 @@ class LD2410S : public Component, public uart::UARTDevice {
   void parse_data_frame_();
   void parse_cmd_frame_();
 
-#ifdef LD2410S_V2
-  void init_();
   void read_all_();
   void read_all_thresholds_();
 
@@ -308,21 +212,40 @@ class LD2410S : public Component, public uart::UARTDevice {
   void parse_ack_fw_read_(const uint8_t *data);
   void parse_ack_minimal_output_(uint8_t *data);
   void parse_ack_thresholds_read_(uint8_t *data);
-  // void parse_ack_threshold_hold_read_(uint8_t *data);
   void parse_ack_snrs_read_(uint8_t *data);
 
-  void publish_distance_(uint16_t distance, bool force_publish = false);
-  void publish_presence_(bool presence, bool force_publish = false);
-  void publish_calibration_progress_(uint16_t calibration_progress, bool force_publish = false);
-  void publish_calibration_running_(bool running, bool force_publish = false);
-  void publish_energy_values_(bool force_publish = false);
-  void publish_fw_version_(const std::string &version, bool force_publish = false);
-  void publish_threshold_trigger_(bool force_publish = false);
-  void publish_threshold_hold_(bool force_publish = false);
-  // void publish_threshold_snr_(bool force_publish = false);
+  LD2410Sschedule tx_schedule_;
+  LD2410Srx rx_;
 
-  static std::string format_int(uint32_t *in, uint8_t len, uint8_t min_w);
+  uint8_t tx_frame_[RX_TX_BUFFER_SIZE] = {};
 
+  // settings_;
+  uint8_t energy_values_[16] = {};
+  uint16_t has_target_{0};
+  uint16_t version_[3] = {0, 0, 0};
+  uint16_t target_distance_{0};
+  uint16_t cal_progress_{0};
+  uint16_t tx_frame_size_{0};
+  uint32_t gate_trig_threshold_[16] = {};
+  uint32_t gate_hold_threshold_[16] = {};
+  uint32_t max_detect_gate_{0};
+  uint32_t min_detect_gate_{0};
+  uint32_t delay_{0};
+  uint32_t status_reporting_freq_{0};
+  uint32_t distance_reporting_freq_{0};
+  uint32_t resp_speed_{5};
+  uint32_t loop_count_{0};
+  bool cal_running_{false};
+  bool pause_tx_{false};
+  bool minimal_output_{true};
+  bool init_done_{false};
+
+#ifdef USE_NUMBER
+  std::array<number::Number *, TOTAL_GATES> gate_trig_threshold_number_{};
+  std::array<number::Number *, TOTAL_GATES> gate_hold_threshold_number_{};
+#endif
+#ifdef USE_SENSOR
+  std::array<SensorWithDedup<uint8_t>, TOTAL_GATES> gate_energy_sensor_{};
 #endif
 
   // append variable sized append_data to data, returns true if not overflow
@@ -369,49 +292,47 @@ class LD2410S : public Component, public uart::UARTDevice {
            append_seq_data(data, insert_position, append_data, append_array_size, actual_size);
   }
 
-  void append_gate_thresholds(uint8_t *data, uint16_t &insert_position, uint16_t sub_command) {
+  static void append_gate_threshold(uint8_t *data, uint16_t &insert_position, uint16_t sub_command,
+                                    const uint32_t *triggers_array, const uint32_t *holds_array) {
     if (sub_command != NO_SUB_CMD) {
       if (sub_command >= 16)
         return;
+      append_seq_data(data, insert_position, &sub_command);
       if (sub_command < 8) {
-        append_seq_data(data, insert_position, &sub_command);
-        append_seq_data(data, insert_position, &this->trigger_thresholds_[sub_command]);
+        append_seq_data(data, insert_position, &triggers_array[sub_command]);
       } else {
-        append_seq_data(data, insert_position, &sub_command);
-        append_seq_data(data, insert_position, &this->holding_thresholds_[sub_command-8]);
+        append_seq_data(data, insert_position, &holds_array[sub_command - 8]);
       }
     } else {
       for (uint16_t i = 0; i < 16; i++) {
+        append_seq_data(data, insert_position, &i, 1);
         if (i < 8) {
-          append_seq_data(data, insert_position, &i, 1);
-          append_seq_data(data, insert_position, &this->trigger_thresholds_[i]);
+          append_seq_data(data, insert_position, &triggers_array[i]);
         } else {
-          append_seq_data(data, insert_position, &i, 1);
-          append_seq_data(data, insert_position, &this->holding_thresholds_[i - 8]);
+          append_seq_data(data, insert_position, &holds_array[i - 8]);
         }
       }
     }
   }
 
-  void append_gate_snrs(uint8_t *data, uint16_t &insert_position, uint16_t sub_command) {
+  static void append_gate_snrs(uint8_t *data, uint16_t &insert_position, uint16_t sub_command,
+                               const uint32_t *triggers_array, const uint32_t *holds_array) {
     if (sub_command != NO_SUB_CMD) {
       if (sub_command >= 16)
         return;
+      append_seq_data(data, insert_position, &sub_command);
       if (sub_command < 8) {
-        append_seq_data(data, insert_position, &sub_command);
-        append_seq_data(data, insert_position, &this->trigger_thresholds_[sub_command+8]);
+        append_seq_data(data, insert_position, &triggers_array[sub_command + 8]);
       } else {
-        append_seq_data(data, insert_position, &sub_command);
-        append_seq_data(data, insert_position, &this->holding_thresholds_[sub_command]);
+        append_seq_data(data, insert_position, &holds_array[sub_command]);
       }
     } else {
       for (uint16_t i = 0; i < 16; i++) {
+        append_seq_data(data, insert_position, &i, 1);
         if (i < 8) {
-          append_seq_data(data, insert_position, &i, 1);
-          append_seq_data(data, insert_position, &this->trigger_thresholds_[i+8]);
+          append_seq_data(data, insert_position, &triggers_array[i + 8]);
         } else {
-          append_seq_data(data, insert_position, &i, 1);
-          append_seq_data(data, insert_position, &this->holding_thresholds_[i]);
+          append_seq_data(data, insert_position, &holds_array[i]);
         }
       }
     }
