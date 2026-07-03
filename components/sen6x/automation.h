@@ -4,8 +4,7 @@
 #include "esphome/core/automation.h"
 #include "sen6x.h"
 
-namespace esphome {
-namespace sen6x {
+namespace esphome::sen6x {
 
 template<typename... Ts> class StartFanCleaningAction : public Action<Ts...>, public Parented<Sen6xComponent> {
  public:
@@ -59,5 +58,5 @@ class SetTemperatureCompensationAction : public Action<Ts...>, public Parented<S
   TEMPLATABLE_VALUE(uint8_t, slot)
 };
 
-}  // namespace sen6x
-}  // namespace esphome
+}  // namespace esphome::ld2410s
+
