@@ -33,44 +33,146 @@ ld2410s:
 binary_sensor:
   - platform: ld2410s
     has_target:
-      name: MMWAVE Presence
-    has_calibration_running:
-      name: LD2410S Calibration Running
+      name: Has Target
+    cal_running:
+      name: Cal Running
 
 button:
   - platform: ld2410s
-    calibration:
-      name: Cal Start Auto
-    factory_reset:
-      name: LD2410S Factory Reset
+    cal_start:
+      name: Cal Start
 
 number:
   - platform: ld2410s
-    max_distance:
-      name: Max Detect Distance
-    min_distance:
-      name: Min Detect Distance
+    max_detect_gate:
+      name: Max Detect Gate
+    min_detect_gate:
+      name: Min Detect Gate
     no_delay:
-      name: No detect Report Delay
+      name: No Detect Report Delay
     status_reporting_frequency:
-      name: Status Reporting Frequency
+      id: status_reporting_frequency
     distance_reporting_frequency:
-      name: Distance Reporting Frequency
-    threshold_trigger:
-      name: Threshold Trigger
-    threshold_hold:
-      name: Threshold Hold
-    threshold_snr:
-      name: Threshold SNR
-    threshold_selected_gate:
-      name: Threshold Selected Gate
+      id: distance_reporting_frequency
+    g0:
+      trigger_threshold:
+        name: G0 Trigger Threshold
+      hold_threshold:
+        name: G0 Hold Threshold
+    g1:
+      trigger_threshold:
+        name: G1 Trigger Threshold
+      hold_threshold:
+        name: G1 Hold Threshold
+    g2:
+      trigger_threshold:
+        name: G2 Trigger Threshold
+      hold_threshold:
+        name: G2 Hold Threshold
+    g3:
+      trigger_threshold:
+        name: G3 Trigger Threshold
+      hold_threshold:
+        name: G3 Hold Threshold
+    g4:
+      trigger_threshold:
+        name: G4 Trigger Threshold
+      hold_threshold:
+        name: G4 Hold Threshold
+    g5:
+      trigger_threshold:
+        name: G5 Trigger Threshold
+      hold_threshold:
+        name: G5 Hold Threshold
+    g6:
+      trigger_threshold:
+        name: G6 Trigger Threshold
+      hold_threshold:
+        name: G6 Hold Threshold
+    g7:
+      trigger_threshold:
+        name: G7 Trigger Threshold
+      hold_threshold:
+        name: G7 Hold Threshold
+    g8:
+      trigger_threshold:
+        name: G8 Trigger Threshold
+      hold_threshold:
+        name: G8 Hold Threshold
+    g9:
+      trigger_threshold:
+        name: G9 Trigger Threshold
+      hold_threshold:
+        name: G9 Hold Threshold
+    g10:
+      trigger_threshold:
+        name: G10 Trigger Threshold
+      hold_threshold:
+        name: G10 Hold Threshold
+    g11:
+      trigger_threshold:
+        name: G11 Trigger Threshold
+      hold_threshold:
+        name: G11 Hold Threshold
+    g12:
+      trigger_threshold:
+        name: G12 Trigger Threshold
+      hold_threshold:
+        name: G12 Hold Threshold
+    g13:
+      trigger_threshold:
+        name: G13 Trigger Threshold
+      hold_threshold:
+        name: G13 Hold Threshold
+    g14:
+      trigger_threshold:
+        name: G14 Trigger Threshold
+      hold_threshold:
+        name: G14 Hold Threshold
+    g15:
+      trigger_threshold:
+        name: G15 Trigger Threshold
+      hold_threshold:
+        name: G15 Hold Threshold
 
 sensor:
   - platform: ld2410s
     target_distance:
       name: Target Distance
-    calibration_progress:
-      name: Calibration Progress
+    cal_progress:
+      name: LD2410S Cal Progress
+    g0_energy:
+      name: G0 Energy
+    g1_energy:
+      name: G1 Energy
+    g2_energy:
+      name: G2 Energy
+    g3_energy:
+      name: G3 Energy
+    g4_energy:
+      name: G4 Energy
+    g5_energy:
+      name: G5 Energy
+    g6_energy:
+      name: G6 Energy
+    g7_energy:
+      name: G7 Energy
+    g8_energy:
+      name: G8 Energy
+    g9_energy:
+      name: G9 Energy
+    g10_energy:
+      name: G10 Energy
+    g11_energy:
+      name: G11 Energy
+    g12_energy:
+      name: G12 Energy
+    g13_energy:
+      name: G13 Energy
+    g14_energy:
+      name: G14 Energy
+    g15_energy:
+      name: G15 Energy
 
 select:
   - platform: ld2410s
@@ -86,12 +188,3 @@ text_sensor:
   - platform: ld2410s
     fw_version:
       name: Firmware version
-    threshold_triggers:
-      name: Threshold Triggers
-    threshold_holds:
-      name: Threshold Holds
-    threshold_snrs:
-      name: Threshold SNRs
-    energy_values:
-      name: Energy Values
-

@@ -2,24 +2,99 @@
 
 namespace esphome::ld2410s {
 
+#pragma region LD2410S Specific Constants
+static const char *const TAG = "ld2410s";
+
+static const uint16_t CMD_CONFIRMATION = 0x0100;  // Command confirmation response code
+
+static const uint8_t SHORT_DATA_FRAME_HEADER = 0x6E;
+static const uint8_t SHORT_DATA_FRAME_FOOTER = 0x62;
+static const uint32_t STD_DATA_FRAME_HEADER = 0xF1F2F3F4;
+static const uint32_t STD_DATA_FRAME_FOOTER = 0xF5F6F7F8;
+static const uint32_t CMD_FRAME_HEADER = 0xFAFBFCFD;
+static const uint32_t CMD_FRAME_FOOTER = 0x01020304;
+
+static const uint16_t CONFIG_MODE_START_CMD = 0x00FF;
+static const uint16_t CONFIG_MODE_START_VALUE = 0x0001;
+static const uint16_t CONFIG_MODE_END_CMD = 0x00FE;
+
+static const uint16_t OUTPUT_MODE_SWITCH_CMD = 0x007A;
+static const uint8_t OUTPUT_MODE_VALUE_STD[] = {0x00, 0x00, 0x01, 0x00, 0x00, 0x00};
+static const uint8_t OUTPUT_MODE_VALUE_MIN[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+static const uint16_t CALIBRATION_CMD = 0x0009;
+static const uint16_t CALIBRATION_TRIGGER_VALUE = 0x0002;
+static const uint16_t CALIBRATION_RETENTION_VALUE = 0x0001;
+static const uint16_t CALIBRATION_TIME_VALUE = 0x0078;
+
+static const uint16_t CFG_FW_READ_CMD = 0x0000;
+
+static const uint16_t CFG_PARAMS_READ_CMD = 0x0071;
+static const uint16_t CFG_PARAMS_WRITE_CMD = 0x0070;
+static const uint16_t CFG_MAX_DETECTION_VALUE = 0x0005;
+static const uint16_t CFG_MIN_DETECTION_VALUE = 0x000A;
+static const uint16_t CFG_NO_DELAY_VALUE = 0x0006;
+static const uint16_t CFG_STATUS_FREQ_VALUE = 0x0002;
+static const uint16_t CFG_DISTANCE_FREQ_VALUE = 0x000C;
+static const uint16_t CFG_RESPONSE_SPEED_VALUE = 0x000B;
+static const std::string CFG_RESPONSE_SPEED_NORMAL = "Normal";
+static const std::string CFG_RESPONSE_SPEED_FAST = "Fast";
+
+static const uint16_t CFG_GATE_THRESHOLDS_READ_CMD = 0x0073;
+static const uint16_t CFG_GATE_THRESHOLDS_WRITE_CMD = 0x0072;
+static const uint32_t CFG_GATE_THRESHOLDS_WRITE_DATA[] = {
+    48, 42, 36, 34, 32, 31, 31, 31,  // Distance Gate 0~7 Trigger Thresholds range 10~95 dB
+    31, 31, 31, 31, 31, 31, 31, 31   // Distance Gate 0~7 Holding Thresholds range 10~95 dB
+};
+
+static const uint16_t CFG_GATE_SNRS_READ_CMD = 0x0075;
+static const uint16_t CFG_GATE_SNRS_WRITE_CMD = 0x0074;
+static const uint32_t CFG_GATE_SNRS_WRITE_DATA[] = {
+    51, 50, 30, 28, 25, 25, 25, 25,  // Distance Gate 8~15 Trigger Thresholds range 5~63 dB
+    25, 25, 25, 25, 25, 22, 22, 22   // Distance Gate 8~15 Holding Thresholds range 5~63 dB
+};
+
+// ToDo
+// static const uint16_t SN_READ_CMD = 0x0011;
+// static const uint16_t SN_WRITE_CMD = 0x0010;
+
+#pragma endregion
+
+#pragma region Defines
+#define SAFE_PUBLISH_BINARY_SENSOR(sensor, value) \
+  if (sensor != nullptr) \
+    if (sensor->state != static_cast<bool>(value)) \
+      sensor->publish_state(static_cast<bool>(value));
+#define SAFE_PUBLISH_NUMBER(sensor, value) \
+  if (sensor != nullptr) \
+    if (sensor->state != static_cast<float>(value)) \
+      sensor->publish_state(static_cast<float>(value));
+#pragma endregion
+
+// Helper function to format firmware version with stack allocation
+// Buffer must be exactly 20 bytes (format: "vx.x.x" fits in 20 {19 + null terminator})
+static inline void format_version_str(const uint16_t *version, std::span<char, 20> buffer) {
+  snprintf(buffer.data(), buffer.size(), "v%" PRId16 ".%" PRId16 ".%" PRId16, version[0], version[1], version[2]);
+}
+
 #pragma region LD2410S
 
-void LD2410S::setup() {
-  ESP_LOGD(TAG, "setup");
-
-#ifdef LD2410S_V2
-  this->publish_distance_(0, true);
-  this->publish_presence_(false, true);
-
-  this->publish_calibration_progress_(0, true);
-  this->publish_calibration_running_(false, true);
-
-  this->set_threshold_selected_gate(0);
-
-  this->init_();
-#endif
+void LD2410SComponent::setup() {
+  ESP_LOGD(TAG, "Setup");
+  SAFE_PUBLISH_SENSOR(this->target_distance_sensor_, this->target_distance_);
+  SAFE_PUBLISH_SENSOR(this->cal_progress_sensor_, this->cal_progress_);
+  if (this->has_target_binary_sensor_ != nullptr) {
+    this->has_target_binary_sensor_->publish_state(this->has_target_);
+  }
+  if (this->cal_running_binary_sensor_ != nullptr) {
+    this->cal_running_binary_sensor_->publish_state(this->cal_running_);
+  }
+  this->init_done_ = false;
+  this->minimal_output_ = true;
+  this->read_all_();
 }
-void LD2410S::loop() {
+
+void LD2410SComponent::loop() {
   if (!this->receive_()) {
     if (!this->pause_tx_) {
       this->send_();
@@ -27,11 +102,153 @@ void LD2410S::loop() {
   }
   this->loop_count_++;
 }
-float LD2410S::get_setup_priority() const { return setup_priority::HARDWARE; }
 
+float LD2410SComponent::get_setup_priority() const { return setup_priority::HARDWARE; }
+
+void LD2410SComponent::dump_config() {
+  char version_s[20];
+  format_version_str(this->version_, version_s);
+
+  ESP_LOGCONFIG(TAG,
+                "LD2410S:\n"
+                "  Firmware version: %s",
+                version_s);
+
+#ifdef USE_BINARY_SENSOR
+  ESP_LOGCONFIG(TAG, "Binary Sensors:");
+  LOG_BINARY_SENSOR("  ", "Has Target", this->has_target_binary_sensor_);
+  LOG_BINARY_SENSOR("  ", "Cal Running", this->cal_running_binary_sensor_);
+#endif
+#ifdef USE_SENSOR
+  ESP_LOGCONFIG(TAG, "Sensors:");
+  LOG_SENSOR_WITH_DEDUP_SAFE("  ", "Cal Progress", this->cal_progress_sensor_);
+  for (auto &s : this->gate_energy_sensor_) {
+    LOG_SENSOR_WITH_DEDUP_SAFE("  ", "Gate Energy", s);
+  }
+  LOG_SENSOR_WITH_DEDUP_SAFE("  ", "Target Distance", this->target_distance_sensor_);
+#endif
+#ifdef USE_TEXT_SENSOR
+  ESP_LOGCONFIG(TAG, "Text Sensors:");
+  LOG_TEXT_SENSOR("  ", "FW Version", this->fw_version_text_sensor_);
+#endif
+#ifdef USE_NUMBER
+  ESP_LOGCONFIG(TAG, "Numbers:");
+  for (auto &n : this->gate_trig_threshold_number_) {
+    LOG_NUMBER("  ", "Trigger Threshold", n);
+  }
+  for (number::Number *n : this->gate_hold_threshold_number_) {
+    LOG_NUMBER("  ", "Hold Threshold", n);
+  }
+#endif
+#ifdef USE_SELECT
+  ESP_LOGCONFIG(TAG, "Selects:");
+  LOG_SELECT("  ", "Response Speed", this->response_speed_select_);
+#endif
+#ifdef USE_SWITCH
+  ESP_LOGCONFIG(TAG, "Switches:");
+  LOG_SWITCH("  ", "Minimal Output", this->minimal_output_switch_);
+#endif
+#ifdef USE_BUTTON
+  ESP_LOGCONFIG(TAG, "Buttons:");
+  LOG_BUTTON("  ", "Factory Reset", this->factory_reset_button_);
+  LOG_BUTTON("  ", "Cal Start", this->cal_start_button_);
+#endif
+}
+
+// button
+void LD2410SComponent::cal_start() {
+  this->cal_progress_ = 0;
+  this->cal_running_ = true;
+  SAFE_PUBLISH_SENSOR(this->cal_progress_sensor_, this->cal_progress_);
+  SAFE_PUBLISH_BINARY_SENSOR(this->cal_running_binary_sensor_, this->cal_running_);
+  this->tx_schedule_.append(CALIBRATION_CMD);
+}
+void LD2410SComponent::factory_reset() {
+  ESP_LOGI(TAG, "factory_reset");
+
+  // load defaults
+  this->max_detect_gate_ = 15;
+  this->min_detect_gate_ = 0;
+  this->delay_ = 10;
+  this->status_reporting_freq_ = 80;
+  this->distance_reporting_freq_ = 80;
+
+  this->minimal_output_ = true;
+
+  this->resp_speed_ = 5;
+
+  for (uint8_t gate = 0; gate < TOTAL_GATES / 2; gate++) {
+    this->gate_trig_threshold_[gate] = CFG_GATE_THRESHOLDS_WRITE_DATA[gate];
+    this->gate_hold_threshold_[gate] = CFG_GATE_THRESHOLDS_WRITE_DATA[gate + 8];
+    this->gate_trig_threshold_[gate + 8] = CFG_GATE_SNRS_WRITE_DATA[gate];
+    this->gate_hold_threshold_[gate + 8] = CFG_GATE_SNRS_WRITE_DATA[gate + 8];
+  }
+
+  // send defaults to radar
+  this->tx_schedule_.append(OUTPUT_MODE_SWITCH_CMD);
+
+  this->tx_schedule_.append(CFG_PARAMS_WRITE_CMD);
+  this->tx_schedule_.append(CFG_GATE_THRESHOLDS_WRITE_CMD);
+  this->tx_schedule_.append(CFG_GATE_SNRS_WRITE_CMD);
+
+  this->tx_schedule_.append(CFG_PARAMS_READ_CMD);
+  this->tx_schedule_.append(CFG_GATE_THRESHOLDS_READ_CMD);
+  this->tx_schedule_.append(CFG_GATE_SNRS_READ_CMD);
+}
+// number
+void LD2410SComponent::set_no_delay(float delay) {
+  this->delay_ = delay;
+  this->tx_schedule_.append(CFG_PARAMS_WRITE_CMD, CFG_NO_DELAY_VALUE);
+}
+void LD2410SComponent::set_distance_reporting_freq(float distance_reporting_freq) {
+  this->distance_reporting_freq_ = distance_reporting_freq * 10;
+  this->tx_schedule_.append(CFG_PARAMS_WRITE_CMD, CFG_DISTANCE_FREQ_VALUE);
+}
+void LD2410SComponent::set_max_detect_gate(float max_detect_gate) {
+  this->max_detect_gate_ = max_detect_gate;
+  this->tx_schedule_.append(CFG_PARAMS_WRITE_CMD, CFG_MAX_DETECTION_VALUE);
+}
+void LD2410SComponent::set_min_detect_gate(float min_detect_gate) {
+  this->min_detect_gate_ = min_detect_gate;
+  this->tx_schedule_.append(CFG_PARAMS_WRITE_CMD, CFG_MIN_DETECTION_VALUE);
+}
+void LD2410SComponent::set_status_reporting_freq(float status_reporting_freq) {
+  this->status_reporting_freq_ = status_reporting_freq * 10;
+  this->tx_schedule_.append(CFG_PARAMS_WRITE_CMD, CFG_STATUS_FREQ_VALUE);
+}
+void LD2410SComponent::set_gate_hold_threshold(uint8_t gate, float hold_threshold) {
+  this->gate_hold_threshold_[gate] = hold_threshold;
+  this->tx_schedule_.append(CFG_GATE_THRESHOLDS_WRITE_CMD, gate);
+}
+void LD2410SComponent::set_gate_trig_threshold(uint8_t gate, float trigger_threshold) {
+  this->gate_trig_threshold_[gate] = trigger_threshold;
+  this->tx_schedule_.append(CFG_GATE_THRESHOLDS_WRITE_CMD, gate);
+}
+// select
+void LD2410SComponent::set_response_speed(size_t index) {
+  this->resp_speed_ = index == 1 ? 10 : 5;
+  this->tx_schedule_.append(CFG_PARAMS_WRITE_CMD, CFG_RESPONSE_SPEED_VALUE);
+}
+// switch
+void LD2410SComponent::set_minimal_output(bool state) {
+  this->minimal_output_ = state;
+  this->tx_schedule_.append(OUTPUT_MODE_SWITCH_CMD);
+#ifdef USE_SENSOR
+  for (uint8_t gate = 0; gate < TOTAL_GATES; gate++) {
+    SAFE_PUBLISH_SENSOR_UNKNOWN(this->gate_energy_sensor_[gate]);
+  }
+#endif
+}
+void LD2410SComponent::read_all_() {
+  this->tx_schedule_.append(OUTPUT_MODE_SWITCH_CMD);
+  this->tx_schedule_.append(CFG_FW_READ_CMD);
+  this->tx_schedule_.append(CFG_PARAMS_READ_CMD);
+  this->tx_schedule_.append(CFG_GATE_THRESHOLDS_READ_CMD);
+  this->tx_schedule_.append(CFG_GATE_SNRS_READ_CMD);
+}
 // prepares scheduled frames for sending
 // executes actual data sending
-void LD2410S::send_() {
+void LD2410SComponent::send_() {
   switch (this->tx_schedule_.check_state(this->loop_count_)) {
     case TxCmdState::SCHEDULED:
       this->build_cmd_frame_(this->tx_schedule_.get_command(), this->tx_schedule_.get_sub_command());
@@ -39,9 +256,12 @@ void LD2410S::send_() {
       break;
 
     case TxCmdState::SEND:
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERY_VERBOSE
       char hex_buf[format_hex_pretty_size(RX_TX_BUFFER_SIZE)];
-      ESP_LOGVV(TAG, ">   [loop:%d] cmd:%04x > %s", this->loop_count_, this->tx_schedule_.get_command(),
+      ESP_LOGVV(TAG, ">   [loop:%" PRIu32 "] cmd:%04" PRIX16 " > %s", this->loop_count_,
+                this->tx_schedule_.get_command(),
                 format_hex_pretty_to(hex_buf, this->tx_frame_, this->tx_frame_size_, ' '));
+#endif
       this->write_array(this->tx_frame_, this->tx_frame_size_);
       this->flush();
 
@@ -51,16 +271,14 @@ void LD2410S::send_() {
       break;
 
     case TxCmdState::FAILED:
-      ESP_LOGD(TAG, ">XX [loop:%d] Scheduling command send failed!!!, re-initializing...", this->loop_count_);
-      this->tx_schedule_.reset_schedule();
-#ifdef LD2410S_V2
-      this->pause_tx_ = true;
-      this->set_timeout("Pausing Sending", 15000, [this]() {
-        this->pause_tx_ = false;
-        this->init_();
-      });
-
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+      ESP_LOGV(TAG, ">XX [loop:%" PRIu32 "] Scheduling command send failed!!!, re-initializing...", this->loop_count_);
+#else
+      ESP_LOGD(TAG, "Scheduling command send failed!!!, re-initializing...");
 #endif
+      this->tx_schedule_.reset_schedule();
+      this->pause_tx_ = true;
+      this->set_timeout("Pausing Sending", 15000, [this]() { this->pause_tx_ = false; });
       static const uint8_t CFG_END[] = {0xFD, 0xFC, 0xFB, 0xFA, 0x02, 0x00, 0xFE, 0x00, 0x04, 0x03, 0x02, 0x01};
       this->write_array(CFG_END, sizeof(CFG_END));
       this->flush();
@@ -69,7 +287,7 @@ void LD2410S::send_() {
     case TxCmdState::IDLE:
       if (!this->init_done_) {
         this->init_done_ = true;
-        ESP_LOGV(TAG, "+++ [loop:%d] Setup done", this->loop_count_);
+        ESP_LOGD(TAG, "Initialized");
       }
       break;
 
@@ -79,8 +297,8 @@ void LD2410S::send_() {
   }
 }
 // builds CMD_FRAME
-void LD2410S::build_cmd_frame_(uint16_t command, uint16_t sub_command) {
-  ESP_LOGV(TAG, ":>> [loop:%d] cmd:%04x Prepare frame ", this->loop_count_, command);
+void LD2410SComponent::build_cmd_frame_(uint16_t command, uint16_t sub_command) {
+  ESP_LOGV(TAG, ":>> [loop:%" PRIu32 "] cmd:%04" PRIX16 " Prepare frame ", this->loop_count_, command);
 
   this->tx_frame_size_ = 0;
 
@@ -145,11 +363,11 @@ void LD2410S::build_cmd_frame_(uint16_t command, uint16_t sub_command) {
       } else {
         switch (sub_command) {
           case CFG_MAX_DETECTION_VALUE:
-            append_seq_data_value(this->tx_frame_, this->tx_frame_size_, sub_command, &this->max_dist_);
+            append_seq_data_value(this->tx_frame_, this->tx_frame_size_, sub_command, &this->max_detect_gate_);
             break;
 
           case CFG_MIN_DETECTION_VALUE:
-            append_seq_data_value(this->tx_frame_, this->tx_frame_size_, sub_command, &this->min_dist_);
+            append_seq_data_value(this->tx_frame_, this->tx_frame_size_, sub_command, &this->min_detect_gate_);
             break;
 
           case CFG_NO_DELAY_VALUE:
@@ -157,11 +375,11 @@ void LD2410S::build_cmd_frame_(uint16_t command, uint16_t sub_command) {
             break;
 
           case CFG_STATUS_FREQ_VALUE:
-            append_seq_data_value(this->tx_frame_, this->tx_frame_size_, sub_command, &this->status_freq_);
+            append_seq_data_value(this->tx_frame_, this->tx_frame_size_, sub_command, &this->status_reporting_freq_);
             break;
 
           case CFG_DISTANCE_FREQ_VALUE:
-            append_seq_data_value(this->tx_frame_, this->tx_frame_size_, sub_command, &this->dist_freq_);
+            append_seq_data_value(this->tx_frame_, this->tx_frame_size_, sub_command, &this->distance_reporting_freq_);
             break;
 
           case CFG_RESPONSE_SPEED_VALUE:
@@ -169,11 +387,11 @@ void LD2410S::build_cmd_frame_(uint16_t command, uint16_t sub_command) {
             break;
 
           default:
-            append_seq_data_value(this->tx_frame_, this->tx_frame_size_, CFG_MAX_DETECTION_VALUE, &this->max_dist_);
-            append_seq_data_value(this->tx_frame_, this->tx_frame_size_, CFG_MIN_DETECTION_VALUE, &this->min_dist_);
+            append_seq_data_value(this->tx_frame_, this->tx_frame_size_, CFG_MAX_DETECTION_VALUE, &this->max_detect_gate_);
+            append_seq_data_value(this->tx_frame_, this->tx_frame_size_, CFG_MIN_DETECTION_VALUE, &this->min_detect_gate_);
             append_seq_data_value(this->tx_frame_, this->tx_frame_size_, CFG_NO_DELAY_VALUE, &this->delay_);
-            append_seq_data_value(this->tx_frame_, this->tx_frame_size_, CFG_STATUS_FREQ_VALUE, &this->status_freq_);
-            append_seq_data_value(this->tx_frame_, this->tx_frame_size_, CFG_DISTANCE_FREQ_VALUE, &this->dist_freq_);
+            append_seq_data_value(this->tx_frame_, this->tx_frame_size_, CFG_STATUS_FREQ_VALUE, &this->status_reporting_freq_);
+            append_seq_data_value(this->tx_frame_, this->tx_frame_size_, CFG_DISTANCE_FREQ_VALUE, &this->distance_reporting_freq_);
             append_seq_data_value(this->tx_frame_, this->tx_frame_size_, CFG_RESPONSE_SPEED_VALUE, &this->resp_speed_);
             break;
         }
@@ -186,9 +404,8 @@ void LD2410S::build_cmd_frame_(uint16_t command, uint16_t sub_command) {
       append_seq_data(this->tx_frame_, this->tx_frame_size_, &CALIBRATION_TIME_VALUE);
       break;
 
-    case CFG_GATE_THRESHOLD_TRIGGER_READ_CMD:
-    case CFG_GATE_THRESHOLD_HOLD_READ_CMD:
-    case CFG_GATE_THRESHOLD_SNR_READ_CMD:
+    case CFG_GATE_THRESHOLDS_READ_CMD:
+    case CFG_GATE_SNRS_READ_CMD:
       if (sub_command != NO_SUB_CMD) {
         append_seq_data(this->tx_frame_, this->tx_frame_size_, &sub_command);
       } else {
@@ -198,16 +415,14 @@ void LD2410S::build_cmd_frame_(uint16_t command, uint16_t sub_command) {
       }
       break;
 
-    case CFG_GATE_THRESHOLD_TRIGGER_WRITE_CMD:
-      append_gate_thresholds(this->tx_frame_, this->tx_frame_size_, sub_command, this->thresholds_trigger_);
+    case CFG_GATE_THRESHOLDS_WRITE_CMD:
+      append_gate_threshold(this->tx_frame_, this->tx_frame_size_, sub_command, this->gate_trig_threshold_,
+                            this->gate_hold_threshold_);
       break;
 
-    case CFG_GATE_THRESHOLD_HOLD_WRITE_CMD:
-      append_gate_thresholds(this->tx_frame_, this->tx_frame_size_, sub_command, this->thresholds_hold_);
-      break;
-
-    case CFG_GATE_THRESHOLD_SNR_WRITE_CMD:
-      append_gate_thresholds(this->tx_frame_, this->tx_frame_size_, sub_command, this->thresholds_snr_);
+    case CFG_GATE_SNRS_WRITE_CMD:
+      append_gate_snrs(this->tx_frame_, this->tx_frame_size_, sub_command, this->gate_trig_threshold_,
+                       this->gate_hold_threshold_);
       break;
 
     default:
@@ -222,16 +437,16 @@ void LD2410S::build_cmd_frame_(uint16_t command, uint16_t sub_command) {
   append_seq_data(this->tx_frame_, this->tx_frame_size_, &CMD_FRAME_FOOTER);
 }
 
-void LD2410S::sending_pause_() {
+void LD2410SComponent::sending_pause_() {
   this->pause_tx_ = true;
   this->set_timeout("Pausing Sending", TX_PAUSE_TIMEOUT, [this]() {
-    ESP_LOGVV("ld2410s", "Proceeding after tx pause of %d ms", TX_PAUSE_TIMEOUT);
+    ESP_LOGVV(TAG, "Proceeding after tx pause of %" PRIu16 " ms", TX_PAUSE_TIMEOUT);
     this->pause_tx_ = false;
   });
 }
 
 // receives frames and starts processing
-bool LD2410S::receive_() {
+bool LD2410SComponent::receive_() {
   uint8_t rx;
   int rx_bytes_count = 0;
 
@@ -248,7 +463,7 @@ bool LD2410S::receive_() {
   return rx_bytes_count > 0;
 }
 // starts received frame decoding, and handling received data
-void LD2410S::parse_() {
+void LD2410SComponent::parse_() {
   switch (this->rx_.frame_type()) {
     case RxFrameType::SHORT_DATA_FRAME:
       this->parse_short_data_frame_();
@@ -264,95 +479,124 @@ void LD2410S::parse_() {
 
     default:
       char hex_buf[format_hex_pretty_size(RX_TX_BUFFER_SIZE)];
-      ESP_LOGD(TAG, "Received Unknown package type!!! < %s",
+      ESP_LOGE(TAG, "Received Unknown package type!!! < %s",
                format_hex_pretty_to(hex_buf, this->rx_.frame_data(), this->rx_.frame_size(), ' '));
       break;
   }
 }
-void LD2410S::parse_short_data_frame_() {
+void LD2410SComponent::parse_short_data_frame_() {
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERY_VERBOSE
   char hex_buf[format_hex_pretty_size(RX_TX_BUFFER_SIZE)];
-  ESP_LOGVV(TAG, "<   [loop:%d] short data < %s", this->loop_count_,
+  ESP_LOGVV(TAG, "<   [loop:%" PRIu32 "] short data < %s", this->loop_count_,
             format_hex_pretty_to(hex_buf, this->rx_.frame_data(), this->rx_.frame_size(), ' '));
-
-  if (this->rx_.payload_size() < 3)
-    return;
-
-  const bool presence_state = this->rx_.payload_data()[0] > 1;
-  uint16_t distance = encode_uint16(this->rx_.payload_data()[2], this->rx_.payload_data()[1]);
-
-  if (!presence_state)
-    distance = 0;
-
-#ifdef LD2410S_V2
-  this->publish_distance_(distance);
-  this->publish_presence_(presence_state);
 #endif
-}
-void LD2410S::parse_data_frame_() {
-  if (this->rx_.payload_size() < 1)
+  if (this->rx_.payload_size() < 3) {
+    ESP_LOGW(TAG, "Payload too small, ignored");
     return;
+  }
+
+  this->has_target_ = this->rx_.payload_data()[0] > 1;
+  this->target_distance_ = encode_uint16(this->rx_.payload_data()[2], this->rx_.payload_data()[1]);
+
+  if (!this->has_target_)
+    this->target_distance_ = 0;
+
+  SAFE_PUBLISH_SENSOR(this->target_distance_sensor_, this->target_distance_);
+  SAFE_PUBLISH_BINARY_SENSOR(this->has_target_binary_sensor_, this->has_target_);
+}
+void LD2410SComponent::parse_data_frame_() {
+  if (this->rx_.payload_size() < 1) {
+    ESP_LOGW(TAG, "Payload too small, ignored");
+    return;
+  }
 
   switch (this->rx_.payload_data()[0]) {
     case 0x01:  // standard data
     {
-      if (this->rx_.payload_size() < 4)
+      if (this->rx_.payload_size() < 4) {
+        ESP_LOGW(TAG, "Payload too small, ignored");
         break;
+      }
 
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERY_VERBOSE
       char hex_buf[format_hex_pretty_size(RX_TX_BUFFER_SIZE)];
-      ESP_LOGVV(TAG, "<   [loop:%d] std data < %s", this->loop_count_,
-                format_hex_pretty_to(hex_buf, this->rx_.frame_data(), this->rx_.frame_size(), ' '));
-
-      const bool presence_state = this->rx_.payload_data()[1] > 1;
-
-      uint16_t distance = encode_uint16(this->rx_.payload_data()[3], this->rx_.payload_data()[2]);
-      if (!presence_state)
-        distance = 0;
-
-#ifdef LD2410S_V2
-      this->publish_distance_(distance);
-      this->publish_presence_(presence_state);
-
-      if (this->rx_.payload_size() >= 7)
-        this->parse_data_energy_values_read_(&this->rx_.payload_data()[6]);
+      ESP_LOGV(TAG, "<   [loop:%" PRIu32 "] Std Data < %s", this->loop_count_,
+               format_hex_pretty_to(hex_buf, this->rx_.frame_data(), this->rx_.frame_size(), ' '));
 #endif
+      this->has_target_ = this->rx_.payload_data()[1] > 1;
+
+      this->target_distance_ = encode_uint16(this->rx_.payload_data()[3], this->rx_.payload_data()[2]);
+      if (!this->has_target_) {
+        this->target_distance_ = 0;
+      }
+      SAFE_PUBLISH_SENSOR(this->target_distance_sensor_, this->target_distance_);
+      SAFE_PUBLISH_BINARY_SENSOR(this->has_target_binary_sensor_, this->has_target_);
+
+      if (this->rx_.payload_size() < 7) {
+        // no energy values
+        ESP_LOGV(TAG, "Std Data Frame Parsed Has Target=%s, Target Distance=%" PRIu16 "cm",
+                 TRUEFALSE(this->has_target_), this->target_distance_);
+      } else {
+        // energy values included
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+        char energy_s[65];
+        snprintf(energy_s, 65,
+                 "%" PRIu16 ",%" PRIu16 ",%" PRIu16 ",%" PRIu16 ",%" PRIu16 ",%" PRIu16 ",%" PRIu16 ",%" PRIu16
+                 ",%" PRIu16 ",%" PRIu16 ",%" PRIu16 ",%" PRIu16 ",%" PRIu16 ",%" PRIu16 ",%" PRIu16 ",%" PRIu16,
+                 this->energy_values_[0], this->energy_values_[1], this->energy_values_[2], this->energy_values_[3],
+                 this->energy_values_[4], this->energy_values_[5], this->energy_values_[6], this->energy_values_[7],
+                 this->energy_values_[8], this->energy_values_[9], this->energy_values_[10], this->energy_values_[11],
+                 this->energy_values_[12], this->energy_values_[13], this->energy_values_[14],
+                 this->energy_values_[15]);
+        ESP_LOGV(TAG, "Std Data Frame Parsed Has Target=%s, Target Distance=%" PRIu16 "cm, Energy=%s",
+                 TRUEFALSE(this->has_target_), this->target_distance_, energy_s);
+#endif
+        this->parse_data_energy_values_read_(&this->rx_.payload_data()[6]);
+      }
 
       break;
     }
 
     case 0x03:  // calibration progress
     {
-#ifdef LD2410S_V2
-      if (this->rx_.payload_size() < 3)
+      if (this->rx_.payload_size() < 3) {
+        ESP_LOGW(TAG, "Payload too small, ignored");
         break;
+      }
 
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERY_VERBOSE
       char hex_buf[format_hex_pretty_size(RX_TX_BUFFER_SIZE)];
-      ESP_LOGVV(TAG, "<   [loop:%d] std calibration < %s", this->loop_count_,
+      ESP_LOGVV(TAG, "<   [loop:%" PRIu32 "] std calibration < %s", this->loop_count_,
                 format_hex_pretty_to(hex_buf, this->rx_.frame_data(), this->rx_.frame_size(), ' '));
-
-      uint16_t progress = encode_uint16(this->rx_.payload_data()[2], this->rx_.payload_data()[1]);
-
+#endif
+      this->cal_progress_ = encode_uint16(this->rx_.payload_data()[2], this->rx_.payload_data()[1]);
       this->sending_pause_();
 
-      if (progress == 100) {
-        this->publish_calibration_running_(false);
+      if (this->cal_progress_ == 100) {
+        this->cal_running_ = false;
+        SAFE_PUBLISH_SENSOR(this->cal_progress_sensor_, this->cal_progress_);
+        SAFE_PUBLISH_BINARY_SENSOR(this->cal_running_binary_sensor_, this->cal_running_);
         this->read_all_thresholds_();
+        this->set_timeout("Cal Prog Delay", 5000, [this]() {
+          SAFE_PUBLISH_SENSOR_UNKNOWN(this->cal_progress_sensor_);
+        });
       } else {
-        this->publish_calibration_running_(true);
+        this->cal_running_ = true;
+        SAFE_PUBLISH_SENSOR(this->cal_progress_sensor_, this->cal_progress_);
       }
-      this->publish_calibration_progress_(progress);
-#endif
-
       break;
     }
 
     default:
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERY_VERBOSE
       char hex_buf[format_hex_pretty_size(RX_TX_BUFFER_SIZE)];
-      ESP_LOGV(TAG, "<XX [loop:%d] std, Unknown std frame type < %s", this->loop_count_,
-               format_hex_pretty_to(hex_buf, this->rx_.frame_data(), this->rx_.frame_size(), ' '));
+      ESP_LOGVV(TAG, "<XX [loop:%" PRIu32 "] std, Unknown std frame type < %s", this->loop_count_,
+                format_hex_pretty_to(hex_buf, this->rx_.frame_data(), this->rx_.frame_size(), ' '));
+#endif
       break;
   }
 }
-void LD2410S::parse_cmd_frame_() {
+void LD2410SComponent::parse_cmd_frame_() {
   if (this->rx_.payload_size() < 4)
     return;
 
@@ -366,11 +610,15 @@ void LD2410S::parse_cmd_frame_() {
 
   char hex_buf[format_hex_pretty_size(RX_TX_BUFFER_SIZE)];
   if (ack == 0x0000) {
-    ESP_LOGVV(TAG, "<   [loop:%d] cmd:%04x < %s", this->loop_count_, command_word,
+    ESP_LOGVV(TAG, "<   [loop:%" PRIu32 "] cmd:%04" PRIX16 " < %s", this->loop_count_, command_word,
               format_hex_pretty_to(hex_buf, this->rx_.frame_data(), this->rx_.frame_size(), ' '));
   } else {
-    ESP_LOGD(TAG, "<XX [loop:%d] cmd:%04x Failed ack:%04x < %s", this->loop_count_, command_word, ack,
-             format_hex_pretty_to(hex_buf, this->rx_.frame_data(), this->rx_.frame_size(), ' '));
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+    ESP_LOGD(TAG, "<XX [loop:%" PRIu32 "] cmd:%04" PRIX16 " Failed ack:%" PRIX16 " < %s", this->loop_count_,
+             command_word, ack, format_hex_pretty_to(hex_buf, this->rx_.frame_data(), this->rx_.frame_size(), ' '));
+#else
+    ESP_LOGE(TAG, "Failed ack");
+#endif
   }
 
   this->tx_schedule_.verify_response(command_word, this->loop_count_);
@@ -378,9 +626,7 @@ void LD2410S::parse_cmd_frame_() {
   uint8_t *data = &data_start[read_position];
 
   switch (command_word) {
-    // Process acknowledgements
-
-#ifdef LD2410S_V2
+      // Process acknowledgements
 
     case CONFIG_MODE_START_CMD | CMD_CONFIRMATION:
       if (this->rx_.payload_size() < 8)
@@ -406,16 +652,12 @@ void LD2410S::parse_cmd_frame_() {
       this->parse_ack_minimal_output_(data);
       break;
 
-    case CFG_GATE_THRESHOLD_TRIGGER_WRITE_CMD | CMD_CONFIRMATION:
-      ESP_LOGI(TAG, "Trigger Threshold written");
+    case CFG_GATE_THRESHOLDS_WRITE_CMD | CMD_CONFIRMATION:
+      ESP_LOGI(TAG, "Gate Threshold written");
       break;
 
-    case CFG_GATE_THRESHOLD_HOLD_WRITE_CMD | CMD_CONFIRMATION:
-      ESP_LOGI(TAG, "Trigger Hold written");
-      break;
-
-    case CFG_GATE_THRESHOLD_SNR_WRITE_CMD | CMD_CONFIRMATION:
-      ESP_LOGI(TAG, "Trigger SNR written");
+    case CFG_GATE_SNRS_WRITE_CMD | CMD_CONFIRMATION:
+      ESP_LOGI(TAG, "Gate SNR written");
       break;
 
       // Read command acknowledgements
@@ -432,24 +674,17 @@ void LD2410S::parse_cmd_frame_() {
       this->parse_ack_fw_read_(data);
       break;
 
-    case CFG_GATE_THRESHOLD_TRIGGER_READ_CMD | CMD_CONFIRMATION:
+    case CFG_GATE_THRESHOLDS_READ_CMD | CMD_CONFIRMATION:
       if (this->rx_.payload_size() < 68)
         break;
-      this->parse_ack_threshold_trigger_read_(data);
+      this->parse_ack_thresholds_read_(data);
       break;
 
-    case CFG_GATE_THRESHOLD_HOLD_READ_CMD | CMD_CONFIRMATION:
+    case CFG_GATE_SNRS_READ_CMD | CMD_CONFIRMATION:
       if (this->rx_.payload_size() < 68)
         break;
-      this->parse_ack_threshold_hold_read_(data);
+      this->parse_ack_snrs_read_(data);
       break;
-
-    case CFG_GATE_THRESHOLD_SNR_READ_CMD | CMD_CONFIRMATION:
-      if (this->rx_.payload_size() < 68)
-        break;
-      this->parse_ack_threshold_snr_read_(data);
-      break;
-#endif
 
     default:
       ESP_LOGD(TAG, "< Unknown: %4x", command_word);
@@ -457,6 +692,116 @@ void LD2410S::parse_cmd_frame_() {
   }
 }
 
+void LD2410SComponent::read_all_thresholds_() {
+  this->tx_schedule_.append(CFG_GATE_THRESHOLDS_READ_CMD);
+  this->tx_schedule_.append(CFG_GATE_SNRS_READ_CMD);
+}
+
+void LD2410SComponent::parse_data_energy_values_read_(uint8_t *data) {
+#ifdef USE_SENSOR
+  uint16_t read_position = 0;
+  for (auto &energy_value : this->energy_values_) {
+    uint32_t val = 0;
+    read_seq_data(data, read_position, &val);
+
+    uint32_t db = 0;
+    if (val > 0) {
+      db = 10 * log10(val);
+    }
+    energy_value = db;
+  }
+  for (uint8_t gate = 0; gate < TOTAL_GATES; gate++) {
+    SAFE_PUBLISH_SENSOR(this->gate_energy_sensor_[gate], this->energy_values_[gate]);
+  }
+#endif
+}
+
+void LD2410SComponent::parse_ack_config_start_(const uint8_t *data) {
+  uint16_t read_position = 0;
+  uint16_t protocol_version = 0;
+  uint16_t buffer_size = 0;
+  read_seq_data(data, read_position, &protocol_version);  // does not exist in both documents
+  read_seq_data(data, read_position, &buffer_size);
+
+  ESP_LOGD(TAG, "CONFIG MODE ENABLED, protocol_version:%" PRIu16 "  buffer_size:%" PRIu16, protocol_version,
+           buffer_size);
+}
+void LD2410SComponent::parse_ack_config_end_(const uint8_t *data) { ESP_LOGD(TAG, "CONFIG MODE DISABLED"); }
+void LD2410SComponent::parse_ack_minimal_output_(uint8_t *data) {
+  if (this->minimal_output_) {
+    ESP_LOGD(TAG, "Minimal Output Mode switched ON");
+  } else {
+    ESP_LOGD(TAG, "Minimal Output Mode switched OFF");
+  }
+#ifdef USE_SWITCH
+  if (this->minimal_output_switch_ != nullptr) {
+    this->minimal_output_switch_->publish_state(this->minimal_output_);
+  }
+#endif
+}
+void LD2410SComponent::parse_ack_config_read_(uint8_t *data) {
+  uint16_t read_position = 0;
+  read_seq_data(data, read_position, &this->max_detect_gate_);
+  read_seq_data(data, read_position, &this->min_detect_gate_);
+  read_seq_data(data, read_position, &this->delay_);
+  read_seq_data(data, read_position, &this->status_reporting_freq_);
+  read_seq_data(data, read_position, &this->distance_reporting_freq_);
+  read_seq_data(data, read_position, &this->resp_speed_);
+
+#ifdef USE_NUMBER
+  SAFE_PUBLISH_NUMBER(this->max_detect_gate_number_, static_cast<float>(this->max_detect_gate_));
+  SAFE_PUBLISH_NUMBER(this->min_detect_gate_number_, static_cast<float>(this->min_detect_gate_));
+  SAFE_PUBLISH_NUMBER(this->no_delay_number_, static_cast<float>(this->delay_));
+  SAFE_PUBLISH_NUMBER(this->status_reporting_freq_number_, static_cast<float>(this->status_reporting_freq_) / 10);
+  SAFE_PUBLISH_NUMBER(this->distance_reporting_freq_number_, static_cast<float>(this->distance_reporting_freq_) / 10);
+#endif
+#ifdef USE_SELECT
+  if (this->response_speed_select_ != nullptr) {
+    this->response_speed_select_->publish_state(this->resp_speed_ == 10 ? 1 : 0);
+  }
+#endif
+}
+void LD2410SComponent::parse_ack_fw_read_(const uint8_t *data) {
+  uint16_t read_position = 4;  // skip equipment type
+  read_seq_data(data, read_position, &this->version_[0]);
+  read_seq_data(data, read_position, &this->version_[1]);
+  read_seq_data(data, read_position, &this->version_[2]);
+#ifdef USE_TEXT_SENSOR
+  if (this->fw_version_text_sensor_ != nullptr) {
+    char version_s[20];
+    format_version_str(this->version_, version_s);
+    if (this->fw_version_text_sensor_ != nullptr) {
+      this->fw_version_text_sensor_->publish_state(version_s);
+    }
+  }
+#endif
+}
+void LD2410SComponent::parse_ack_thresholds_read_(uint8_t *data) {
+#ifdef USE_NUMBER
+  uint16_t read_position = 0;
+  uint32_t gate_threshold[16];
+  read_seq_data(data, read_position, gate_threshold, 16, 4);
+  for (uint8_t gate = 0; gate < TOTAL_GATES / 2; gate++) {
+    this->gate_trig_threshold_[gate] = gate_threshold[gate];
+    SAFE_PUBLISH_NUMBER(this->gate_trig_threshold_number_[gate], gate_threshold[gate]);
+    this->gate_hold_threshold_[gate] = gate_threshold[gate + 8];
+    SAFE_PUBLISH_NUMBER(this->gate_hold_threshold_number_[gate], gate_threshold[gate + 8]);
+  }
+#endif
+}
+void LD2410SComponent::parse_ack_snrs_read_(uint8_t *data) {
+#ifdef USE_NUMBER
+  uint16_t read_position = 0;
+  uint32_t gate_threshold[16];
+  read_seq_data(data, read_position, gate_threshold, 16, 4);
+  for (uint8_t gate = 0; gate < TOTAL_GATES / 2; gate++) {
+    this->gate_trig_threshold_[gate + 8] = gate_threshold[gate];
+    SAFE_PUBLISH_NUMBER(this->gate_trig_threshold_number_[gate + 8], gate_threshold[gate]);
+    this->gate_hold_threshold_[gate + 8] = gate_threshold[gate + 8];
+    SAFE_PUBLISH_NUMBER(this->gate_hold_threshold_number_[gate + 8], gate_threshold[gate + 8]);
+  }
+#endif
+}
 #pragma endregion
 
 #pragma region LD2410Srx
@@ -485,16 +830,18 @@ RxEvaluationResult LD2410Srx::receive_byte(uint32_t loop_count, uint8_t byte) {
     case RxEvaluationResult::UNKNOWN:
       this->end_pos_++;
       if (this->end_pos_ >= RX_TX_BUFFER_SIZE) {
-        ESP_LOGV(TAG, "XX< [loop:%d] Received data buffer overflow, resetting", loop_count);
+        ESP_LOGV(TAG, "XX< [loop:%" PRIu32 "] Received data buffer overflow, resetting", loop_count);
         this->reset();
       }
       break;
 
     case RxEvaluationResult::NOK:
     default:
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
       char hex_buf[format_hex_pretty_size(RX_TX_BUFFER_SIZE)];
-      ESP_LOGV(TAG, "<XX [loop:%d] %s < %s", loop_count, this->msg_.c_str(),
+      ESP_LOGV(TAG, "<XX [loop:%" PRIu32 "] %s < %s", loop_count, this->msg_.c_str(),
                format_hex_pretty_to(hex_buf, this->rcv_buffer_, end_pos_ + 1, ' '));
+#endif
       this->reset();
       result = RxEvaluationResult::UNKNOWN;
       break;
@@ -595,13 +942,11 @@ RxEvaluationResult LD2410Srx::evaluate_size_(uint16_t end_pos) {
 
   if (this->expected_frame_size_ == 0 || end_pos < this->expected_frame_size_) {
     return RxEvaluationResult::UNKNOWN;  // not enough data yet to determine size
-
   } else if (end_pos > this->expected_frame_size_) {
     char msg_buf[48];
-    snprintf(msg_buf, sizeof(msg_buf), "rx passed the expected frame, expected:%u", this->expected_frame_size_);
+    snprintf(msg_buf, sizeof(msg_buf), "rx passed the expected frame, expected:%" PRIu8, this->expected_frame_size_);
     this->msg_ = msg_buf;
     return RxEvaluationResult::NOK;  // passed the end of short data frame
-
   } else {
     return RxEvaluationResult::OK;  // correct size
   }
@@ -669,15 +1014,20 @@ int LD2410Srx::read_int(const uint8_t *buffer, size_t pos, size_t len) {
 // Appends new task to schedule
 void LD2410Sschedule::append(uint16_t command, uint16_t sub_command) {
   if (this->last_ > 0) {
-    ESP_LOGV(TAG, "append => cmd:%04x, prev_cmd:%04x, active:%d, last:%d", command,
+    ESP_LOGV(TAG, "append => cmd:%04" PRIX16 ", prev_cmd:%04" PRIX16 ", active:%" PRIu8 ", last:%" PRIu8, command,
              this->commands_[this->last_ - 1].command, this->active_, this->last_);
   } else {
-    ESP_LOGV(TAG, "append => cmd:%04x, prev_cmd:none, active:%d, last:%d", command, this->active_, this->last_);
+    ESP_LOGV(TAG, "append => cmd:%04" PRIX16 ", prev_cmd:none, active:%" PRIu8 ", last:%" PRIu8, command, this->active_,
+             this->last_);
   }
 
   if (this->last_ >= TX_SCHEDULE_BUFFER_SIZE) {
-    ESP_LOGW(TAG, "++: pos:[%d], cmd:%04x, Schedule buffer overflow, resetting buffer !!!", this->last_ - 1, command);
-
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERY_VERBOSE
+    ESP_LOGV(TAG, "++: pos:[%" PRIu8 "], cmd:%04" PRIX16 ", Schedule buffer overflow, resetting buffer !!!",
+             this->last_ - 1, command);
+#else
+    ESP_LOGW(TAG, "Schedule buffer overflow, resetting buffer !!!");
+#endif
     this->reset_schedule();
     this->state_ = TxCmdState::FAILED;
     return;
@@ -698,7 +1048,6 @@ void LD2410Sschedule::append(uint16_t command, uint16_t sub_command) {
         if (this->active_ == this->last_ - 1) {
           ESP_LOGV(TAG, "Previous cmd is config end and it's already executing => appending config start and new cmd");
           this->append(CONFIG_MODE_START_CMD);
-
         } else {
           ESP_LOGV(TAG, "Last cmd was config end and it's not executing yet => deleting last config end and "
                         "appending new cmd");
@@ -708,7 +1057,7 @@ void LD2410Sschedule::append(uint16_t command, uint16_t sub_command) {
     }
   }
 
-  ESP_LOGV(TAG, "++: pos:[%d], cmd:%04x", this->last_, command);
+  ESP_LOGV(TAG, "++: pos:[%" PRIu8 "], cmd:%04" PRIX16, this->last_, command);
 
   this->commands_[this->last_].command = command;
   this->commands_[this->last_].sub_command = sub_command;
@@ -729,14 +1078,14 @@ TxCmdState LD2410Sschedule::check_state(uint32_t loop_count) {
   switch (this->state_) {
     case TxCmdState::SCHEDULED:
       this->retry_count_ = 0;
-      ESP_LOGV(TAG, "::> [loop:%d] pos:%d[%d], cmd:%04x, Scheduled", loop_count, this->active_, this->last_ - 1,
-               this->get_command());
+      ESP_LOGV(TAG, "::> [loop:%" PRIu32 "] pos:%" PRIu8 "[%" PRIu8 "], cmd:%04" PRIX16 ", Scheduled", loop_count,
+               this->active_, this->last_ - 1, this->get_command());
       break;
 
     case TxCmdState::SEND:
       this->time_started_ = App.get_loop_component_start_time();
-      ESP_LOGV(TAG, "::> [loop:%d] pos:%d[%d], cmd:%04x, Send", loop_count, this->active_, this->last_ - 1,
-               this->get_command());
+      ESP_LOGV(TAG, "::> [loop:%" PRIu32 "] pos:%" PRIu8 "[%" PRIu8 "], cmd:%04" PRIX16 ", Send", loop_count,
+               this->active_, this->last_ - 1, this->get_command());
       break;
 
     case TxCmdState::SENT:
@@ -744,31 +1093,31 @@ TxCmdState LD2410Sschedule::check_state(uint32_t loop_count) {
         this->time_started_ = App.get_loop_component_start_time();
 
         if (this->retry_count_ < TX_MAX_RESEND) {
-          ESP_LOGD(TAG, ":>> [loop:%d] pos:%d[%d], cmd:%04x, retry:%d, restart:%d, Send Timeout Expired, Resend!",
+          ESP_LOGD(TAG,
+                   ":>> [loop:%" PRIu32 "] pos:%" PRIu8 "[%" PRIu8 "], cmd:%04" PRIX16 ", retry:%" PRIu8
+                   ", restart:%" PRIu8 ", Send Timeout Expired, Resend!",
                    loop_count, this->active_, this->last_ - 1, this->get_command(), this->retry_count_,
                    this->restart_count_);
           this->state_ = TxCmdState::SEND;
           this->retry_count_++;
-
         } else {
           if (this->restart_count_ < TX_MAX_RESTART) {
-            ESP_LOGW(
-                TAG,
-                ":>> [loop:%d] pos:%d[:%d], cmd:%04x, retry:%d, restart:%d, Resend limit reached, Restart sequence!!",
-                loop_count, this->active_, this->last_ - 1, this->get_command(), this->retry_count_,
-                this->restart_count_);
+            ESP_LOGW(TAG,
+                     ":>> [loop:%" PRIu32 "] pos:%" PRIu8 "[:%" PRIu8 "], cmd:%04" PRIX16 ", retry:%" PRIu8
+                     ", restart:%" PRIu8 ", Resend limit reached, Restart sequence!!",
+                     loop_count, this->active_, this->last_ - 1, this->get_command(), this->retry_count_,
+                     this->restart_count_);
             this->state_ = TxCmdState::SCHEDULED;
             this->retry_count_ = 0;
             this->restart_count_++;
             this->active_ = 0;
-
           } else {
-            ESP_LOGE(
-                TAG,
-                ":>> [loop:%d] pos:%d[%d], cmd:%04x, retry:%d, restart:%d, Restart sequence limit reached, Giving up, "
-                "Reseting buffer!!!",
-                loop_count, this->active_, this->last_ - 1, this->get_command(), this->retry_count_,
-                this->restart_count_);
+            ESP_LOGE(TAG,
+                     ":>> [loop:%" PRIu32 "] pos:%" PRIu8 "[%" PRIu8 "], cmd:%04" PRIX16 ", retry:%" PRIu8
+                     ", restart:%" PRIu8 ", Restart sequence limit reached, Giving up, "
+                     "Reseting buffer!!!",
+                     loop_count, this->active_, this->last_ - 1, this->get_command(), this->retry_count_,
+                     this->restart_count_);
             this->state_ = TxCmdState::FAILED;
             this->retry_count_ = 0;
             this->restart_count_ = 0;
@@ -797,9 +1146,12 @@ void LD2410Sschedule::verify_response(uint16_t command_word, uint32_t loop_count
   int16_t expected = this->get_command() | CMD_CONFIRMATION;
   if (this->state_ == TxCmdState::SENT) {
     if (command_word == expected) {
-      ESP_LOGD(TAG, "Sent cmd: %04x", this->get_command());
-      ESP_LOGV(TAG, "::< [loop:%d] pos:%d[%d], cmd:%04x, Sending confirmed, rx:%x", loop_count, this->active_,
-               this->last_ - 1, this->get_command(), command_word);
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+      ESP_LOGV(TAG, "Sent cmd: %04" PRIX16, this->get_command());
+      ESP_LOGVV(
+          TAG, "::< [loop:%" PRIu32 "] pos:%" PRIu8 "[%" PRIu8 "], cmd:%04" PRIX16 ", Sending confirmed, rx:%04" PRIX16,
+          loop_count, this->active_, this->last_ - 1, this->get_command(), command_word);
+#endif
 
       switch (command_word) {
         // config start confirmed
@@ -821,29 +1173,44 @@ void LD2410Sschedule::verify_response(uint16_t command_word, uint32_t loop_count
       this->state_ = TxCmdState::SCHEDULED;
 
       if (this->active_ >= this->last_) {
-        ESP_LOGD(TAG, "::: Schedule emptied, Resetting");
+        ESP_LOGV(TAG, "Schedule emptied, Resetting");
         this->reset_schedule();
       }
 
       if (this->active_ >= TX_SCHEDULE_BUFFER_SIZE) {
-        ESP_LOGD(TAG, "::: Schedule overflow, Reseting");
+        ESP_LOGW(TAG, "Schedule overflow, Reseting");
         this->reset_schedule();
       }
-
     } else {
       if (this->active_ > 0 && command_word == (this->commands_[this->active_ - 1].command | CMD_CONFIRMATION)) {
-        ESP_LOGD(
-            TAG,
-            "::< [loop:%d] pos:%d[%d], cmd:%04x, received:%x, Received unexpected confirmation for previous command",
-            loop_count, this->active_, this->last_, this->get_command(), command_word);
-      } else {
-        ESP_LOGD(TAG, "::< [loop:%d] pos:%d[%d], cmd:%04x, received:%x, Received confirmation for wrong command",
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+        ESP_LOGD(TAG,
+                 "::< [loop:%" PRIu32 "] pos:%" PRIu8 "[%" PRIu8 "], cmd:%04" PRIX16 ", received:%04" PRIX16
+                 ", Received unexpected confirmation for previous command",
                  loop_count, this->active_, this->last_, this->get_command(), command_word);
+#else
+        ESP_LOGW(TAG, "Received unexpected confirmation for previous command");
+#endif
+      } else {
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+        ESP_LOGV(TAG,
+                 "::< [loop:%" PRIu32 "] pos:%" PRIu8 "[%" PRIu8 "], cmd:%04" PRIX16 ", received:%04" PRIX16
+                 ", Received confirmation for wrong command",
+                 loop_count, this->active_, this->last_, this->get_command(), command_word);
+#else
+        ESP_LOGW(TAG, "Received confirmation for wrong command");
+#endif
       }
     }
   } else {
-    ESP_LOGD(TAG, "::< [loop:%d] pos:%d[%d], cmd:%04x, received:%x, Received unexpected command confirmation",
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+    ESP_LOGV(TAG,
+             "::< [loop:%" PRIu32 "] pos:%" PRIu8 "[%" PRIu8 "], cmd:%04" PRIX16 ", received:%04" PRIX16
+             ", Received unexpected command confirmation",
              loop_count, this->active_, this->last_, this->get_command(), command_word);
+#else
+    ESP_LOGW(TAG, "Received unexpected command confirmation");
+#endif
   }
 }
 
