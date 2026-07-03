@@ -40,10 +40,10 @@ button:
 
 number:
   - platform: ld2410s
-    max_distance:
-      name: Max Detect Distance
-    min_distance:
-      name: Min Detect Distance
+    max_detect_gate:
+      name: Max Detect Gate
+    min_detect_gate:
+      name: Min Detect Gate
     no_delay:
       name: No Detect Report Delay
     status_reporting_frequency:
@@ -168,3 +168,19 @@ sensor:
     g14_energy:
       name: G14 Energy
     g15_energy:
+      name: G15 Energy
+
+select:
+  - platform: ld2410s
+    response_speed:
+      name: Response Speed
+
+switch:
+  - platform: ld2410s
+    minimal_output:
+      name: Minimal Output
+
+text_sensor:
+  - platform: ld2410s
+    fw_version:
+      name: Firmware version

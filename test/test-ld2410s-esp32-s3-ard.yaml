@@ -44,10 +44,10 @@ button:
 
 number:
   - platform: ld2410s
-    max_distance:
-      name: Max Detect Distance
-    min_distance:
-      name: Min Detect Distance
+    max_detect_gate:
+      name: Max Detect Gate
+    min_detect_gate:
+      name: Min Detect Gate
     no_delay:
       name: No Detect Report Delay
     status_reporting_frequency:
