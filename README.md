@@ -504,6 +504,12 @@ text_sensor:
 
 - **has_target** (*Optional*): When ```true``` the radar has detected a target either moving or still. This is effectivly presence. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
 
+> [!NOTE]
+> The cal_start [Binary_Sensor](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration) above includes the following [Filter](https://https://esphome.io/components/binary_sensor/#binary-sensor-filters).
+> ```- settle: 1s```
+> If you have defined other filters, this default will be overridden; you may of course add it back to your custom filter(s) as above if you wish.
+> To remove the default filter for any given sensor instance, add ```filters: []``` to its configuration.
+
 - **cal_running** (*Optional*): When ```true``` Auto-Calibration is running and ```false``` when not. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
 
 ### LD2410S Numbers
@@ -538,7 +544,7 @@ text_sensor:
 > Each of the [Sensor Components](https://esphome.io/components/sensor/#base-sensor-configuration) above include the following [Filter](https://esphome.io/components/sensor/#sensor-filters).
 > ```- throttle_with_priority: 1s```
 > If you have defined other filters, this default will be overridden; you may of course add it back to your custom filter(s) as above if you wish.
-> To remove the default filter for any given sensor instance, add ```filters: []`` to its configuration.
+> To remove the default filter for any given sensor instance, add ```filters: []``` to its configuration.
 
 - **target_distance** (*Optional*): This sensor indicates current distance to target in meters (m). All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
 
