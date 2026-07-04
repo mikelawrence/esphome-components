@@ -711,7 +711,10 @@ void LD2410SComponent::parse_data_energy_values_read_(uint8_t *data) {
     energy_value = db;
   }
   for (uint8_t gate = 0; gate < TOTAL_GATES; gate++) {
-    SAFE_PUBLISH_SENSOR(this->gate_energy_sensor_[gate], this->energy_values_[gate]);
+    if (this->gate_energy_sensor_[gate] != nullptr) {
+      this->gate_energy_sensor_[gate]->publish_state(this->energy_values_[gate]);
+    }
+    // SAFE_PUBLISH_SENSOR(this->gate_energy_sensor_[gate], this->energy_values_[gate]);
   }
 #endif
 }
@@ -723,15 +726,15 @@ void LD2410SComponent::parse_ack_config_start_(const uint8_t *data) {
   read_seq_data(data, read_position, &protocol_version);  // does not exist in both documents
   read_seq_data(data, read_position, &buffer_size);
 
-  ESP_LOGV(TAG, "CONFIG MODE ENABLED, protocol_version:%" PRIu16 "  buffer_size:%" PRIu16, protocol_version,
+  ESP_LOGD(TAG, "CONFIG MODE ENABLED, protocol_version:%" PRIu16 "  buffer_size:%" PRIu16, protocol_version,
            buffer_size);
 }
-void LD2410SComponent::parse_ack_config_end_(const uint8_t *data) { ESP_LOGV(TAG, "CONFIG MODE DISABLED"); }
+void LD2410SComponent::parse_ack_config_end_(const uint8_t *data) { ESP_LOGD(TAG, "CONFIG MODE DISABLED"); }
 void LD2410SComponent::parse_ack_minimal_output_(uint8_t *data) {
   if (this->minimal_output_) {
-    ESP_LOGV(TAG, "Parsed Minimal Output: ON");
+    ESP_LOGD(TAG, "Minimal Output Mode switched ON");
   } else {
-    ESP_LOGV(TAG, "Parsed Minimal Output: OFF");
+    ESP_LOGD(TAG, "Minimal Output Mode switched OFF");
   }
 #ifdef USE_SWITCH
   if (this->minimal_output_switch_ != nullptr) {
@@ -742,21 +745,11 @@ void LD2410SComponent::parse_ack_minimal_output_(uint8_t *data) {
 void LD2410SComponent::parse_ack_config_read_(uint8_t *data) {
   uint16_t read_position = 0;
   read_seq_data(data, read_position, &this->max_detect_gate_);
-  ESP_LOGV(TAG, "Parsed Max Detect: %" PRIu16, this->max_detect_gate_);
   read_seq_data(data, read_position, &this->min_detect_gate_);
-  ESP_LOGV(TAG, "Parsed Min Detect: %" PRIu16, this->min_detect_gate_);
   read_seq_data(data, read_position, &this->delay_);
-  ESP_LOGV(TAG, "Parsed Delay: %" PRIu16, this->delay_);
   read_seq_data(data, read_position, &this->status_reporting_freq_);
-  ESP_LOGV(TAG, "Parsed Status Reporting Frequency: %" PRIu16, this->status_reporting_freq_);
   read_seq_data(data, read_position, &this->distance_reporting_freq_);
-  ESP_LOGV(TAG, "Parsed Distance Reporting Frequency: %" PRIu16, this->distance_reporting_freq_);
   read_seq_data(data, read_position, &this->resp_speed_);
-  if (this->resp_speed_ != 5){
-    ESP_LOGV(TAG, "Parsed Response Speed: %s", "Normal");
-  } else {
-    ESP_LOGV(TAG, "Parsed Response Speed: %s", "Fast");
-  }
 
 #ifdef USE_NUMBER
   SAFE_PUBLISH_NUMBER(this->max_detect_gate_number_, static_cast<float>(this->max_detect_gate_));
@@ -780,7 +773,6 @@ void LD2410SComponent::parse_ack_fw_read_(const uint8_t *data) {
   if (this->fw_version_text_sensor_ != nullptr) {
     char version_s[20];
     format_version_str(this->version_, version_s);
-    ESP_LOGV(TAG, "Parsed Firmware Version: %s", version_s);
     if (this->fw_version_text_sensor_ != nullptr) {
       this->fw_version_text_sensor_->publish_state(version_s);
     }
@@ -794,11 +786,9 @@ void LD2410SComponent::parse_ack_thresholds_read_(uint8_t *data) {
   read_seq_data(data, read_position, gate_threshold, 16, 4);
   for (uint8_t gate = 0; gate < TOTAL_GATES / 2; gate++) {
     this->gate_trig_threshold_[gate] = gate_threshold[gate];
-    ESP_LOGV(TAG, "Parsed Trigger Threshold, Gate: %s, Value: %" PRIu32, gate, this->gate_trig_threshold_[gate]);
-    SAFE_PUBLISH_NUMBER(this->gate_trig_threshold_number_[gate], this->gate_trig_threshold_[gate]);
+    SAFE_PUBLISH_NUMBER(this->gate_trig_threshold_number_[gate], gate_threshold[gate]);
     this->gate_hold_threshold_[gate] = gate_threshold[gate + 8];
-    ESP_LOGV(TAG, "Parsed Hold Threshold, Gate: %s, Value: %" PRIu32, this->gate_hold_threshold_[gate]);
-    SAFE_PUBLISH_NUMBER(this->gate_hold_threshold_number_[gate], this->gate_hold_threshold_[gate]);
+    SAFE_PUBLISH_NUMBER(this->gate_hold_threshold_number_[gate], gate_threshold[gate + 8]);
   }
 #endif
 }
@@ -809,11 +799,9 @@ void LD2410SComponent::parse_ack_snrs_read_(uint8_t *data) {
   read_seq_data(data, read_position, gate_threshold, 16, 4);
   for (uint8_t gate = 0; gate < TOTAL_GATES / 2; gate++) {
     this->gate_trig_threshold_[gate + 8] = gate_threshold[gate];
-    SAFE_PUBLISH_NUMBER(this->gate_trig_threshold_number_[gate + 8], this->gate_trig_threshold_[gate + 8]);
-    ESP_LOGV(TAG, "Parsed Trigger Threshold, Gate: %s, Value: %" PRIu32, gate + 8, this->gate_trig_threshold_[gate + 8]);
+    SAFE_PUBLISH_NUMBER(this->gate_trig_threshold_number_[gate + 8], gate_threshold[gate]);
     this->gate_hold_threshold_[gate + 8] = gate_threshold[gate + 8];
-    ESP_LOGV(TAG, "Parsed Hold Threshold, Gate: %s, Value: %" PRIu32, gate + 8, this->gate_hold_threshold_[gate + 8]);
-    SAFE_PUBLISH_NUMBER(this->gate_hold_threshold_number_[gate + 8], this->gate_hold_threshold_[gate + 8]);
+    SAFE_PUBLISH_NUMBER(this->gate_hold_threshold_number_[gate + 8], gate_threshold[gate + 8]);
   }
 #endif
 }
@@ -845,7 +833,7 @@ RxEvaluationResult LD2410Srx::receive_byte(uint32_t loop_count, uint8_t byte) {
     case RxEvaluationResult::UNKNOWN:
       this->end_pos_++;
       if (this->end_pos_ >= RX_TX_BUFFER_SIZE) {
-        ESP_LOGVV(TAG, "XX< [loop:%" PRIu32 "] Received data buffer overflow, resetting", loop_count);
+        ESP_LOGV(TAG, "XX< [loop:%" PRIu32 "] Received data buffer overflow, resetting", loop_count);
         this->reset();
       }
       break;
@@ -854,7 +842,7 @@ RxEvaluationResult LD2410Srx::receive_byte(uint32_t loop_count, uint8_t byte) {
     default:
 #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
       char hex_buf[format_hex_pretty_size(RX_TX_BUFFER_SIZE)];
-      ESP_LOGVV(TAG, "<XX [loop:%" PRIu32 "] %s < %s", loop_count, this->msg_.c_str(),
+      ESP_LOGV(TAG, "<XX [loop:%" PRIu32 "] %s < %s", loop_count, this->msg_.c_str(),
                format_hex_pretty_to(hex_buf, this->rcv_buffer_, end_pos_ + 1, ' '));
 #endif
       this->reset();
@@ -1029,16 +1017,16 @@ int LD2410Srx::read_int(const uint8_t *buffer, size_t pos, size_t len) {
 // Appends new task to schedule
 void LD2410Sschedule::append(uint16_t command, uint16_t sub_command) {
   if (this->last_ > 0) {
-    ESP_LOGVV(TAG, "append => cmd:%04" PRIX16 ", prev_cmd:%04" PRIX16 ", active:%" PRIu8 ", last:%" PRIu8, command,
+    ESP_LOGV(TAG, "append => cmd:%04" PRIX16 ", prev_cmd:%04" PRIX16 ", active:%" PRIu8 ", last:%" PRIu8, command,
              this->commands_[this->last_ - 1].command, this->active_, this->last_);
   } else {
-    ESP_LOGVV(TAG, "append => cmd:%04" PRIX16 ", prev_cmd:none, active:%" PRIu8 ", last:%" PRIu8, command, this->active_,
+    ESP_LOGV(TAG, "append => cmd:%04" PRIX16 ", prev_cmd:none, active:%" PRIu8 ", last:%" PRIu8, command, this->active_,
              this->last_);
   }
 
   if (this->last_ >= TX_SCHEDULE_BUFFER_SIZE) {
 #if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERY_VERBOSE
-    ESP_LOGVV(TAG, "++: pos:[%" PRIu8 "], cmd:%04" PRIX16 ", Schedule buffer overflow, resetting buffer !!!",
+    ESP_LOGV(TAG, "++: pos:[%" PRIu8 "], cmd:%04" PRIX16 ", Schedule buffer overflow, resetting buffer !!!",
              this->last_ - 1, command);
 #else
     ESP_LOGW(TAG, "Schedule buffer overflow, resetting buffer !!!");
@@ -1050,21 +1038,21 @@ void LD2410Sschedule::append(uint16_t command, uint16_t sub_command) {
 
   if (command != CONFIG_MODE_START_CMD) {
     if (this->last_ <= 0) {
-      ESP_LOGVV(TAG, "First cmd must be config start => appending config start and new cmd");
+      ESP_LOGV(TAG, "First cmd must be config start => appending config start and new cmd");
       this->append(CONFIG_MODE_START_CMD);
     } else {
       // if previous cmd is config end, it's not possible to just append new command
       if (this->commands_[this->last_ - 1].command == CONFIG_MODE_END_CMD) {
         if (command == CONFIG_MODE_END_CMD) {
-          ESP_LOGVV(TAG, "Ignoring duplicated config end cmd");
+          ESP_LOGV(TAG, "Ignoring duplicated config end cmd");
           return;
         }
 
         if (this->active_ == this->last_ - 1) {
-          ESP_LOGVV(TAG, "Previous cmd is config end and it's already executing => appending config start and new cmd");
+          ESP_LOGV(TAG, "Previous cmd is config end and it's already executing => appending config start and new cmd");
           this->append(CONFIG_MODE_START_CMD);
         } else {
-          ESP_LOGVV(TAG, "Last cmd was config end and it's not executing yet => deleting last config end and "
+          ESP_LOGV(TAG, "Last cmd was config end and it's not executing yet => deleting last config end and "
                         "appending new cmd");
           this->last_--;
         }
@@ -1093,13 +1081,13 @@ TxCmdState LD2410Sschedule::check_state(uint32_t loop_count) {
   switch (this->state_) {
     case TxCmdState::SCHEDULED:
       this->retry_count_ = 0;
-      ESP_LOGVV(TAG, "::> [loop:%" PRIu32 "] pos:%" PRIu8 "[%" PRIu8 "], cmd:%04" PRIX16 ", Scheduled", loop_count,
+      ESP_LOGV(TAG, "::> [loop:%" PRIu32 "] pos:%" PRIu8 "[%" PRIu8 "], cmd:%04" PRIX16 ", Scheduled", loop_count,
                this->active_, this->last_ - 1, this->get_command());
       break;
 
     case TxCmdState::SEND:
       this->time_started_ = App.get_loop_component_start_time();
-      ESP_LOGVV(TAG, "::> [loop:%" PRIu32 "] pos:%" PRIu8 "[%" PRIu8 "], cmd:%04" PRIX16 ", Send", loop_count,
+      ESP_LOGV(TAG, "::> [loop:%" PRIu32 "] pos:%" PRIu8 "[%" PRIu8 "], cmd:%04" PRIX16 ", Send", loop_count,
                this->active_, this->last_ - 1, this->get_command());
       break;
 
@@ -1108,34 +1096,31 @@ TxCmdState LD2410Sschedule::check_state(uint32_t loop_count) {
         this->time_started_ = App.get_loop_component_start_time();
 
         if (this->retry_count_ < TX_MAX_RESEND) {
-          ESP_LOGVV(TAG,
+          ESP_LOGD(TAG,
                    ":>> [loop:%" PRIu32 "] pos:%" PRIu8 "[%" PRIu8 "], cmd:%04" PRIX16 ", retry:%" PRIu8
-                   ", restart:%" PRIu8,
+                   ", restart:%" PRIu8 ", Send Timeout Expired, Resend!",
                    loop_count, this->active_, this->last_ - 1, this->get_command(), this->retry_count_,
                    this->restart_count_);
-          ESP_LOGD(TAG, "Send Timeout Expired, Resend!");
           this->state_ = TxCmdState::SEND;
           this->retry_count_++;
         } else {
           if (this->restart_count_ < TX_MAX_RESTART) {
-            ESP_LOGVV(TAG,
+            ESP_LOGW(TAG,
                      ":>> [loop:%" PRIu32 "] pos:%" PRIu8 "[:%" PRIu8 "], cmd:%04" PRIX16 ", retry:%" PRIu8
                      ", restart:%" PRIu8 ", Resend limit reached, Restart sequence!!",
                      loop_count, this->active_, this->last_ - 1, this->get_command(), this->retry_count_,
                      this->restart_count_);
-            ESP_LOGD(TAG, "Resend limit reached, Restart sequence!!");
             this->state_ = TxCmdState::SCHEDULED;
             this->retry_count_ = 0;
             this->restart_count_++;
             this->active_ = 0;
           } else {
-            ESP_LOGVV(TAG,
+            ESP_LOGE(TAG,
                      ":>> [loop:%" PRIu32 "] pos:%" PRIu8 "[%" PRIu8 "], cmd:%04" PRIX16 ", retry:%" PRIu8
                      ", restart:%" PRIu8 ", Restart sequence limit reached, Giving up, "
                      "Reseting buffer!!!",
                      loop_count, this->active_, this->last_ - 1, this->get_command(), this->retry_count_,
                      this->restart_count_);
-            ESP_LOGE(TAG, "Restart sequence limit reached, Giving up, Reseting buffer!!!");
             this->state_ = TxCmdState::FAILED;
             this->retry_count_ = 0;
             this->restart_count_ = 0;
@@ -1201,25 +1186,34 @@ void LD2410Sschedule::verify_response(uint16_t command_word, uint32_t loop_count
       }
     } else {
       if (this->active_ > 0 && command_word == (this->commands_[this->active_ - 1].command | CMD_CONFIRMATION)) {
-        ESP_LOGVV(TAG,
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+        ESP_LOGD(TAG,
                  "::< [loop:%" PRIu32 "] pos:%" PRIu8 "[%" PRIu8 "], cmd:%04" PRIX16 ", received:%04" PRIX16
                  ", Received unexpected confirmation for previous command",
                  loop_count, this->active_, this->last_, this->get_command(), command_word);
+#else
         ESP_LOGW(TAG, "Received unexpected confirmation for previous command");
+#endif
       } else {
-        ESP_LOGVV(TAG,
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+        ESP_LOGV(TAG,
                  "::< [loop:%" PRIu32 "] pos:%" PRIu8 "[%" PRIu8 "], cmd:%04" PRIX16 ", received:%04" PRIX16
                  ", Received confirmation for wrong command",
                  loop_count, this->active_, this->last_, this->get_command(), command_word);
+#else
         ESP_LOGW(TAG, "Received confirmation for wrong command");
+#endif
       }
     }
   } else {
-    ESP_LOGVV(TAG,
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERBOSE
+    ESP_LOGV(TAG,
              "::< [loop:%" PRIu32 "] pos:%" PRIu8 "[%" PRIu8 "], cmd:%04" PRIX16 ", received:%04" PRIX16
              ", Received unexpected command confirmation",
              loop_count, this->active_, this->last_, this->get_command(), command_word);
+#else
     ESP_LOGW(TAG, "Received unexpected command confirmation");
+#endif
   }
 }
 
