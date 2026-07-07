@@ -711,10 +711,7 @@ void LD2410SComponent::parse_data_energy_values_read_(uint8_t *data) {
     energy_value = db;
   }
   for (uint8_t gate = 0; gate < TOTAL_GATES; gate++) {
-    if (this->gate_energy_sensor_[gate] != nullptr) {
-      this->gate_energy_sensor_[gate]->publish_state(this->energy_values_[gate]);
-    }
-    // SAFE_PUBLISH_SENSOR(this->gate_energy_sensor_[gate], this->energy_values_[gate]);
+    SAFE_PUBLISH_SENSOR(this->gate_energy_sensor_[gate], this->energy_values_[gate]);
   }
 #endif
 }
