@@ -2,10 +2,10 @@ substitutions:
   ref: main
 
 esphome:
-  name: test-stusb4500-rp2040
-  friendly_name: Test TFMini Component with RP2040
+  name: test-ld2410s-rp2
+  friendly_name: Test LD2410S Component with RP2
 
-rp2040:
+rp2:
   board: rpipicow
 
 external_components:

@@ -2,10 +2,10 @@ substitutions:
   ref: main
 
 esphome:
-  name: test-sen6x-rp2040
-  friendly_name: Test SEN6X Component with RP2040
+  name: test-sen5x-rp2
+  friendly_name: Test SEN5X Component with RP2
 
-rp2040:
+rp2:
   board: rpipicow
 
 external_components:
@@ -13,17 +13,7 @@ external_components:
     type: git
     url: https://github.com/mikelawrence/esphome-components
     ref: ${ref}
-  components: [sen6x]
-
-wifi:
-  ssid: MyHomeNetwork
-  password: VerySafePassword
-
-api:
-
-time:
-  - platform: homeassistant
-    id: homeassistant_time
+  components: [sen5x]
 
 i2c:
   - id: i2c1_bus
@@ -32,19 +22,15 @@ i2c:
     scan: true
 
 sensor:
-  - platform: sen6x
+  - platform: sen5x
     i2c_id: i2c1_bus
     update_interval: 1s
-    type: SEN69C
+    type: SEN55
+    store_baseline: true
     temperature_compensation:
       offset: 0
       normalized_offset_slope: 0
       time_constant: 0
-    temperature_acceleration:
-      t1: 100
-      t2: 300
-      k: 20
-      p: 20
     temperature:
       name: "Temperature"
       accuracy_decimals: 2
@@ -63,10 +49,6 @@ sensor:
     pm_10_0:
       name: "PM <10µm Mass concentration"
       accuracy_decimals: 2
-    co2:
-      name: "CO₂"
-      automatic_self_calibration: false
-      accuracy_decimals: 0
     nox:
       name: "NOₓ"
       accuracy_decimals: 0
@@ -78,8 +60,6 @@ sensor:
     voc:
       name: "VOC"
       accuracy_decimals: 0
-      algorithm_state_recovery: true
-      algorithm_state_time_source: homeassistant_time
       algorithm_tuning:
         index_offset: 100
         learning_time_offset_hours: 12
@@ -87,6 +67,3 @@ sensor:
         gating_max_duration_minutes: 180
         std_initial: 50
         gain_factor: 230
-    hcho:
-      name: "Formaldehyde"
-      accuracy_decimals: 0
