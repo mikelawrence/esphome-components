@@ -26,19 +26,19 @@ jobs:
         file:
           - test/test-ld2410s-esp32-s3-idf
           - test/test-ld2410s-esp32-s3-ard
-          - test/test-ld2410s-rp2040
+          - test/test-ld2410s-rp2
           - test/test-sen5x-esp32-s3-idf
           - test/test-sen5x-esp32-s3-ard
-          - test/test-sen5x-rp2040
+          - test/test-sen5x-rp2
           - test/test-sen6x-esp32-s3-idf
           - test/test-sen6x-esp32-s3-ard
-          - test/test-sen6x-rp2040
+          - test/test-sen6x-rp2
           - test/test-stusb4500-esp32-s3-idf
           - test/test-stusb4500-esp32-s3-ard
-          - test/test-stusb4500-rp2040
+          - test/test-stusb4500-rp2
           - test/test-tfmini-esp32-s3-idf
           - test/test-tfmini-esp32-s3-ard
-          - test/test-tfmini-rp2040
+          - test/test-tfmini-rp2
         #### Modify above here to match your project ####
         esphome-version:
           - stable
