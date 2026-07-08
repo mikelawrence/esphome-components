@@ -220,7 +220,7 @@ class LD2410SComponent final : public Component, public uart::UARTDevice {
   uint8_t tx_frame_[RX_TX_BUFFER_SIZE] = {};
 
   // settings_;
-  uint8_t energy_values_[16] = {};
+  uint8_t gate_energy_[16] = {};
   uint16_t has_target_{0};
   uint16_t version_[3] = {0, 0, 0};
   uint16_t target_distance_{0};

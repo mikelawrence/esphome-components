@@ -29,6 +29,15 @@ CONFIG_SCHEMA = cv.Schema(
         ),
         cv.Optional(CONF_TARGET_DISTANCE): sensor.sensor_schema(
             device_class=DEVICE_CLASS_DISTANCE,
+            filters=[
+                {
+                    "timeout": {
+                        "timeout": cv.TimePeriod(milliseconds=1000),
+                        "value": "last",
+                    }
+                },
+                {"throttle_with_priority": cv.TimePeriod(milliseconds=1000)},
+            ],
             unit_of_measurement=UNIT_CENTIMETER,
             icon="mdi:arrow-left-right",
         ),
@@ -39,6 +48,15 @@ CONFIG_SCHEMA = CONFIG_SCHEMA.extend(
     {
         cv.Optional(f"g{x}_energy"): sensor.sensor_schema(
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            filters=[
+                {
+                    "timeout": {
+                        "timeout": cv.TimePeriod(milliseconds=1000),
+                        "value": "last",
+                    }
+                },
+                {"throttle_with_priority": cv.TimePeriod(milliseconds=1000)},
+            ],
             icon=ICON_MOTION_SENSOR,
             unit_of_measurement=UNIT_DECIBEL,
         )
