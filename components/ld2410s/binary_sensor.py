@@ -24,6 +24,7 @@ CONFIG_SCHEMA = {
     ),
     cv.Optional(CONF_HAS_TARGET): binary_sensor.binary_sensor_schema(
         device_class=DEVICE_CLASS_OCCUPANCY,
+        filters=[{"settle": cv.TimePeriod(milliseconds=1000)}],
         icon=ICON_ACCOUNT,
     ),
 }
