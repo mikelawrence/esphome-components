@@ -2,7 +2,7 @@ substitutions:
   ref: main
 
 esphome:
-  name: test-stusb4500-rp2040
+  name: test-tfmini-rp2040
   friendly_name: Test TFMini Component with RP2040
 
 rp2040:
