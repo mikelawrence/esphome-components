@@ -446,7 +446,7 @@ void LD2410SComponent::build_cmd_frame_(uint16_t command, uint16_t sub_command) 
 void LD2410SComponent::sending_pause_() {
   this->pause_tx_ = true;
   this->set_timeout("Pausing Sending", TX_PAUSE_TIMEOUT, [this]() {
-    ESP_LOGVV(TAG, "Proceeding after tx pause of %" PRIu16 " ms", TX_PAUSE_TIMEOUT);
+    ESP_LOGVV(TAG, "Proceeding after tx pause of %" PRIu32 " ms", TX_PAUSE_TIMEOUT);
     this->pause_tx_ = false;
   });
 }
@@ -745,15 +745,15 @@ void LD2410SComponent::parse_ack_minimal_output_(uint8_t *data) {
 void LD2410SComponent::parse_ack_config_read_(uint8_t *data) {
   uint16_t read_position = 0;
   read_seq_data(data, read_position, &this->max_detect_gate_);
-  ESP_LOGV(TAG, "Parsed Max Detect: %" PRIu16, this->max_detect_gate_);
+  ESP_LOGV(TAG, "Parsed Max Detect: %" PRIu32, this->max_detect_gate_);
   read_seq_data(data, read_position, &this->min_detect_gate_);
-  ESP_LOGV(TAG, "Parsed Min Detect: %" PRIu16, this->min_detect_gate_);
+  ESP_LOGV(TAG, "Parsed Min Detect: %" PRIu32, this->min_detect_gate_);
   read_seq_data(data, read_position, &this->delay_);
-  ESP_LOGV(TAG, "Parsed Delay: %" PRIu16, this->delay_);
+  ESP_LOGV(TAG, "Parsed Delay: %" PRIu32, this->delay_);
   read_seq_data(data, read_position, &this->status_reporting_freq_);
-  ESP_LOGV(TAG, "Parsed Status Reporting Frequency: %" PRIu16, this->status_reporting_freq_);
+  ESP_LOGV(TAG, "Parsed Status Reporting Frequency: %" PRIu32, this->status_reporting_freq_);
   read_seq_data(data, read_position, &this->distance_reporting_freq_);
-  ESP_LOGV(TAG, "Parsed Distance Reporting Frequency: %" PRIu16, this->distance_reporting_freq_);
+  ESP_LOGV(TAG, "Parsed Distance Reporting Frequency: %" PRIu32, this->distance_reporting_freq_);
   read_seq_data(data, read_position, &this->resp_speed_);
   if (this->resp_speed_ != 5) {
     ESP_LOGV(TAG, "Parsed Response Speed: %s", "Normal");
@@ -797,10 +797,10 @@ void LD2410SComponent::parse_ack_thresholds_read_(uint8_t *data) {
   read_seq_data(data, read_position, gate_threshold, 16, 4);
   for (uint8_t gate = 0; gate < TOTAL_GATES / 2; gate++) {
     this->gate_trig_threshold_[gate] = gate_threshold[gate];
-    ESP_LOGV(TAG, "Parsed Trigger Threshold, Gate: %s, Value: %" PRIu32, gate, this->gate_trig_threshold_[gate]);
+    ESP_LOGV(TAG, "Parsed Trigger Threshold, Gate: %" PRIu8 ", Value: %" PRIu32, gate, this->gate_trig_threshold_[gate]);
     SAFE_PUBLISH_NUMBER(this->gate_trig_threshold_number_[gate], this->gate_trig_threshold_[gate]);
     this->gate_hold_threshold_[gate] = gate_threshold[gate + 8];
-    ESP_LOGV(TAG, "Parsed Hold Threshold, Gate: %s, Value: %" PRIu32, this->gate_hold_threshold_[gate]);
+    ESP_LOGV(TAG, "Parsed Hold Threshold, Gate: %" PRIu8 ", Value: %" PRIu32, gate, this->gate_hold_threshold_[gate]);
     SAFE_PUBLISH_NUMBER(this->gate_hold_threshold_number_[gate], this->gate_hold_threshold_[gate]);
   }
 #endif
@@ -813,10 +813,10 @@ void LD2410SComponent::parse_ack_snrs_read_(uint8_t *data) {
   for (uint8_t gate = 0; gate < TOTAL_GATES / 2; gate++) {
     this->gate_trig_threshold_[gate + 8] = gate_threshold[gate];
     SAFE_PUBLISH_NUMBER(this->gate_trig_threshold_number_[gate + 8], this->gate_trig_threshold_[gate + 8]);
-    ESP_LOGV(TAG, "Parsed Trigger Threshold, Gate: %s, Value: %" PRIu32, gate + 8,
+    ESP_LOGV(TAG, "Parsed Trigger Threshold, Gate: %" PRIu8 ", Value: %" PRIu32, gate + 8,
              this->gate_trig_threshold_[gate + 8]);
     this->gate_hold_threshold_[gate + 8] = gate_threshold[gate + 8];
-    ESP_LOGV(TAG, "Parsed Hold Threshold, Gate: %s, Value: %" PRIu32, gate + 8, this->gate_hold_threshold_[gate + 8]);
+    ESP_LOGV(TAG, "Parsed Hold Threshold, Gate: %" PRIu8 ", Value: %" PRIu32, gate + 8, this->gate_hold_threshold_[gate + 8]);
     SAFE_PUBLISH_NUMBER(this->gate_hold_threshold_number_[gate + 8], this->gate_hold_threshold_[gate + 8]);
   }
 #endif
