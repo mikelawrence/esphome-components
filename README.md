@@ -80,17 +80,17 @@ sensor:
 
 ### Configuration Variables
 
-- **model** (**Required**, string): The model of the Range Finder Sensor. Options are `TFMINI_PLUS` , `TFMINI_S` or `TF_LUNA` .
-- **uart_id** (*Optional*, string): Manually specify the ID of the [UART Bus](https://esphome.io/components/uart) if you use multiple UART buses.
-- **sample_rate** (*Optional*, integer): The frame rate at which the sensor will output sensor data in samples per sec. For the TFMINI_PLUS and TFMINI_S the range is 1-1000. For the TFLuna the range is 1-500. Note when low_power mode is set to true for the TFMINI_S and the TFLuna model the is significantly lower from 1-10. Default is 100.
-- **config_pin** (*Optional*, [Pin Schema](https://esphome.io/guides/configuration-types#config-pin-schema)): This pin when connected will be set high to enable UART mode. (*TF_LUNA only*)
-- **low_power** (*Optional*, boolean): Turns on low power mode. This also requires sample_rate to be 10 or less. (*TF_LUNA, TFMini-S only*)
+* **model** (**Required**, string): The model of the Range Finder Sensor. Options are `TFMINI_PLUS` , `TFMINI_S` or `TF_LUNA` .
+* **uart_id** (*Optional*, string): Manually specify the ID of the [UART Bus](https://esphome.io/components/uart) if you use multiple UART buses.
+* **sample_rate** (*Optional*, integer): The frame rate at which the sensor will output sensor data in samples per sec. For the TFMINI_PLUS and TFMINI_S the range is 1-1000. For the TFLuna the range is 1-500. Note when low_power mode is set to true for the TFMINI_S and the TFLuna model the is significantly lower from 1-10. Default is 100.
+* **config_pin** (*Optional*, [Pin Schema](https://esphome.io/guides/configuration-types#config-pin-schema)): This pin when connected will be set high to enable UART mode. (*TF_LUNA only*)
+* **low_power** (*Optional*, boolean): Turns on low power mode. This also requires sample_rate to be 10 or less. (*TF_LUNA, TFMini-S only*)
 
 ### Sensors
 
-- **distance** (*Optional*): Distance in cm. For the TFMINI_PLUS and TFMINI_S the range is 10-1200cm. For the TFLuna the range is 20-800cm. A distance of 10000cm means the sensor is not receiving enough signal, most likely open air. A distance of 0cm means the sensor is saturated and there is no measurement possible. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
-- **signal_strength** (*Optional*): Represents the signal strength with a range of 0-65535. The longer the measurement distance, the lower signal strength will be. The lower the reflectivity is, the lower the signal strength will be. When signal strength is less than 100 detection is unreliable and distance is set to 10000cm. When signal strength is 65535 detection is unreliable and distance is set to 0cm. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
-- **temperature** (*Optional*): Internal temperature in °C. It's not clear how useful this sensor because it certainly does not measure room temperature. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
+* **distance** (*Optional*): Distance in cm. For the TFMINI_PLUS and TFMINI_S the range is 10-1200cm. For the TFLuna the range is 20-800cm. A distance of 10000cm means the sensor is not receiving enough signal, most likely open air. A distance of 0cm means the sensor is saturated and there is no measurement possible. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
+* **signal_strength** (*Optional*): Represents the signal strength with a range of 0-65535. The longer the measurement distance, the lower signal strength will be. The lower the reflectivity is, the lower the signal strength will be. When signal strength is less than 100 detection is unreliable and distance is set to 10000cm. When signal strength is 65535 detection is unreliable and distance is set to 0cm. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
+* **temperature** (*Optional*): Internal temperature in °C. It's not clear how useful this sensor because it certainly does not measure room temperature. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
 ## STUSB4500 External Component
 
@@ -138,44 +138,44 @@ text_sensor:
 
 ### Configuration Variables
 
-- **flash_nvm** (*Optional*, boolean): When set to `true` the STUSB4500 NVM will be flashed with the current settings but only if different. To be on the safe side you should not leave this set to `true` . A power cycle is required to renegotiate. Default is `false` .
-- **default_nvm** (*Optional*, boolean): When set to `true` the STUSB4500 NVM will be flashed with default settings but only if different. To be on the safe side you should not leave this set to `true` . A power cycle is required to renegotiate. Default is `false` .
-- **snk_pdo_numb** (*Optional*, integer): Set the number of PDOs that should be negotiated. Range is 1 - 3. A value of 3 means PDO3, PDO2 and PDO1 can be negotiated. A value of 2 means PDO2 and PDO1 can be negotiated. A value of 1 means only PDO1 can be negotiated. Default is 3.
-- **v_snk_pdo2** (*Optional*, float): This is the desired PDO2 voltage. Range is 5.0 to 20.0. Default is 20.0.
-- **v_snk_pdo3** (*Optional*, float): This is the desired PDO3 voltage. Range is 5.0 to 20.0. Default is 15.0.
-- **i_snk_pdo1** (*Optional*, float): This is the desired PDO1 current. Range is 0.0 to 5.0. 5.0A is only available with 20V. For all other voltages the maximum current is 3.0A. Default is 1.5.
-- **i_snk_pdo2** (*Optional*, float): This is the desired PDO2 current. Range is 0.0 to 5.0. 5.0A is only available with 20V. For all other voltages the maximum current is 3.0A. Default is 1.5.
-- **i_snk_pdo3** (*Optional*, float): This is the desired PDO3 current. Range is 0.0 to 5.0. 5.0A is only available with 20V. For all other voltages the maximum current is 3.0A. Default is 1.0.
-- **shift_vbus_hl1** (*Optional*, percentage): This is the percentage above PDO1 voltage when the Over Voltage Lock Out occurs. Range is 1% to 15%. Default is 10%.
-- **shift_vbus_ll1** (*Optional*, percentage): This is the percentage below PDO1 voltage when the Under Voltage Lock Out occurs. Range is 1% to 15%. Default is 15%.
-- **shift_vbus_hl2** (*Optional*, percentage): This is the percentage above PDO2 voltage when the Over Voltage Lock Out occurs. Range is 1% to 15%. Default is 5%.
-- **shift_vbus_ll2** (*Optional*, percentage): This is the percentage below PDO2 voltage when the Under Voltage Lock Out occurs. Range is 1% to 15%. Default is 15%.
-- **shift_vbus_hl3** (*Optional*, percentage): This is the percentage above PDO3 voltage when the Over Voltage Lock Out occurs. Range is 1% to 15%. Default is 5%.
-- **shift_vbus_ll3** (*Optional*, percentage): This is the percentage below PDO3 voltage when the Under Voltage Lock Out occurs. Range is 1% to 15%. Default is 15%.
-- **vbus_disch_time_to_0v_** (*Optional*, time): Coefficient used to compute V<sub>BUS</sub> discharge time to 0V. Range is 84ms to 1260ms and must be a multiple of 84ms. Default is 756ms.
-- **vbus_disch_time_to_pdo_** (*Optional*, time): Coefficient used to compute V<sub>BUS</sub> discharge time when transitioning to lower PDO voltage. Range is 24ms to 360ms and must be a multiple of 24ms. Default is 288ms.
-- **vbus_disch_disable** (*Optional*, boolean): When set to `true` the STUSB4500 NVM will stop discharging V<sub>BUS</sub>. Default is `false` .
-- **usb_comms_capable** (*Optional*, boolean): When set to `true` the STUSB4500 will tell the connected device that USB communications are possible. Default is `false` .
-- **snk_uncons_power** (*Optional*, boolean): When set to `true` the STUSB4500 will tell the connected device external power is available. Default is `false` .
-- **req_src_current** (*Optional*, boolean): When set to `true` the STUSB4500 will report the source current from source instead of the sink. Default is `false` .
-- **power_ok_cfg** (*Optional*, enumeration): Selects the POWER_OK pins configuration. Options are `CONFIGURATION_1` , `CONFIGURATION_2` or `CONFIGURATION_3` . Default is `CONFIGURATION_2` .
-- **gpio_cfg** (*Optional*, enumeration): Selects the GPIO configuration. Options are `SW_CTRL_GPIO` , `ERROR_RECOVERY` , `DEBUG` or `SINK_POWER` . Default is `ERROR_RECOVERY` .
-- **power_only_above_5v** (*Optional*, boolean): When set to `true` the STUSB4500 will enable V<sub>BUS</sub> only if PDO2 or PDO3 was negotiated. When `false` V<sub>BUS</sub> is enabled at 5V when connected to a non-PD charger. The available current is unknown. Default is `false` .
+* **flash_nvm** (*Optional*, boolean): When set to `true` the STUSB4500 NVM will be flashed with the current settings but only if different. To be on the safe side you should not leave this set to `true` . A power cycle is required to renegotiate. Default is `false` .
+* **default_nvm** (*Optional*, boolean): When set to `true` the STUSB4500 NVM will be flashed with default settings but only if different. To be on the safe side you should not leave this set to `true` . A power cycle is required to renegotiate. Default is `false` .
+* **snk_pdo_numb** (*Optional*, integer): Set the number of PDOs that should be negotiated. Range is 1 - 3. A value of 3 means PDO3, PDO2 and PDO1 can be negotiated. A value of 2 means PDO2 and PDO1 can be negotiated. A value of 1 means only PDO1 can be negotiated. Default is 3.
+* **v_snk_pdo2** (*Optional*, float): This is the desired PDO2 voltage. Range is 5.0 to 20.0. Default is 20.0.
+* **v_snk_pdo3** (*Optional*, float): This is the desired PDO3 voltage. Range is 5.0 to 20.0. Default is 15.0.
+* **i_snk_pdo1** (*Optional*, float): This is the desired PDO1 current. Range is 0.0 to 5.0. 5.0A is only available with 20V. For all other voltages the maximum current is 3.0A. Default is 1.5.
+* **i_snk_pdo2** (*Optional*, float): This is the desired PDO2 current. Range is 0.0 to 5.0. 5.0A is only available with 20V. For all other voltages the maximum current is 3.0A. Default is 1.5.
+* **i_snk_pdo3** (*Optional*, float): This is the desired PDO3 current. Range is 0.0 to 5.0. 5.0A is only available with 20V. For all other voltages the maximum current is 3.0A. Default is 1.0.
+* **shift_vbus_hl1** (*Optional*, percentage): This is the percentage above PDO1 voltage when the Over Voltage Lock Out occurs. Range is 1% to 15%. Default is 10%.
+* **shift_vbus_ll1** (*Optional*, percentage): This is the percentage below PDO1 voltage when the Under Voltage Lock Out occurs. Range is 1% to 15%. Default is 15%.
+* **shift_vbus_hl2** (*Optional*, percentage): This is the percentage above PDO2 voltage when the Over Voltage Lock Out occurs. Range is 1% to 15%. Default is 5%.
+* **shift_vbus_ll2** (*Optional*, percentage): This is the percentage below PDO2 voltage when the Under Voltage Lock Out occurs. Range is 1% to 15%. Default is 15%.
+* **shift_vbus_hl3** (*Optional*, percentage): This is the percentage above PDO3 voltage when the Over Voltage Lock Out occurs. Range is 1% to 15%. Default is 5%.
+* **shift_vbus_ll3** (*Optional*, percentage): This is the percentage below PDO3 voltage when the Under Voltage Lock Out occurs. Range is 1% to 15%. Default is 15%.
+* **vbus_disch_time_to_0v_** (*Optional*, time): Coefficient used to compute V<sub>BUS</sub> discharge time to 0V. Range is 84ms to 1260ms and must be a multiple of 84ms. Default is 756ms.
+* **vbus_disch_time_to_pdo_** (*Optional*, time): Coefficient used to compute V<sub>BUS</sub> discharge time when transitioning to lower PDO voltage. Range is 24ms to 360ms and must be a multiple of 24ms. Default is 288ms.
+* **vbus_disch_disable** (*Optional*, boolean): When set to `true` the STUSB4500 NVM will stop discharging V<sub>BUS</sub>. Default is `false` .
+* **usb_comms_capable** (*Optional*, boolean): When set to `true` the STUSB4500 will tell the connected device that USB communications are possible. Default is `false` .
+* **snk_uncons_power** (*Optional*, boolean): When set to `true` the STUSB4500 will tell the connected device external power is available. Default is `false` .
+* **req_src_current** (*Optional*, boolean): When set to `true` the STUSB4500 will report the source current from source instead of the sink. Default is `false` .
+* **power_ok_cfg** (*Optional*, enumeration): Selects the POWER_OK pins configuration. Options are `CONFIGURATION_1` , `CONFIGURATION_2` or `CONFIGURATION_3` . Default is `CONFIGURATION_2` .
+* **gpio_cfg** (*Optional*, enumeration): Selects the GPIO configuration. Options are `SW_CTRL_GPIO` , `ERROR_RECOVERY` , `DEBUG` or `SINK_POWER` . Default is `ERROR_RECOVERY` .
+* **power_only_above_5v** (*Optional*, boolean): When set to `true` the STUSB4500 will enable V<sub>BUS</sub> only if PDO2 or PDO3 was negotiated. When `false` V<sub>BUS</sub> is enabled at 5V when connected to a non-PD charger. The available current is unknown. Default is `false` .
 
 ### Sensors
 
-- **pd_state** (*Optional*): Current PD State as an integer. Range 0 to 3 where 0 is no PD negotiated. A value of 1, 2 or 3 indicates which PDO was negotiated. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
+* **pd_state** (*Optional*): Current PD State as an integer. Range 0 to 3 where 0 is no PD negotiated. A value of 1, 2 or 3 indicates which PDO was negotiated. All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
 ### Text Sensors
 
-- **pd_status** (*Optional*): Easy to read PD State (e.g. "12V @ 3A" ). All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
+* **pd_status** (*Optional*): Easy to read PD State (e.g. "12V @ 3A" ). All Options from [Sensor](https://esphome.io/components/sensor/#config-sensor).
 
 ### Actions
 
 When the GPIO is configured for software control `gpio_cfg: SW_CTRL_GPIO` these actions control the state of the output.
 
-- **stusb4500.turn_gpio_on** Will pull the GPIO low.
-- **stusb4500.turn_gpio_off** Will set the output to High-Z.
+* **stusb4500.turn_gpio_on** Will pull the GPIO low.
+* **stusb4500.turn_gpio_off** Will set the output to High-Z.
 
 Example using automations...
 
@@ -269,11 +269,11 @@ dfrobot_c4001:
 
 ### Configuration Variables
 
-- **id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the `dfrobot_c4001` component. Required if there are multiple DFRobot C4001s configured.
+* **id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the `dfrobot_c4001` component. Required if there are multiple DFRobot C4001s configured.
 
-- **uart_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID of the UART Component to use. Required if you have multiple UARTs configured.
+* **uart_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID of the UART Component to use. Required if you have multiple UARTs configured.
 
-- **mode** (*Required*, enumeration): This sets the operation mode of the sensor. Options are `PRESENCE` and `SPEED_AND_DISTANCE`.
+* **mode** (*Required*, enumeration): This sets the operation mode of the sensor. Options are `PRESENCE` and `SPEED_AND_DISTANCE`.
 
 ### Buttons
 
@@ -290,10 +290,10 @@ button:
 
 #### Configuration Variables
 
-- **dfrobot_c4001_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the DFRobot C4001 component. Required if there are multiple DFRobot C4001s configured.
-- **config_save** (*Optional*): When you click this button the current configuration will be saved. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. All Options from [Button Component](https://esphome.io/components/button/#base-button-configuration).
-- **factory_reset** (*Optional*): Clicking this button will perform a factory reset of the module and all configuration values will go back to default. All Options from [Button Component](https://esphome.io/components/button/#base-button-configuration).
-- **restart** (*Optional*): When you click this button the module will restart and all configuration values will remains as previously set. All Options from [Button Component](https://esphome.io/components/button/#base-button-configuration).
+* **dfrobot_c4001_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the DFRobot C4001 component. Required if there are multiple DFRobot C4001s configured.
+* **config_save** (*Optional*): When you click this button the current configuration will be saved. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. All Options from [Button Component](https://esphome.io/components/button/#base-button-configuration).
+* **factory_reset** (*Optional*): Clicking this button will perform a factory reset of the module and all configuration values will go back to default. All Options from [Button Component](https://esphome.io/components/button/#base-button-configuration).
+* **restart** (*Optional*): When you click this button the module will restart and all configuration values will remains as previously set. All Options from [Button Component](https://esphome.io/components/button/#base-button-configuration).
 
 ### Binary Sensors
 
@@ -311,9 +311,9 @@ binary_sensor:
 
 #### Configuration Variables
 
-- **dfrobot_c4001_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the DFRobot C4001 component. Required if there are multiple DFRobot C4001s configured.
-- **config_changed** (*Optional*): When `true` the current sensor configuration has been changed but not saved to the sensor. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
-- **occupancy** (*Optional*): In `PRESENCE` mode this indicates presence. In `SPEED_AND_DISTANCE` mode this indicates a target is being tracked. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
+* **dfrobot_c4001_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the DFRobot C4001 component. Required if there are multiple DFRobot C4001s configured.
+* **config_changed** (*Optional*): When `true` the current sensor configuration has been changed but not saved to the sensor. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
+* **occupancy** (*Optional*): In `PRESENCE` mode this indicates presence. In `SPEED_AND_DISTANCE` mode this indicates a target is being tracked. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
 
 ### Numbers
 
@@ -343,16 +343,16 @@ number:
 
 #### Configuration Variables
 
-- **dfrobot_c4001_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the DFRobot C4001 component. Required if there are multiple DFRobot C4001s configured.
-- **min_range** (*Optional*): This is the minimum detection range. Default is 0.6 meters (m) with a range of 0.6 to 25.0 m. The manual recommends not changing this value. The `config_save` button must be clicked to save the sensor configuration to flash and make operational. Available only in `PRESENCE` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
-- **max_range** (*Optional*): This is the maximum detection range. Default is 6 meters (m) with a range of 0.6 to 25.0 m. The `config_save` button must be clicked to save the sensor configuration to flash and make operational. Available only in `PRESENCE` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
-- **trigger_range** (*Optional*): Sets the maximum range at which occupancy can switch to present. The range between max detection range and trigger detection range can NOT cause occupancy to switch to present. Default is 0.6 meters (m) with a range of 0.6 to 25.0 m. The `config_save` button must be clicked to save the sensor configuration to flash and make operational. Available only in `PRESENCE` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
-- **hold_sensitivity** (*Optional*): The number represents the ease in which the sensor switches to the present state when someone enters the sensing range of the sensor. Default is 7 (no units) with a range of 0 to 9, higher is more sensitive. The `config_save` button must be clicked to save the sensor configuration to flash and make operational. Available only in `PRESENCE` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
-- **trigger_sensitivity** (*Optional*): This number represents ease of continued presence detection after the sensor switched to the present state. Default is 5 (no units) with a range of 0 to 9, higher is more sensitive. The `config_save` button must be clicked to save the sensor configuration to flash and make operational. Available only in `PRESENCE` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
-- **on_latency** (*Optional*): This time value is how long presence is detected before switching to the present state. Default is 0.050 (seconds) with a range of 0.0 to 100.0. The `config_save` button must be clicked to save the sensor configuration to flash and make operational. Available only in `PRESENCE` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
-- **off_latency** (*Optional*): This time value is how long the after the sensor no longer detects presence before switching to the not present state. Default is 15 (seconds) with a range of 0 to 1500. The `config_save` button must be clicked to save the sensor configuration to flash and make operational. Available only in `PRESENCE` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
-- **inhibit_time** (*Optional*): The dead-time after switching to the not present state before presence can be detected again. Default is 1 (seconds) with a range of 0.1 to 255.0. The `config_save` button must be clicked to save the sensor configuration to flash and make operational. Available only in `PRESENCE` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
-- **threshold_factor** (*Optional*): The larger the number the larger the object and more motion is required to trigger the sensor to switch to target tracked state. Default is 5 with a range of 0 to 65535. The `config_save` button must be clicked to save the sensor configuration to flash and make operational. Available only in `SPEED_AND_DISTANCE` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+* **dfrobot_c4001_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the DFRobot C4001 component. Required if there are multiple DFRobot C4001s configured.
+* **min_range** (*Optional*): This is the minimum detection range. Default is 0.6 meters (m) with a range of 0.6 to 25.0 m. The manual recommends not changing this value. The `config_save` button must be clicked to save the sensor configuration to flash and make operational. Available only in `PRESENCE` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+* **max_range** (*Optional*): This is the maximum detection range. Default is 6 meters (m) with a range of 0.6 to 25.0 m. The `config_save` button must be clicked to save the sensor configuration to flash and make operational. Available only in `PRESENCE` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+* **trigger_range** (*Optional*): Sets the maximum range at which occupancy can switch to present. The range between max detection range and trigger detection range can NOT cause occupancy to switch to present. Default is 0.6 meters (m) with a range of 0.6 to 25.0 m. The `config_save` button must be clicked to save the sensor configuration to flash and make operational. Available only in `PRESENCE` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+* **hold_sensitivity** (*Optional*): The number represents the ease in which the sensor switches to the present state when someone enters the sensing range of the sensor. Default is 7 (no units) with a range of 0 to 9, higher is more sensitive. The `config_save` button must be clicked to save the sensor configuration to flash and make operational. Available only in `PRESENCE` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+* **trigger_sensitivity** (*Optional*): This number represents ease of continued presence detection after the sensor switched to the present state. Default is 5 (no units) with a range of 0 to 9, higher is more sensitive. The `config_save` button must be clicked to save the sensor configuration to flash and make operational. Available only in `PRESENCE` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+* **on_latency** (*Optional*): This time value is how long presence is detected before switching to the present state. Default is 0.050 (seconds) with a range of 0.0 to 100.0. The `config_save` button must be clicked to save the sensor configuration to flash and make operational. Available only in `PRESENCE` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+* **off_latency** (*Optional*): This time value is how long the after the sensor no longer detects presence before switching to the not present state. Default is 15 (seconds) with a range of 0 to 1500. The `config_save` button must be clicked to save the sensor configuration to flash and make operational. Available only in `PRESENCE` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+* **inhibit_time** (*Optional*): The dead-time after switching to the not present state before presence can be detected again. Default is 1 (seconds) with a range of 0.1 to 255.0. The `config_save` button must be clicked to save the sensor configuration to flash and make operational. Available only in `PRESENCE` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+* **threshold_factor** (*Optional*): The larger the number the larger the object and more motion is required to trigger the sensor to switch to target tracked state. Default is 5 with a range of 0 to 65535. The `config_save` button must be clicked to save the sensor configuration to flash and make operational. Available only in `SPEED_AND_DISTANCE` mode. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 
 ### Sensors
 
@@ -370,10 +370,10 @@ sensor:
 
 #### Configuration Variables
 
-- **dfrobot_c4001_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the DFRobot C4001 component. Required if there are multiple DFRobot C4001s configured.
-- **target_distance** (*Optional*): When **occupancy** binary sensor is `true` this sensor indicates distance to target in meters (m). When **occupancy** binary sensor is `false` this sensor switches to 0.0 indicating invalid data. Available only in `SPEED_AND_DISTANCE` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
-- **target_speed** (*Optional*): When **occupancy** binary sensor is `true` this sensor indicates target speed in meters per second (m/s). When **occupancy** binary sensor is `false` this sensor switches to 0.0 indicating invalid data. Available only in `SPEED_AND_DISTANCE` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
-- **target_energy** (*Optional*): When **occupancy** binary sensor is `true` this sensor indicates target energy in no units. When **occupancy** binary sensor is `false` this sensor switches to 0.0 indicating invalid data. Available only in `SPEED_AND_DISTANCE` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
+* **dfrobot_c4001_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the DFRobot C4001 component. Required if there are multiple DFRobot C4001s configured.
+* **target_distance** (*Optional*): When **occupancy** binary sensor is `true` this sensor indicates distance to target in meters (m). When **occupancy** binary sensor is `false` this sensor switches to 0.0 indicating invalid data. Available only in `SPEED_AND_DISTANCE` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
+* **target_speed** (*Optional*): When **occupancy** binary sensor is `true` this sensor indicates target speed in meters per second (m/s). When **occupancy** binary sensor is `false` this sensor switches to 0.0 indicating invalid data. Available only in `SPEED_AND_DISTANCE` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
+* **target_energy** (*Optional*): When **occupancy** binary sensor is `true` this sensor indicates target energy in no units. When **occupancy** binary sensor is `false` this sensor switches to 0.0 indicating invalid data. Available only in `SPEED_AND_DISTANCE` mode. All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
 
 ### Text Sensors
 
@@ -391,9 +391,9 @@ text_sensor:
 
 #### Configuration Variables
 
-- **dfrobot_c4001_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the DFRobot C4001 component. Required if there are multiple DFRobot C4001s configured.
-- **software_version** (*Optional*): Software Version as reported by the module. All Options from [Text Sensor Component](https://esphome.io/components/sensor/#base-text-sensor-configuration).
-- **firmware_version** (*Optional*): Firmware Version as reported by the module. All Options from [Text Sensor Component](https://esphome.io/components/text_sensor/#base-text-sensor-configuration).
+* **dfrobot_c4001_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the DFRobot C4001 component. Required if there are multiple DFRobot C4001s configured.
+* **software_version** (*Optional*): Software Version as reported by the module. All Options from [Text Sensor Component](https://esphome.io/components/sensor/#base-text-sensor-configuration).
+* **firmware_version** (*Optional*): Firmware Version as reported by the module. All Options from [Text Sensor Component](https://esphome.io/components/text_sensor/#base-text-sensor-configuration).
 
 ### Switches
 
@@ -409,13 +409,13 @@ switch:
 
 #### Configuration Variables
 
-- **dfrobot_c4001_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the DFRobot C4001 component. Required if there are multiple DFRobot C4001s configured.
-- **led_enable** (*Optional*): When turned on the green LED will flash when the sensor has been started. The blue LED cannot be disabled with this command. All Options from [Switch Component](https://esphome.io/components/switch/#base-switch-configuration).
-- **micro_motion_enable** (*Optional*): Turns on micro motion mode. Available only in `SPEED_AND_DISTANCE` mode. All Options from [Switch Component](https://esphome.io/components/switch/#base-switch-configuration).
+* **dfrobot_c4001_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the DFRobot C4001 component. Required if there are multiple DFRobot C4001s configured.
+* **led_enable** (*Optional*): When turned on the green LED will flash when the sensor has been started. The blue LED cannot be disabled with this command. All Options from [Switch Component](https://esphome.io/components/switch/#base-switch-configuration).
+* **micro_motion_enable** (*Optional*): Turns on micro motion mode. Available only in `SPEED_AND_DISTANCE` mode. All Options from [Switch Component](https://esphome.io/components/switch/#base-switch-configuration).
 
 ### Actions
 
-- **dfrobot_c4001.factory_reset** Will perform a factory reset of the module and all configuration values will go back to default. The module will restart with these defaults. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. This is much easier to do with a lambda that accidentally performs a factory reset every second.
+* **dfrobot_c4001.factory_reset** Will perform a factory reset of the module and all configuration values will go back to default. The module will restart with these defaults. Keep in mind that these are writes to flash and there is a limited number of time you can do this before the flash wears out. This is much easier to do with a lambda that accidentally performs a factory reset every second.
 
 Example using automations...
 
@@ -435,7 +435,7 @@ Example in lambdas...
   id(mmwave_sensor).factory_reset();
 ```
 
-- **dfrobot_c4001.restart** Will restart the module and all configuration values will remains as previously set.
+* **dfrobot_c4001.restart** Will restart the module and all configuration values will remains as previously set.
 
 Example using automations...
 
@@ -456,6 +456,11 @@ Example in lambdas...
 ```
 
 ## LD2410S External Component
+
+<p align="center">
+    <img src="https://www.hlktech.net/res/_cache/auto/15/1575.png" width="50%"><br />
+    Hi-Link LD2410S 8m mmWave Presence Sensor
+</p>
 
 This custom component is based on [PR #8486](https://github.com/esphome/esphome/pull/8486) on ESPHome. I've copied it here since I doubt it will be merged into ESPHome. There is risk that it could disappear on ESPHome and it's not setup as an external component in [NovakIrs repository](https://github.com/NovakIrs/esphome/tree/ld2410s). This PR works just fine. Again all credit goes to [NovakIrs](https://github.com/NovakIrs) repository.
 
@@ -485,9 +490,9 @@ ld2410s:
 
 ### Configuration Variables
 
-- **id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the ld2410s component. Required if there are multiple LD2410Ss configured.
+* **id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the ld2410s component. Required if there are multiple LD2410Ss configured.
 
-- **uart_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID of the UART Component to use. Required if you have multiple UARTs configured.
+* **uart_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID of the UART Component to use. Required if you have multiple UARTs configured.
 
 ## Buttons
 
@@ -503,9 +508,9 @@ button:
 
 ### Configuration Variables
 
-- **ld2410s_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the ld2410s component. Required if there are multiple LD2410Ss configured.
+* **ld2410s_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the ld2410s component. Required if there are multiple LD2410Ss configured.
 
-- **cal_start** (*Optional*): When you click this button the built-in LD2410S Auto-Calibration will start. Be sure to have the room in the idle state, i.e. no people, pets or robot vaccumes running. All Options from [Button Component](https://esphome.io/components/button/#base-button-configuration).
+* **cal_start** (*Optional*): When you click this button the built-in LD2410S Auto-Calibration will start. Be sure to have the room in the idle state, i.e. no people, pets or robot vaccumes running. All Options from [Button Component](https://esphome.io/components/button/#base-button-configuration).
 
 ## Binary Sensors
 
@@ -523,15 +528,15 @@ binary_sensor:
 
 ### Configuration Variables
 
-- **ld2410s_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the ld2410s component. Required if there are multiple LD2410Ss configured.
+* **ld2410s_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the ld2410s component. Required if there are multiple LD2410Ss configured.
 
-- **has_target** (*Optional*): When `true` the radar has detected a target either moving or still. This is effectivly presence. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
+* **has_target** (*Optional*): When `true` the radar has detected a target either moving or still. This is effectivly presence. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
 
-- **calibration_running** (*Optional*): When `true` Auto-Calibration is running and `false` when not. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
+* **calibration_running** (*Optional*): When `true` Auto-Calibration is running and `false` when not. All Options from [Binary Sensor Component](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration).
 
 > [!NOTE]
 > The has_target [Binary_Sensor](https://esphome.io/components/binary_sensor/#base-binary-sensor-configuration) above includes the following [Filter](https://https://esphome.io/components/binary_sensor/#binary-sensor-filters).
-> `- settle: 1s` 
+> `- settle: 1s`
 > If you have defined other filters, this default will be overridden; you may of course add it back to your custom filter(s) as above if you wish.
 > To remove the default filter for any given sensor instance, add `filters: []` to its configuration.
 
@@ -637,23 +642,23 @@ number:
 
 ### Configuration Variables
 
-- **ld2410s_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the ld2410s component. Required if there are multiple LD2410Ss configured.
+* **ld2410s_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the ld2410s component. Required if there are multiple LD2410Ss configured.
 
-- **max_distance_gate** (*Optional*): This is the maximum detection gate. Default is 15 with a range of 0 to 15 in steps of 1. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+* **max_distance_gate** (*Optional*): This is the maximum detection gate. Default is 15 with a range of 0 to 15 in steps of 1. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 
-- **min_distance_gate** (*Optional*): This is the minimum detection gate. Default is 0 with a range of 0 to 15 in steps of 1. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+* **min_distance_gate** (*Optional*): This is the minimum detection gate. Default is 0 with a range of 0 to 15 in steps of 1. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 
-- **no_delay** (*Optional*): This is the no detection delay. Basically a delay off function. Default is 10 seconds (s) with a range of 0 to 120s in steps of 1s. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+* **no_delay** (*Optional*): This is the no detection delay. Basically a delay off function. Default is 10 seconds (s) with a range of 0 to 120s in steps of 1s. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 
-- **status_reporting_frequency** (*Optional*): This is `has_target` binary sensor reporting frequency. Default is 8.0Hz with a range of 0.5 to 8.0Hz. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+* **status_reporting_frequency** (*Optional*): This is `has_target` binary sensor reporting frequency. Default is 8.0Hz with a range of 0.5 to 8.0Hz. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 
-- **distance_reporting_frequency** (*Optional*): This is `target_distance` binary sensor reporting frequency. Default is 8.0Hz with a range of 0.5 to 8.0Hz. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+* **distance_reporting_frequency** (*Optional*): This is `target_distance` binary sensor reporting frequency. Default is 8.0Hz with a range of 0.5 to 8.0Hz. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 
-- **gX** (*Optional*): Thresholds for the Xth gate (X => 0 to 15). The gate sparation is 0.7m. Note the datsheet indicates static detection is effective only in the first 8 gates. The higher gates will still detect motion.
+* **gX** (*Optional*): Thresholds for the Xth gate (X => 0 to 15). The gate sparation is 0.7m. Note the datsheet indicates static detection is effective only in the first 8 gates. The higher gates will still detect motion.
 
-  - **threshold_hold** (*Optional*): This represents the threshold to which a target will no longer be detected for the given gate. Default is gate specific and range is 10 to 95dB for gates 0 - 7 and 5 to 63dB for gate 8 - 15 in steps of 1dB. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+  * **threshold_hold** (*Optional*): This represents the threshold to which a target will no longer be detected for the given gate. Default is gate specific and range is 10 to 95dB for gates 0 - 7 and 5 to 63dB for gate 8 - 15 in steps of 1dB. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 
-  - **threshold_trigger** (*Optional*): Trigger Threshold detemine when the energy is enough to switch to target detected for the given gate. Default is gate specific and range is 10 to 95dB for gates 0 - 7 and 5 to 63dB for gate 8 - 15 in steps of 1dB. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+  * **threshold_trigger** (*Optional*): Trigger Threshold detemine when the energy is enough to switch to target detected for the given gate. Default is gate specific and range is 10 to 95dB for gates 0 - 7 and 5 to 63dB for gate 8 - 15 in steps of 1dB. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 
 ### LD2410S Selects
 
@@ -669,9 +674,9 @@ select:
 
 ### Configuration Variables
 
-- **ld2410s_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the ld2410s component. Required if there are multiple LD2410Ss configured.
+* **ld2410s_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the ld2410s component. Required if there are multiple LD2410Ss configured.
 
-- **response_speed** (*Optional*): This is how quickly the sensor switches to no occupancy.You have two options `Normal` and `Fast`. All Options from [Select Component](https://esphome.io/components/select/#base-select-configuration).
+* **response_speed** (*Optional*): This is how quickly the sensor switches to no occupancy.You have two options `Normal` and `Fast`. All Options from [Select Component](https://esphome.io/components/select/#base-select-configuration).
 
 ### LD2410S Sensors
 
@@ -721,11 +726,11 @@ sensor:
 
 ### Configuration Variables
 
-- **ld2410s_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the ld2410s component. Required if there are multiple LD2410Ss configured.
+* **ld2410s_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the ld2410s component. Required if there are multiple LD2410Ss configured.
 
-- **cal_progress** (*Optional*): This is the current Auto-Calibration progress in perecent (%). All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
+* **cal_progress** (*Optional*): This is the current Auto-Calibration progress in perecent (%). All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
 
-- **gX energy** (*Optional*): Energies for the Xth gate (X => 0 to 15). Range is 0 to 100dB in steps of 1dB. Only operates when Minimal Output is off. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
+* **gX energy** (*Optional*): Energies for the Xth gate (X => 0 to 15). Range is 0 to 100dB in steps of 1dB. Only operates when Minimal Output is off. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 
 > [!NOTE]
 > Each of the [Sensor Components](https://esphome.io/components/sensor/#base-sensor-configuration) above include the following [Filter](https://esphome.io/components/sensor/#sensor-filters).
@@ -733,7 +738,7 @@ sensor:
 > If you have defined other filters, this default will be overridden; you may of course add it back to your custom filter(s) as above if you wish.
 > To remove the default filter for any given sensor instance, add `filters: []` to its configuration.
 
-- **target_distance** (*Optional*): This sensor indicates current distance to target in meters (m). All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
+* **target_distance** (*Optional*): This sensor indicates current distance to target in meters (m). All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
 
 ### LD2410S Switches
 
@@ -749,9 +754,9 @@ switch:
 
 ### Configuration Variables
 
-- **ld2410s_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the ld2410s component. Required if there are multiple LD2410Ss configured.
+* **ld2410s_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the ld2410s component. Required if there are multiple LD2410Ss configured.
 
-- **minimal_output** (*Optional*): When turned on the unit stops sending detailed target parameters like individual gate data and only streams simple presence states over the serial port . All Options from [Switch Component](https://esphome.io/components/switch/#base-switch-configuration).
+* **minimal_output** (*Optional*): When turned on the unit stops sending detailed target parameters like individual gate data and only streams simple presence states over the serial port . All Options from [Switch Component](https://esphome.io/components/switch/#base-switch-configuration).
 
 ### LD2410S Text Sensors
 
@@ -767,11 +772,16 @@ text_sensor:
 
 ### Configuration Variables
 
-- **ld2410s_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the ld2410s component. Required if there are multiple LD2410Ss configured.
+* **ld2410s_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the ld2410s component. Required if there are multiple LD2410Ss configured.
 
-- **fw_version** (*Optional*): The is the LD2410S firmware version. All Options from [Sensor Component](https://esphome.io/components/text_sensor/#base-text-sensor-configuration).
+* **fw_version** (*Optional*): The is the LD2410S firmware version. All Options from [Sensor Component](https://esphome.io/components/text_sensor/#base-text-sensor-configuration).
 
 ## SEN5X External Component
+
+<p align="center">
+    <img src="http://sensirion.com/_next/image?url=https%3A%2F%2Fsensirion.com%2Fmedia%2Fportfolio%2Fseries%2Fimage%2F6a057318-e34a-4b2c-9303-5ac180312d85.webp&w=1200&q=75" width="50%"><br />
+    SEN55 Environmental Sensor
+</p>
 
 > [!NOTE]
 > ESPHome now has a SEN6X component. They decided to not use my pull request that supported the SEN6X sensors in the SEN5X component after 6 mounths of work. Kinda sucked but it what it is. I ended up supporting the SEN6X component integration but it's not really the way I would have handled it. I doubt I will support ESPHome directly in the future but I will release my components here. This component is here incase y0ou want to use the sen5x compoenent from that PR
@@ -840,108 +850,108 @@ sensor:
 
 ### SEN5X Configuration Variables
 
-- **type** (*Required*, enum): The type of the connected sensor. Must be one of the following:
+* **type** (*Required*, enum): The type of the connected sensor. Must be one of the following:
   SEN50, SEN54, SEN55, SEN62, SEN63C, SEN65, SEN66, SEN68 or SEN69C. All options from [Sensor](https://esphome.io/components/sensor/#base-sensor-configuration).
 
-- **pm_1_0** (*Optional*): The information for the **Mass Concentration** sensor for fine particles up to
+* **pm_1_0** (*Optional*): The information for the **Mass Concentration** sensor for fine particles up to
   1μm in size. Readings in µg/m³. All options from [Sensor](https://esphome.io/components/sensor/#base-sensor-configuration).
 
-- **pm_2_5** (*Optional*): The information for the **Mass Concentration** sensor for fine particles up to
+* **pm_2_5** (*Optional*): The information for the **Mass Concentration** sensor for fine particles up to
   2.5μm in size. Readings in µg/m³. All options from [Sensor](https://esphome.io/components/sensor/#base-sensor-configuration).
 
-- **pm_4_0** (*Optional*): The information for the **Mass Concentration** sensor for coarse particles up to
+* **pm_4_0** (*Optional*): The information for the **Mass Concentration** sensor for coarse particles up to
   4μm in size. Readings in µg/m³. All options from [Sensor](https://esphome.io/components/sensor/#base-sensor-configuration).
 
-- **pm_10_0** (*Optional*): The information for the **Mass Concentration** sensor for coarse particles up to
+* **pm_10_0** (*Optional*): The information for the **Mass Concentration** sensor for coarse particles up to
   10μm in size. Readings in µg/m³. All options from [Sensor](https://esphome.io/components/sensor/#base-sensor-configuration).
 
-- **temperature** (*Optional*): The information for the Temperature sensor. Only available with SEN54, SEN55,
+* **temperature** (*Optional*): The information for the Temperature sensor. Only available with SEN54, SEN55,
   SEN62, SEN63C, SEN65, SEN66, SEN68 or SEN69C. All options from [Sensor](https://esphome.io/components/sensor/#base-sensor-configuration).
 
-- **humidity** (*Optional*): The information for the Relative Humidity sensor. Only available with SEN54, SEN55,
+* **humidity** (*Optional*): The information for the Relative Humidity sensor. Only available with SEN54, SEN55,
   SEN62, SEN63C, SEN65, SEN66, SEN68 or SEN69C. All options from [Sensor](https://esphome.io/components/sensor/#base-sensor-configuration).
 
-- **co2** (*Optional*): The information for the Carbon dioxide (CO₂) sensor. Readings in ppm. Only available with
+* **co2** (*Optional*): The information for the Carbon dioxide (CO₂) sensor. Readings in ppm. Only available with
   SEN63C, SEN66 or SEN69C.
 
-  - **auto_self_calibration** (*Optional*, boolean): True enables automatic CO₂ self calibration.
+  * **auto_self_calibration** (*Optional*, boolean): True enables automatic CO₂ self calibration.
   False disables automatic CO₂ calibration. Default is `true`.
-  - **altitude_compensation** (*Optional*, integer): When set to altitude (in meters), the CO₂ sensor will be
+  * **altitude_compensation** (*Optional*, integer): When set to altitude (in meters), the CO₂ sensor will be
   statically compensated for deviations due to current altitude. See [CO₂ Compensation](#co₂-compensation) section below
   for more information.
-  - **ambient_pressure_compensation** (*Optional*, integer): When set to pressure (in hPA), the CO₂ sensor will be
+  * **ambient_pressure_compensation** (*Optional*, integer): When set to pressure (in hPA), the CO₂ sensor will be
   compensated for deviations due to ambient pressure. See [CO₂ Compensation](#co₂-compensation) section below
   for more information.
-  - **ambient_pressure_compensation_source** (*Optional*, [ID](/guides/configuration-types#config-id)):
+  * **ambient_pressure_compensation_source** (*Optional*, [ID](/guides/configuration-types#config-id)):
   Sets an external pressure sensor ID (must report in hPA). This will compensate the CO₂ sensor for deviations
   due to current pressure. This correction is applied with each update of the CO₂ sensor. See
   [CO₂ Compensation](#co₂-compensation) section below for more information.
   - All options from [Sensor](https://esphome.io/components/sensor/#base-sensor-configuration).
 
-- **voc** (*Optional*): The information for the VOC Index sensor. Only available with SEN54, SEN55, SEN65, SEN66,
+* **voc** (*Optional*): The information for the VOC Index sensor. Only available with SEN54, SEN55, SEN65, SEN66,
   SEN69 or SEN69C.
 
-  - **algorithm_tuning** (*Optional*): The VOC algorithm can be customized by tuning 6 different parameters.
+  * **algorithm_tuning** (*Optional*): The VOC algorithm can be customized by tuning 6 different parameters.
     For more details see
     [Engineering Guidelines for SEN5x](https://sensirion.com/media/documents/25AB572C/62B463AA/Sensirion_Engineering_Guidelines_SEN5x.pdf).
 
-    - **index_offset** (*Optional*): VOC index representing typical (average) conditions.
+    * **index_offset** (*Optional*): VOC index representing typical (average) conditions.
       Allowed values are in range 1..250. The default value is 100.
-    - **learning_time_offset_hours** (*Optional*): Time constant to estimate the VOC algorithm offset from the
+    * **learning_time_offset_hours** (*Optional*): Time constant to estimate the VOC algorithm offset from the
       history in hours. Past events will be forgotten after about twice the learning time.
       Allowed values are in range 1..1000. The default value is 12 hour.
-    - **learning_time_gain_hours** (*Optional*): Time constant to estimate the VOC algorithm gain from the
+    * **learning_time_gain_hours** (*Optional*): Time constant to estimate the VOC algorithm gain from the
       history in hours. Past events will be forgotten after about twice the learning time.
       Allowed values are in range 1..1000. The default value is 12 hours.
-    - **gating_max_duration_minutes** (*Optional*): Maximum duration of gating in minutes (freeze of estimator
+    * **gating_max_duration_minutes** (*Optional*): Maximum duration of gating in minutes (freeze of estimator
       during high VOC index signal). Zero disables the gating. Allowed values are in range 0..3000.
       The default value is 180 minutes.
-    - **std_initial** (*Optional*): Initial estimate for standard deviation. Lower value boosts events during
+    * **std_initial** (*Optional*): Initial estimate for standard deviation. Lower value boosts events during
       initial learning period, but may result in larger device-to-device variations.
       Allowed values are in range 10..5000. The default value is 50.
-    - **gain_factor** (*Optional*): Gain factor to amplify or to attenuate the VOC index output.
+    * **gain_factor** (*Optional*): Gain factor to amplify or to attenuate the VOC index output.
       Allowed values are in range 1..1000. The default value is 230. All options from [Sensor](https://esphome.io/components/sensor/#base-sensor-configuration).
 
-- **nox** (*Optional*): NOx Index. Only available with SEN55, SEN65, SEN66, SEN69 or SEN69C.
+* **nox** (*Optional*): NOx Index. Only available with SEN55, SEN65, SEN66, SEN69 or SEN69C.
 
-  - **algorithm_tuning** (*Optional*): Like VOC the NOx algorithm can be customized by tuning 5 different parameters.
+  * **algorithm_tuning** (*Optional*): Like VOC the NOx algorithm can be customized by tuning 5 different parameters.
 
-    - **index_offset** (*Optional*): NOx index representing typical (average) conditions.
+    * **index_offset** (*Optional*): NOx index representing typical (average) conditions.
       Allowed values are in range 1..250. The default value is 100.
-    - **learning_time_offset_hours** (*Optional*): Time constant to estimate the NOx algorithm offset from the
+    * **learning_time_offset_hours** (*Optional*): Time constant to estimate the NOx algorithm offset from the
       history in hours. Past events will be forgotten after about twice the learning time.
       Allowed values are in range 1..1000. The default value is 12 hour.
-    - **learning_time_gain_hours** (*Optional*): Here for completeness, but this is ignored by NOx Algorithm Tuning.
-    - **gating_max_duration_minutes** (*Optional*): Maximum duration of gating in minutes (freeze of estimator
+    * **learning_time_gain_hours** (*Optional*): Here for completeness, but this is ignored by NOx Algorithm Tuning.
+    * **gating_max_duration_minutes** (*Optional*): Maximum duration of gating in minutes (freeze of estimator
       during high NOx index signal). Zero disables the gating. Allowed values are in range 0..3000.
       The default value is 180 minutes.
-    - **std_initial** (*Optional*): Here for completeness, but this is ignored by NOx Algorithm Tuning.
-    - **gain_factor** (*Optional*): Gain factor to amplify or to attenuate the NOx index output.
+    * **std_initial** (*Optional*): Here for completeness, but this is ignored by NOx Algorithm Tuning.
+    * **gain_factor** (*Optional*): Gain factor to amplify or to attenuate the NOx index output.
       Allowed values are in range 1..1000. The default value is 230. All options from [Sensor](https://esphome.io/components/sensor/#base-sensor-configuration).
 
-- **hcho** (*Optional*): The information for the Formaldehyde (HCHO) sensor. Readings in ppb. Only available with
+* **hcho** (*Optional*): The information for the Formaldehyde (HCHO) sensor. Readings in ppb. Only available with
   SEN68 or SEN69C.
   
   - All options from [Sensor](https://esphome.io/components/sensor/#base-sensor-configuration).
 
-- **store_baseline** (*Optional*, boolean): When set to `true` the VOC algorithm state is saved to flash every
+* **store_baseline** (*Optional*, boolean): When set to `true` the VOC algorithm state is saved to flash every
   2 hours. During setup of the sensor the previously saved algorithm state is loaded and the VOC sensor will
   skip the initial learning phase.
   Only available with SEN54, SEN55, SEN65, SEN66, SEN68 or SEN69C.
 
-- **auto_cleaning_interval** (*Optional*, positive int): The periodic fan-cleaning interval in seconds.
+* **auto_cleaning_interval** (*Optional*, positive int): The periodic fan-cleaning interval in seconds.
   Only available with SEN55, SEN54 OR SEN55.
 
-- **temperature_compensation** (*Optional*, sequence): These parameters allow the user to compensate temperature
+* **temperature_compensation** (*Optional*, sequence): These parameters allow the user to compensate temperature
   effects of the customer design by applying custom temperature offsets to the ambient temperature. Only available
   with SEN54, SEN55, SEN62, SEN63C, SEN65, SEN66, SEN69 or SEN69C.
   See [Temperature Compensation](#sen5x-temperature-compensation) section below for more information.
 
-  - **offset** (*Optional*, float): Temperature offset, in °C. Defaults to `0`.
-  - **normalized_offset_slope** (*Optional*, float): Normalized temperature offset slope. Defaults to `0`.
-  - **time_constant** (*Optional*, positive int): Time constant in seconds. Defaults to `0`.
+  * **offset** (*Optional*, float): Temperature offset, in °C. Defaults to `0`.
+  * **normalized_offset_slope** (*Optional*, float): Normalized temperature offset slope. Defaults to `0`.
+  * **time_constant** (*Optional*, positive int): Time constant in seconds. Defaults to `0`.
   
-- **acceleration_mode** (*Optional*): Allowed value are `low`, `medium` and `high`. Defaults to `low`.
+* **acceleration_mode** (*Optional*): Allowed value are `low`, `medium` and `high`. Defaults to `low`.
   Only available with SEN54 or SEN55.
 
   By default, the RH/T acceleration algorithm is optimized for a sensor which is positioned in free air.
@@ -957,7 +967,7 @@ sensor:
   For more information see
   [Temperature Acceleration and Compensation Instructions for SEN5x.](https://sensirion.com/media/documents/9B9DE2A7/61E957EB/Sensirion_Temperature_Acceleration_and_Compensation_Instructions_SEN.pdf).
 
-- **address** (*Optional*, int): Manually specify the I²C address of the sensor. Defaults to `0x69` for
+* **address** (*Optional*, int): Manually specify the I²C address of the sensor. Defaults to `0x69` for
   SEN5X sensors and `0x6B` for SEN6X sensors.
 
 > [!NOTE]
@@ -1191,6 +1201,11 @@ More details about the tuning of these parameters for SEN6X sensors are included
 
 ## SEN6X External Component
 
+<p align="center">
+    <img src="https://sensirion.com/_next/image?url=https%3A%2F%2Fsensirion.com%2Fmedia%2Fportfolio%2Fproduct%2Fimage%2Fd2b23157-ec1c-40f7-b89f-e38ad4d4a40f.webp&w=1200&q=75" width="50%"><br />
+    SEN66 Environmental Sensor
+</p>
+
 This external component adds SEN60, SEN63C, SEN65, SEN66 and SEN68 support to ESPHome.
 
 Temperature compensation is not working for the SEN6x models. Still waiting on the Sensirion Application Note.
@@ -1253,14 +1268,14 @@ sensor:
 
 ### Configuration Variables
 
-- **type** (*Required*, enum): The type of the connected sensor.Provides compile time config validation of sensors. Must be one of the following:
+* **type** (*Required*, enum): The type of the connected sensor.Provides compile time config validation of sensors. Must be one of the following:
   SEN62, SEN63C, SEN65, SEN66, SEN68 or SEN69C. All options from [Sensor](/components/sensor#config-sensor).
 
-- **id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the sen6x component. Required if there are multiple SEN6Xs configured.
+* **id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID for the sen6x component. Required if there are multiple SEN6Xs configured.
 
-- **address** (*Optional*, int): Manually specify the I²C address of the sensor. Defaults to `0x6B`.
+* **address** (*Optional*, int): Manually specify the I²C address of the sensor. Defaults to `0x6B`.
 
-- **temperature_acceleration** (*Optional*): This command allows user to set custom temperature acceleration
+* **temperature_acceleration** (*Optional*): This command allows user to set custom temperature acceleration
   parameters.
 
   This is a good starting point for these values.
@@ -1274,100 +1289,100 @@ sensor:
   For more information see
   [SEN6x – Temperature Acceleration and Compensation Instructions](https://sensirion.com/media/documents/C964FCC8/693FD554/PS_AN_SEN6x_Temperature_Compensation_and_Acceleration_Application_No.pdf).
 
-  - **k** (*Required*): Filter constant K.
-  - **p** (*Required*): Filter constant P.
-  - **t1** (*Required*): Time constant T1 in seconds.
-  - **t2** (*Required*): Time constant T2 in seconds.
+  * **k** (*Required*): Filter constant K.
+  * **p** (*Required*): Filter constant P.
+  * **t1** (*Required*): Time constant T1 in seconds.
+  * **t2** (*Required*): Time constant T2 in seconds.
 
-- **temperature_compensation** (*Optional*, sequence): These parameters allow the user to compensate temperature
+* **temperature_compensation** (*Optional*, sequence): These parameters allow the user to compensate temperature
   effects of the design-in at the customer side by applying custom temperature offsets to the ambient temperature.
   Temperature Compensation is a sequence (called slots) of compensation parameter sets. Up to five
   temperature compensation sets are supported.
   See [Temperature Compensation](#temperature-compensation) section below for more information.
 
-  - **offset** (*Optional*, float): Temperature offset, in °C. Defaults to `0`.
-  - **normalized_offset_slope** (*Optional*, float): Normalized temperature offset slope. Defaults to `0`.
-  - **time_constant** (*Optional*, positive int): Time constant in seconds. Defaults to `0`.
+  * **offset** (*Optional*, float): Temperature offset, in °C. Defaults to `0`.
+  * **normalized_offset_slope** (*Optional*, float): Normalized temperature offset slope. Defaults to `0`.
+  * **time_constant** (*Optional*, positive int): Time constant in seconds. Defaults to `0`.
 
 ### SEN6X Sensors
 
-- **pm_1_0** (*Optional*): The information for the **Mass Concentration** sensor for fine particles up to
+* **pm_1_0** (*Optional*): The information for the **Mass Concentration** sensor for fine particles up to
   1μm in size. Readings in µg/m³. All options from [Sensor](/components/sensor#config-sensor).
 
-- **pm_2_5** (*Optional*): The information for the **Mass Concentration** sensor for fine particles up to
+* **pm_2_5** (*Optional*): The information for the **Mass Concentration** sensor for fine particles up to
   2.5μm in size. Readings in µg/m³. All options from [Sensor](/components/sensor#config-sensor).
 
-- **pm_4_0** (*Optional*): The information for the **Mass Concentration** sensor for coarse particles up to
+* **pm_4_0** (*Optional*): The information for the **Mass Concentration** sensor for coarse particles up to
   4μm in size. Readings in µg/m³. All options from [Sensor](/components/sensor#config-sensor).
 
-- **pm_10_0** (*Optional*): The information for the **Mass Concentration** sensor for coarse particles up to
+* **pm_10_0** (*Optional*): The information for the **Mass Concentration** sensor for coarse particles up to
   10μm in size. Readings in µg/m³. All options from [Sensor](/components/sensor#config-sensor).
 
-- **temperature** (*Optional*): The information for the Temperature sensor. Only available with
+* **temperature** (*Optional*): The information for the Temperature sensor. Only available with
   SEN62, SEN63C, SEN65, SEN66, SEN68 or SEN69C. All options from [Sensor](/components/sensor#config-sensor).
 
-- **humidity** (*Optional*): The information for the Relative Humidity sensor. Only available with
+* **humidity** (*Optional*): The information for the Relative Humidity sensor. Only available with
   SEN62, SEN63C, SEN65, SEN66, SEN68 or SEN69C. All options from [Sensor](/components/sensor#config-sensor).
 
-- **co2** (*Optional*): The information for the Carbon dioxide (CO₂) sensor. Readings in ppm. Only available with
+* **co2** (*Optional*): The information for the Carbon dioxide (CO₂) sensor. Readings in ppm. Only available with
   SEN63C, SEN66 or SEN69C.
 
-  - **auto_self_calibration** (*Optional*, boolean): True enables automatic CO₂ self calibration.
+  * **auto_self_calibration** (*Optional*, boolean): True enables automatic CO₂ self calibration.
   False disables automatic CO₂ calibration. Default is `true`.
-  - **altitude_compensation** (*Optional*, integer): When set to altitude (in meters), the CO₂ sensor will be
+  * **altitude_compensation** (*Optional*, integer): When set to altitude (in meters), the CO₂ sensor will be
   statically compensated for deviations due to current altitude. See [CO₂ Compensation](#co₂-compensation) section below
   for more information.
-  - **ambient_pressure_compensation_source** (*Optional*, [ID](/guides/configuration-types#config-id)):
+  * **ambient_pressure_compensation_source** (*Optional*, [ID](/guides/configuration-types#config-id)):
   Sets an external pressure sensor ID (must report in hPA). This will compensate the CO₂ sensor for deviations
   due to current pressure. This correction is applied with each update of the CO₂ sensor. See
   [CO₂ Compensation](#co₂-compensation) section below for more information.
   - All options from [Sensor](/components/sensor#config-sensor).
 
-- **voc** (*Optional*): The information for the VOC Index sensor. Only available with SEN65, SEN66, SEN69 or SEN69C.
+* **voc** (*Optional*): The information for the VOC Index sensor. Only available with SEN65, SEN66, SEN69 or SEN69C.
 
-  - **store_algorithm_state** (*Optional*, boolean): When set to `true` the VOC algorithm state is saved to flash every
+  * **store_algorithm_state** (*Optional*, boolean): When set to `true` the VOC algorithm state is saved to flash every
     2 hours. During setup of the sensor the previously saved algorithm state is loaded and the VOC sensor will
     skip the initial learning phase.
     Only available with SEN65, SEN66, SEN68 or SEN69C.
-  - **algorithm_tuning** (*Optional*): The VOC algorithm can be customized by tuning 6 different parameters.
+  * **algorithm_tuning** (*Optional*): The VOC algorithm can be customized by tuning 6 different parameters.
     For more details see
     [Engineering Guidelines for SEN5x](https://sensirion.com/media/documents/25AB572C/62B463AA/Sensirion_Engineering_Guidelines_SEN5x.pdf).
 
-    - **index_offset** (*Optional*): VOC index representing typical (average) conditions.
+    * **index_offset** (*Optional*): VOC index representing typical (average) conditions.
       Allowed values are in range 1..250. The default value is 100.
-    - **learning_time_offset_hours** (*Optional*): Time constant to estimate the VOC algorithm offset from the
+    * **learning_time_offset_hours** (*Optional*): Time constant to estimate the VOC algorithm offset from the
       history in hours. Past events will be forgotten after about twice the learning time.
       Allowed values are in range 1..1000. The default value is 12 hour.
-    - **learning_time_gain_hours** (*Optional*): Time constant to estimate the VOC algorithm gain from the
+    * **learning_time_gain_hours** (*Optional*): Time constant to estimate the VOC algorithm gain from the
       history in hours. Past events will be forgotten after about twice the learning time.
       Allowed values are in range 1..1000. The default value is 12 hours.
-    - **gating_max_duration_minutes** (*Optional*): Maximum duration of gating in minutes (freeze of estimator
+    * **gating_max_duration_minutes** (*Optional*): Maximum duration of gating in minutes (freeze of estimator
       during high VOC index signal). Zero disables the gating. Allowed values are in range 0..3000.
       The default value is 180 minutes.
-    - **std_initial** (*Optional*): Initial estimate for standard deviation. Lower value boosts events during
+    * **std_initial** (*Optional*): Initial estimate for standard deviation. Lower value boosts events during
       initial learning period, but may result in larger device-to-device variations.
       Allowed values are in range 10..5000. The default value is 50.
-    - **gain_factor** (*Optional*): Gain factor to amplify or to attenuate the VOC index output.
+    * **gain_factor** (*Optional*): Gain factor to amplify or to attenuate the VOC index output.
       Allowed values are in range 1..1000. The default value is 230. All options from [Sensor](/components/sensor#config-sensor).
 
-- **nox** (*Optional*): NOx Index. Only available with SEN65, SEN66, SEN69 or SEN69C.
+* **nox** (*Optional*): NOx Index. Only available with SEN65, SEN66, SEN69 or SEN69C.
 
-  - **algorithm_tuning** (*Optional*): Like VOC the NOx algorithm can be customized by tuning 5 different parameters.
+  * **algorithm_tuning** (*Optional*): Like VOC the NOx algorithm can be customized by tuning 5 different parameters.
 
-    - **index_offset** (*Optional*): NOx index representing typical (average) conditions.
+    * **index_offset** (*Optional*): NOx index representing typical (average) conditions.
       Allowed values are in range 1..250. The default value is 100.
-    - **learning_time_offset_hours** (*Optional*): Time constant to estimate the NOx algorithm offset from the
+    * **learning_time_offset_hours** (*Optional*): Time constant to estimate the NOx algorithm offset from the
       history in hours. Past events will be forgotten after about twice the learning time.
       Allowed values are in range 1..1000. The default value is 12 hour.
-    - **learning_time_gain_hours** (*Optional*): Here for completeness, but this is ignored by NOx Algorithm Tuning.
-    - **gating_max_duration_minutes** (*Optional*): Maximum duration of gating in minutes (freeze of estimator
+    * **learning_time_gain_hours** (*Optional*): Here for completeness, but this is ignored by NOx Algorithm Tuning.
+    * **gating_max_duration_minutes** (*Optional*): Maximum duration of gating in minutes (freeze of estimator
       during high NOx index signal). Zero disables the gating. Allowed values are in range 0..3000.
       The default value is 180 minutes.
-    - **std_initial** (*Optional*): Here for completeness, but this is ignored by NOx Algorithm Tuning.
-    - **gain_factor** (*Optional*): Gain factor to amplify or to attenuate the NOx index output.
+    * **std_initial** (*Optional*): Here for completeness, but this is ignored by NOx Algorithm Tuning.
+    * **gain_factor** (*Optional*): Gain factor to amplify or to attenuate the NOx index output.
       Allowed values are in range 1..1000. The default value is 230. All options from [Sensor](/components/sensor#config-sensor).
 
-- **hcho** (*Optional*): The information for the Formaldehyde (HCHO) sensor. Readings in ppb. Only available with
+* **hcho** (*Optional*): The information for the Formaldehyde (HCHO) sensor. Readings in ppb. Only available with
   SEN68 or SEN69C. All options from [Sensor](/components/sensor#config-sensor).
 
 > [!NOTE]
@@ -1606,13 +1621,13 @@ fan:
 
 ### ESP32 RMT PWM Configuration Variables
 
-- **id** (*Required*, ID)
+* **id** (*Required*, ID)
   The ID of the output component. This is used to reference the output from other ESPHome components (lights, fans, custom components, etc.).
 
-- **pin** (*Required*, [Pin Schema](https://esphome.io/guides/configuration-types#config-pin-schema))
+* **pin** (*Required*, [Pin Schema](https://esphome.io/guides/configuration-types#config-pin-schema))
   The GPIO pin used for the PWM output signal.
 
-- **frequency** (*Optional*, frequency, default: `25kHz`)
+* **frequency** (*Optional*, frequency, default: `25kHz`)
   The PWM frequency.
   Internally, the component:
 
@@ -1625,7 +1640,7 @@ fan:
 
   If the requested frequency falls outside these bounds, the component logs an error and marks itself as failed during setup rather than generating an invalid PWM signal.
 
-- **rmt_symbols** (*Optional*, integer, variant-specific default, minimum: `48`)
+* **rmt_symbols** (*Optional*, integer, variant-specific default, minimum: `48`)
 
   Number of RMT symbols allocated for the TX channel (`mem_block_symbols`).
 
