@@ -779,7 +779,7 @@ text_sensor:
 ## SEN5X External Component
 
 <p align="center">
-    <img src="http://sensirion.com/_next/image?url=https%3A%2F%2Fsensirion.com%2Fmedia%2Fportfolio%2Fseries%2Fimage%2F6a057318-e34a-4b2c-9303-5ac180312d85.webp&w=1200&q=75" width="50%"><br />
+    <img src="https://sensirion.com/_next/image?url=https%3A%2F%2Fsensirion.com%2Fmedia%2Fportfolio%2Fseries%2Fimage%2F6a057318-e34a-4b2c-9303-5ac180312d85.webp&w=2048&q=75" width="50%"><br />
     SEN55 Environmental Sensor
 </p>
 
@@ -789,7 +789,7 @@ text_sensor:
 This external component adds SEN60, SEN63C, SEN65, SEN66 and SEN68 support to the built-in sen5x component.
 
 > [!NOTE]
-> I recommend you use my sen6x component below or the ESPHome built-in sen6x component. This will not be updated frequently.
+> I recommend you use my [sen6x component](#sen6x-external-component) below or the ESPHome built-in sen6x component. This will not be updated frequently.
 
 ```yaml
 # Load from this repository
@@ -1202,7 +1202,7 @@ More details about the tuning of these parameters for SEN6X sensors are included
 ## SEN6X External Component
 
 <p align="center">
-    <img src="https://sensirion.com/_next/image?url=https%3A%2F%2Fsensirion.com%2Fmedia%2Fportfolio%2Fproduct%2Fimage%2Fd2b23157-ec1c-40f7-b89f-e38ad4d4a40f.webp&w=1200&q=75" width="50%"><br />
+    <img src="https://sensirion.com/_next/image?url=https%3A%2F%2Fsensirion.com%2Fmedia%2Fportfolio%2Fproduct%2Fimage%2Fd2b23157-ec1c-40f7-b89f-e38ad4d4a40f.webp&w=2048&q=75" width="50%"><br />
     SEN66 Environmental Sensor
 </p>
 
