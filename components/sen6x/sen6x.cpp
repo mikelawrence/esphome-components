@@ -516,10 +516,8 @@ void Sen6xComponent::loop() {
           return;
         }
       }
-      }
       this->loop_state_ = SetupStates::SM_SETUP_SET_ACCEL;
       break;
-    }
     case SetupStates::SM_SETUP_SET_ACCEL:
       ESP_LOGV(TAG, "SM_SETUP_SET_ACCEL State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
                App.get_loop_component_start_time() - this->state_time_);
