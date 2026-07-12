@@ -732,13 +732,13 @@ sensor:
 
 * **gX energy** (*Optional*): Energies for the Xth gate (X => 0 to 15). Range is 0 to 100dB in steps of 1dB. Only operates when Minimal Output is off. All Options from [Number Component](https://esphome.io/components/number/#base-number-configuration).
 
+* **target_distance** (*Optional*): This sensor indicates current distance to target in meters (m). All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
+
 > [!NOTE]
 > Each of the [Sensor Components](https://esphome.io/components/sensor/#base-sensor-configuration) above include the following [Filter](https://esphome.io/components/sensor/#sensor-filters).
 > `- throttle_with_priority: 1s`
 > If you have defined other filters, this default will be overridden; you may of course add it back to your custom filter(s) as above if you wish.
 > To remove the default filter for any given sensor instance, add `filters: []` to its configuration.
-
-* **target_distance** (*Optional*): This sensor indicates current distance to target in meters (m). All Options from [Sensor Component](https://esphome.io/components/sensor/#base-sensor-configuration).
 
 ### LD2410S Switches
 
