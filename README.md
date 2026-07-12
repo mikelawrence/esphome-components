@@ -241,8 +241,8 @@ The DFRobot C4001 (SEN0609 or SEN0610) is a millimeter-wave presence detector. T
 
 There are two variants:
 
-+ SEN0609 has a 100° horizontal and 40° vertical field of view, 16 meter presence detection range and 25 meter motion detection range.
-+ SEN0610 has a 100° horizontal and 80° vertical field of view, 8 meter presence detection range and 12 meter motion detection range.
+* SEN0609 has a 100° horizontal and 40° vertical field of view, 16 meter presence detection range and 25 meter motion detection range.
+* SEN0610 has a 100° horizontal and 80° vertical field of view, 8 meter presence detection range and 12 meter motion detection range.
 
 > [!NOTE]
 > Some settings have different ranges depending on the variant used. This component treats both variants the same, so it is your responsibility to make sure your configuration sets these values appropriately.
@@ -886,7 +886,7 @@ sensor:
   Sets an external pressure sensor ID (must report in hPA). This will compensate the CO₂ sensor for deviations
   due to current pressure. This correction is applied with each update of the CO₂ sensor. See
   [CO₂ Compensation](#co₂-compensation) section below for more information.
-  - All options from [Sensor](https://esphome.io/components/sensor/#base-sensor-configuration).
+  * All options from [Sensor](https://esphome.io/components/sensor/#base-sensor-configuration).
 
 * **voc** (*Optional*): The information for the VOC Index sensor. Only available with SEN54, SEN55, SEN65, SEN66,
   SEN69 or SEN69C.
@@ -932,7 +932,7 @@ sensor:
 * **hcho** (*Optional*): The information for the Formaldehyde (HCHO) sensor. Readings in ppb. Only available with
   SEN68 or SEN69C.
   
-  - All options from [Sensor](https://esphome.io/components/sensor/#base-sensor-configuration).
+  * All options from [Sensor](https://esphome.io/components/sensor/#base-sensor-configuration).
 
 * **store_baseline** (*Optional*, boolean): When set to `true` the VOC algorithm state is saved to flash every
   2 hours. During setup of the sensor the previously saved algorithm state is loaded and the VOC sensor will
@@ -975,15 +975,15 @@ sensor:
 > Your configuration should limit reporting of sensor values for a period of time after power-up.
 > A good starting point is 5 minutes.
 >
-> - The PM sensor has a start-up time of 30 seconds.
-> - The temperature sensor has a response time of 1 minute with no mention start-up time.
-> - The humidity sensor has a response time of 20 seconds with no mention start-up time.
-> - The VOC sensor will start detecting events in 1 minute but may take up to 1 hour to meet
+> * The PM sensor has a start-up time of 30 seconds.
+> * The temperature sensor has a response time of 1 minute with no mention start-up time.
+> * The humidity sensor has a response time of 20 seconds with no mention start-up time.
+> * The VOC sensor will start detecting events in 1 minute but may take up to 1 hour to meet
 >   data sheet specifications.
-> - The NOx sensor will start detecting events in 5 minutes but may take up to 6 hours to meet
+> * The NOx sensor will start detecting events in 5 minutes but may take up to 6 hours to meet
 >   data sheet specifications.
-> - The CO₂ sensor has a response time of between 60 and 70 seconds with no mention start-up time.
-> - The HCHO sensor has a start-up time of 10 minutes.
+> * The CO₂ sensor has a response time of between 60 and 70 seconds with no mention start-up time.
+> * The HCHO sensor has a start-up time of 10 minutes.
 
 ### SEN5X Actions
 
@@ -1163,11 +1163,11 @@ The SEN5X sensors have an automatic fan-cleaning procedure will be triggered per
 `auto_cleaning_interval` cleaning interval. This will accelerate the fan to maximum speed for 10 seconds
 to blow out the accumulated dust inside the fan.
 
-- Measurement values are not updated while the fan-cleaning is running.
-- The default cleaning interval is set to 604,800 seconds (i.e., 168 hours or 1 week).
-- The interval can be configured using the Set Automatic Cleaning Interval command.
-- Set the interval to 0 to disable the automatic cleaning.
-- The cleaning procedure can also be started manually with the `start_fan_autoclean` Action.
+* Measurement values are not updated while the fan-cleaning is running.
+* The default cleaning interval is set to 604,800 seconds (i.e., 168 hours or 1 week).
+* The interval can be configured using the Set Automatic Cleaning Interval command.
+* Set the interval to 0 to disable the automatic cleaning.
+* The cleaning procedure can also be started manually with the `start_fan_autoclean` Action.
 
 ### SEN5X NOx and VOC Algorithm Tuning
 
@@ -1336,7 +1336,7 @@ sensor:
   Sets an external pressure sensor ID (must report in hPA). This will compensate the CO₂ sensor for deviations
   due to current pressure. This correction is applied with each update of the CO₂ sensor. See
   [CO₂ Compensation](#co₂-compensation) section below for more information.
-  - All options from [Sensor](/components/sensor#config-sensor).
+  * All options from [Sensor](/components/sensor#config-sensor).
 
 * **voc** (*Optional*): The information for the VOC Index sensor. Only available with SEN65, SEN66, SEN69 or SEN69C.
 
@@ -1392,15 +1392,15 @@ sensor:
 > Your configuration should limit reporting of sensor values for a period of time after power-up.
 > A good starting point is 5 minutes.
 >
-> - The PM sensor has a start-up time of 30 seconds.
-> - The temperature sensor has a response time of 1 minute with no mention start-up time.
-> - The humidity sensor has a response time of 20 seconds with no mention start-up time.
-> - The VOC sensor will start detecting events in 1 minute but may take up to 1 hour to meet
+> * The PM sensor has a start-up time of 30 seconds.
+> * The temperature sensor has a response time of 1 minute with no mention start-up time.
+> * The humidity sensor has a response time of 20 seconds with no mention start-up time.
+> * The VOC sensor will start detecting events in 1 minute but may take up to 1 hour to meet
 >   data sheet specifications.
-> - The NOx sensor will start detecting events in 5 minutes but may take up to 6 hours to meet
+> * The NOx sensor will start detecting events in 5 minutes but may take up to 6 hours to meet
 >   data sheet specifications.
-> - The CO₂ sensor has a response time of between 60 and 70 seconds with no mention start-up time.
-> - The HCHO sensor has a start-up time of 10 minutes.
+> * The CO₂ sensor has a response time of between 60 and 70 seconds with no mention start-up time.
+> * The HCHO sensor has a start-up time of 10 minutes.
 
 ### Actions
 
@@ -1410,7 +1410,6 @@ Multiple actions are available with this component and are queued when requested
 
 The sensor supports a manual fan cleaning cycle by using the
 `sen6x.start_fan_cleaning` action.
-
 
 ##### `sen6x.start_fan_cleaning` Action
 
@@ -1604,8 +1603,6 @@ button:
           time_constant: 0
 ```
 
-See [Temperature Compensation](#temperature-compensation) section below for more information.
-
 ## ESP32 RMT PWM External Component
 
 PWM output using the ESP-IDF RMT driver for ESP32 devices.
@@ -1647,12 +1644,12 @@ fan:
   The PWM frequency.
   Internally, the component:
 
-  + Uses an RMT resolution of 10 MHz (100 ns per tick).
-  + Computes the PWM period in ticks as:
-    + `period_ticks = resolution_hz / frequency`
-  + Validates that:
-    + `period_ticks >= 2` (to avoid absurdly high frequencies)
-    + `period_ticks <= 32767` (to fit the 15-bit RMT symbol duration field)
+  * Uses an RMT resolution of 10 MHz (100 ns per tick).
+  * Computes the PWM period in ticks as:
+    * `period_ticks = resolution_hz / frequency`
+  * Validates that:
+    * `period_ticks >= 2` (to avoid absurdly high frequencies)
+    * `period_ticks <= 32767` (to fit the 15-bit RMT symbol duration field)
 
   If the requested frequency falls outside these bounds, the component logs an error and marks itself as failed during setup rather than generating an invalid PWM signal.
 
