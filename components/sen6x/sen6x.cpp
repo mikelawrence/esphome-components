@@ -330,9 +330,9 @@ void Sen6xComponent::loop() {
       ESP_LOGD(TAG, "Activate Heater: Complete");
       break;
     case SetupStates::SM_CO2_RECAL_INIT:
-      ESP_LOGV(TAG, "SM_CO2_RECAL_INIT State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
-      ESP_LOGD(TAG, "Forced CO₂ Recalibration: Started, co2=%" PRIu16 , this->co2_reference_);
+      ESP_LOGV(TAG, "SM_CO2_RECAL_INIT State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGD(TAG, "Forced CO₂ Recalibration: Started, co2=%" PRIu16, this->co2_reference_);
       if (!this->stop_measurements_()) {
         ESP_LOGE(TAG, "Forced CO₂ Recalibration: Failed to Stop Measurements");
         this->loop_state_ = SetupStates::SM_CO2_RECAL_DONE;
@@ -342,8 +342,8 @@ void Sen6xComponent::loop() {
       this->state_wait_time_ = 20;
       break;
     case SetupStates::SM_CO2_RECAL_ON:
-      ESP_LOGV(TAG, "SM_CO2_RECAL_ON State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_CO2_RECAL_ON State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       if (!this->write_command(CMD_PERFORM_FORCED_CO2_RECAL, this->co2_reference_)) {
         ESP_LOGE(TAG, "Forced CO₂ Recalibration: Failed to Start Recalibration");
         this->loop_state_ = SetupStates::SM_CO2_RECAL_START;
@@ -354,8 +354,8 @@ void Sen6xComponent::loop() {
       break;
     case SetupStates::SM_CO2_RECAL_WAIT: {
       uint16_t correction;
-      ESP_LOGV(TAG, "SM_CO2_RECAL_WAIT State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_CO2_RECAL_WAIT State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       if (!this->read_data(correction)) {
         ESP_LOGE(TAG, "Forced CO₂ Recalibration: Failed to read correction");
       } else {
@@ -370,8 +370,8 @@ void Sen6xComponent::loop() {
       break;
     }
     case SetupStates::SM_CO2_RECAL_START:
-      ESP_LOGV(TAG, "SM_HEAT_START State, stop_to_start_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_HEAT_START State, stop_to_start_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       if (!this->start_measurements_()) {
         ESP_LOGE(TAG, "Forced CO₂ Recalibration: Failed to Start Measurements");
       }
@@ -379,15 +379,15 @@ void Sen6xComponent::loop() {
       this->state_wait_time_ = 50;
       break;
     case SetupStates::SM_CO2_RECAL_DONE:
-      ESP_LOGV(TAG, "SM_CO2_RECAL_DONE State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_CO2_RECAL_DONE State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       this->command_flag_ &= ~CMD_FLAG_CO2_RECAL;
       this->loop_state_ = SetupStates::SM_IDLE;
       ESP_LOGD(TAG, "Forced CO₂ Recalibration: Complete");
       break;
     case SetupStates::SM_CO2_PRESS_INIT:
-      ESP_LOGV(TAG, "SM_CO2_PRESS_INIT State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_CO2_PRESS_INIT State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       if (!write_ambient_pressure_compensation_(this->ambient_pressure_)) {
         ESP_LOGE(TAG, "Set Ambient Pressure Compensation: Failed");
       }
@@ -395,8 +395,8 @@ void Sen6xComponent::loop() {
       this->loop_state_ = SetupStates::SM_CO2_PRESS_DONE;
       break;
     case SetupStates::SM_CO2_PRESS_DONE:
-      ESP_LOGV(TAG, "SM_CO2_PRESS_DONE State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_CO2_PRESS_DONE State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       this->command_flag_ &= ~CMD_FLAG_CO2_PRESS;
       this->loop_state_ = SetupStates::SM_IDLE;
       break;
@@ -441,8 +441,8 @@ void Sen6xComponent::loop() {
       ESP_LOGD(TAG, "Fan Cleaning: Complete");
       break;
     case SetupStates::SM_TEMP_COMP_INIT:
-      ESP_LOGV(TAG, "SM_TEMP_COMP_INIT State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_TEMP_COMP_INIT State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       if (!this->write_temperature_compensation_(this->temperature_compensation_.value())) {
         ESP_LOGE(TAG, "Set Temperature Compensation failed");
       }
@@ -451,7 +451,8 @@ void Sen6xComponent::loop() {
       break;
     case SetupStates::SM_TEMP_COMP_DONE:
       ESP_LOGD(TAG,
-               "Temperature Compensation: Updated offset=%.3f, normalized_offset_slope=%.6f, time_constant=%" PRIu16 ", "
+               "Temperature Compensation: Updated offset=%.3f, normalized_offset_slope=%.6f, time_constant=%" PRIu16
+               ", "
                "slot=%" PRIu8,
                static_cast<float>(this->temperature_compensation_.value().offset) / 200.0,
                static_cast<float>(this->temperature_compensation_.value().normalized_offset_slope) / 10000.0,
@@ -460,8 +461,8 @@ void Sen6xComponent::loop() {
       this->loop_state_ = SetupStates::SM_IDLE;
       break;
     case SetupStates::SM_VOC_CHECK_INIT: {
-      ESP_LOGV(TAG, "SM_VOC_CHECK_INIT State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_VOC_CHECK_INIT State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       time_t diff = this->time_source_->timestamp_now() - this->voc_algorithm_state_.epoch;
       if (diff <= ALGORITHM_STATE_MAX_AGE) {
         if (!this->write_command(CMD_VOC_ALGORITHM_STATE, this->voc_algorithm_state_.state, 4)) {
@@ -491,8 +492,8 @@ void Sen6xComponent::loop() {
       this->loop_state_ = SetupStates::SM_SETUP_INIT_WAIT;
       break;
     case SetupStates::SM_SETUP_INIT_WAIT:
-      ESP_LOGV(TAG, "SM_SETUP_INIT_WAIT State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_SETUP_INIT_WAIT State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       if (!this->write_command(CMD_GET_DATA_READY_STATUS)) {
         this->mark_failed(LOG_STR("Get Status failed"));
         return;
@@ -502,8 +503,8 @@ void Sen6xComponent::loop() {
       break;
     case SetupStates::SM_SETUP_GET_STATUS:
       uint16_t raw_read_status;
-      ESP_LOGV(TAG, "SM_SETUP_GET_STATUS State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_SETUP_GET_STATUS State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       if (!this->read_data(raw_read_status)) {
         this->mark_failed(LOG_STR("Get Status failed"));
         return;
@@ -519,8 +520,8 @@ void Sen6xComponent::loop() {
       this->loop_state_ = SetupStates::SM_SETUP_SET_ACCEL;
       break;
     case SetupStates::SM_SETUP_SET_ACCEL:
-      ESP_LOGV(TAG, "SM_SETUP_SET_ACCEL State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_SETUP_SET_ACCEL State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       if (this->temperature_acceleration_.has_value()) {
         auto &accel = this->temperature_acceleration_.value();
         if (!this->write_temperature_acceleration_()) {
@@ -533,8 +534,8 @@ void Sen6xComponent::loop() {
       this->loop_state_ = SetupStates::SM_SETUP_SET_TC;
       break;
     case SetupStates::SM_SETUP_SET_TC:
-      ESP_LOGV(TAG, "SM_SETUP_SET_TC State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_SETUP_SET_TC State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       if (this->temperature_compensation_.has_value()) {
         auto &comp = this->temperature_compensation_.value();
         if (!this->write_temperature_compensation_(comp)) {
@@ -549,8 +550,8 @@ void Sen6xComponent::loop() {
       this->loop_state_ = SetupStates::SM_SETUP_GET_SN;
       break;
     case SetupStates::SM_SETUP_GET_SN:
-      ESP_LOGV(TAG, "SM_SETUP_GET_SN State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_SETUP_GET_SN State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       if (!this->write_command(CMD_GET_SERIAL_NUMBER)) {
         this->mark_failed(LOG_STR("Get Serial Number failed"));
         return;
@@ -560,8 +561,8 @@ void Sen6xComponent::loop() {
     case SetupStates::SM_SETUP_GET_SN_1: {
       // Serial numbers are currently only 16 chars long, same on label, this could change
       uint16_t raw_serial_number[8];
-      ESP_LOGV(TAG, "SM_SETUP_GET_SN_1 State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_SETUP_GET_SN_1 State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       if (!this->read_data(raw_serial_number, 8)) {
         this->mark_failed(LOG_STR("Get Serial Number failed"));
         return;
@@ -580,8 +581,8 @@ void Sen6xComponent::loop() {
     case SetupStates::SM_SETUP_GET_PN: {
       // 8 chars is enough room for the at most 7 chars plus null
       uint16_t raw_product_name[16];
-      ESP_LOGV(TAG, "SM_SETUP_GET_PN State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_SETUP_GET_PN State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       if (!this->read_data(raw_product_name, 16)) {
         this->mark_failed(LOG_STR("Get Product Name failed"));
         return;
@@ -609,8 +610,8 @@ void Sen6xComponent::loop() {
     }
     case SetupStates::SM_SETUP_GET_FW:
       uint16_t firmware;
-      ESP_LOGV(TAG, "SM_SETUP_GET_FW State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_SETUP_GET_FW State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       if (!this->read_data(&firmware, 1)) {
         this->mark_failed(LOG_STR("Get FW failed"));
         return;
@@ -621,8 +622,8 @@ void Sen6xComponent::loop() {
       this->loop_state_ = SetupStates::SM_SETUP_SET_VOCA;
       break;
     case SetupStates::SM_SETUP_SET_VOCA: {
-      ESP_LOGV(TAG, "SM_SETUP_SET_VOCA State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_SETUP_SET_VOCA State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       // Hash with serial number. Serial numbers are unique, so multiple sensors can be used without conflict
       // change the integer if Sen6xVocBaseline format changes
       uint32_t hash = fnv1a_hash_extend(1, fnv1a_hash(this->serial_number_));
@@ -654,11 +655,13 @@ void Sen6xComponent::loop() {
           ESP_LOGV(TAG, "VOC Algorithm State does not exist");
           this->voc_algorithm_state_status_ = Sen6xVocStatus::NO_PREF;
         }
-      this->loop_state_ = SetupStates::SM_SETUP_SET_VOCT;
-      break;
+        this->loop_state_ = SetupStates::SM_SETUP_SET_VOCT;
+        break;
+      }
+    }
     case SetupStates::SM_SETUP_SET_VOCT:
-      ESP_LOGV(TAG, "SM_SETUP_SET_VOCT State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_SETUP_SET_VOCT State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       if (this->voc_tuning_params_.has_value()) {
         auto &tuning_params = this->voc_tuning_params_.value();
         if (!this->write_tuning_parameters_(CMD_VOC_ALGORITHM_TUNING, tuning_params)) {
@@ -666,8 +669,10 @@ void Sen6xComponent::loop() {
           return;
         }
         ESP_LOGV(TAG,
-                 "Set VOC Algorithm Tuning Parameters: Index Offset: %" PRIu16 " Learning Time Offset (hours): %" PRIu16 " "
-                 "Learning Time Gain (hours): %" PRIu16 " Gating Max Duration (minutes): %" PRIu16 " STD Initial: %" PRIu16 " Gain Factor: %" PRIu16,
+                 "Set VOC Algorithm Tuning Parameters: Index Offset: %" PRIu16 " Learning Time Offset (hours): %" PRIu16
+                 " "
+                 "Learning Time Gain (hours): %" PRIu16 " Gating Max Duration (minutes): %" PRIu16
+                 " STD Initial: %" PRIu16 " Gain Factor: %" PRIu16,
                  tuning_params.index_offset, tuning_params.learning_time_offset_hours,
                  tuning_params.learning_time_gain_hours, tuning_params.gating_max_duration_minutes,
                  tuning_params.std_initial, tuning_params.gain_factor);
@@ -675,8 +680,8 @@ void Sen6xComponent::loop() {
       this->loop_state_ = SetupStates::SM_SETUP_SET_NOXT;
       break;
     case SetupStates::SM_SETUP_SET_NOXT:
-      ESP_LOGV(TAG, "SM_SETUP_SET_NOXT State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_SETUP_SET_NOXT State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       if (this->nox_tuning_params_.has_value()) {
         auto &tuning_params = this->nox_tuning_params_.value();
         if (!this->write_tuning_parameters_(CMD_NOX_ALGORITHM_TUNING, tuning_params)) {
@@ -684,7 +689,7 @@ void Sen6xComponent::loop() {
           return;
         }
         ESP_LOGV(TAG,
-                 "Set NOx Algorithm Tuning Parameters: Index Offset: %" PRIu16 " Learning Time Offset (hours): %" PRIu16 " "
+                 "Set NOx Algorithm Tuning Parameters: Index Offset: %" PRIu16 " Learning Time Offset (hours): %" PRIu16
                  "Gating Max Duration (minutes): %" PRIu16 " Gain Factor: %" PRIu16,
                  tuning_params.index_offset, tuning_params.learning_time_offset_hours,
                  tuning_params.gating_max_duration_minutes, tuning_params.gain_factor);
@@ -692,8 +697,8 @@ void Sen6xComponent::loop() {
       this->loop_state_ = SetupStates::SM_SETUP_SET_CO2ASC;
       break;
     case SetupStates::SM_SETUP_SET_CO2ASC:
-      ESP_LOGV(TAG, "SM_SETUP_SET_CO2ASC State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_SETUP_SET_CO2ASC State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       if (this->auto_self_calibration_.has_value()) {
         if (!this->write_command(CMD_CO2_SENSOR_AUTO_SELF_CAL, this->auto_self_calibration_.value() ? 0x01 : 0x00)) {
           this->mark_failed(LOG_STR("Set CO₂ Auto Self Calibration failed"));
@@ -704,8 +709,8 @@ void Sen6xComponent::loop() {
       this->loop_state_ = SetupStates::SM_SETUP_SET_CO2AC;
       break;
     case SetupStates::SM_SETUP_SET_CO2AC:
-      ESP_LOGV(TAG, "SM_SETUP_SET_CO2AC State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
+      ESP_LOGV(TAG, "SM_SETUP_SET_CO2AC State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms",
+               this->state_wait_time_, App.get_loop_component_start_time() - this->state_time_);
       if (this->altitude_compensation_.has_value()) {
         if (!this->write_command(CMD_SENSOR_ALTITUDE, this->altitude_compensation_.value())) {
           this->mark_failed(LOG_STR("Set CO₂ Altitude Compensation failed"));
@@ -970,5 +975,4 @@ bool Sen6xComponent::set_temperature_compensation(float offset, float normalized
   return true;
 }
 
-}  // namespace esphome::ld2410s
-
+}  // namespace esphome::sen6x
