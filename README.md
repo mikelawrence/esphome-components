@@ -1603,8 +1603,6 @@ button:
           time_constant: 0
 ```
 
-See [Temperature Compensation](#temperature-compensation) section below for more information.
-
 ## ESP32 RMT PWM External Component
 
 PWM output using the ESP-IDF RMT driver for ESP32 devices.
