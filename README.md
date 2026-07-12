@@ -1346,7 +1346,7 @@ sensor:
     Only available with SEN65, SEN66, SEN68 or SEN69C.
   * **algorithm_tuning** (*Optional*): The VOC algorithm can be customized by tuning 6 different parameters.
     For more details see
-    [Engineering Guidelines for SEN5x](https://sensirion.com/media/documents/25AB572C/62B463AA/Sensirion_Engineering_Guidelines_SEN5x.pdf).
+    [Engineering Guidelines for SEN5X](https://sensirion.com/media/documents/25AB572C/62B463AA/Sensirion_Engineering_Guidelines_SEN5x.pdf)
 
     * **index_offset** (*Optional*): VOC index representing typical (average) conditions.
       Allowed values are in range 1..250. The default value is 100.
@@ -1368,6 +1368,8 @@ sensor:
 * **nox** (*Optional*): NOx Index. Only available with SEN65, SEN66, SEN69 or SEN69C.
 
   * **algorithm_tuning** (*Optional*): Like VOC the NOx algorithm can be customized by tuning 5 different parameters.
+    For more details see
+    [Engineering Guidelines for SEN5X](https://sensirion.com/media/documents/25AB572C/62B463AA/Sensirion_Engineering_Guidelines_SEN5x.pdf)
 
     * **index_offset** (*Optional*): NOx index representing typical (average) conditions.
       Allowed values are in range 1..250. The default value is 100.
@@ -1441,7 +1443,7 @@ The SEN6X humidity sensor can develop an offset in the humidity reading when exp
 humidity for extended periods of time. It supports a heater similar to the one in the SHT4X. The
 difference is no automatic mode. Instead you have to trigger `sen6x.activate_heater` action occasionally.
 
-##### `activate_heater` Action
+##### `sen6x.activate_heater` Action
 
 This [action](/automations/actions#all-actions) manually starts the heater. First all measurements are
 stopped, then the heater is turned on at 200mW for 1s, finally there is a 20 second delay before
@@ -1466,7 +1468,7 @@ take the sensor outside for 5 minutes and then force a manual CO₂ calibration 
 Be sure to watch the log output of your device when you perform this action. If the sensor reports an error
 during the recalibration process it will be reported in the log.
 
-##### `perform_forced_co2_recalibration` Action
+##### `sen6x.perform_forced_co2_recalibration` Action
 
 This [action](/automations/actions#all-actions) forces a manual calibration on the CO₂ sensor. Measurements
 are stopped before issuing the forced co2 recalibrate command to the sensor. The entire perform forced co2
@@ -1529,7 +1531,7 @@ sensor:
       ambient_pressure_compensation_source: pressure_hpa
 ```
 
-##### Dynamic example `set_ambient_pressure_compensation` Action
+##### Dynamic example `sen6x.set_ambient_pressure_compensation` Action
 
 This [action](/automations/actions#all-actions) updates the current pressure used in CO₂ pressure compensation.
 Must be in hPa or mBar. Note: Once `set_ambient_pressure_compensation` is called `altitude_compensation`, if
@@ -1567,13 +1569,7 @@ sensor:
       altitude_compensation: 427m
 ```
 
-### NOx and VOC Algorithm Tuning
-
-Both the NOx and VOC sensor support algorithm tuning. These variables are set with the `algorithm_tuning`
-configuration under the `voc` and `nox` sensors. For more details see
-[Engineering Guidelines for SEN5X](https://sensirion.com/media/documents/25AB572C/62B463AA/Sensirion_Engineering_Guidelines_SEN5x.pdf)
-
-### Temperature Compensation
+#### Temperature Compensation
 
 These sensors contain an internal temperature compensation mechanism. The compensated ambient temperature is
 calculated as follows:
@@ -1589,6 +1585,26 @@ offset are applied.
 
 More details about the tuning of these parameters is included in the application note:
 [SEN6x – Temperature Acceleration and Compensation Instructions](https://sensirion.com/media/documents/C964FCC8/693FD554/PS_AN_SEN6x_Temperature_Compensation_and_Acceleration_Application_No.pdf).
+
+##### `sen6x.set_temperature_compensation` Action
+
+This [action](/automations/actions#all-actions) give you access to temperature compensation slots 0-4.
+This is a dynamic compensation that for example can be used when internal devices are turned on that cause additional heating.
+
+```yaml
+button:
+  - platform: template
+    name: "Set Slot 1 TC"
+    on_press:
+      - sen6x.set_temperature_compensation:
+          id: sen66_sensor
+          slot: 1
+          offset: -1.2
+          normalized_offset_slope: 0
+          time_constant: 0
+```
+
+See [Temperature Compensation](#temperature-compensation) section below for more information.
 
 ## ESP32 RMT PWM External Component
 
