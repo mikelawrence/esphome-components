@@ -516,6 +516,38 @@ void Sen6xComponent::loop() {
           return;
         }
       }
+      }
+      this->loop_state_ = SetupStates::SM_SETUP_SET_ACCEL;
+      break;
+    }
+    case SetupStates::SM_SETUP_SET_ACCEL:
+      ESP_LOGV(TAG, "SM_SETUP_SET_ACCEL State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
+               App.get_loop_component_start_time() - this->state_time_);
+      if (this->temperature_acceleration_.has_value()) {
+        auto &accel = this->temperature_acceleration_.value();
+        if (!this->write_temperature_acceleration_()) {
+          this->mark_failed(LOG_STR("Set Temperature Acceleration failed"));
+          return;
+        }
+        ESP_LOGV(TAG, "Set Temperature Acceleration: T1: %.1f T2: %.1f K: %.1f P: %.1f", accel.t1 / 10.0,
+                 accel.t2 / 10.0, accel.k / 10.0, accel.p / 10.0);
+      }
+      this->loop_state_ = SetupStates::SM_SETUP_SET_TC;
+      break;
+    case SetupStates::SM_SETUP_SET_TC:
+      ESP_LOGV(TAG, "SM_SETUP_SET_TC State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
+               App.get_loop_component_start_time() - this->state_time_);
+      if (this->temperature_compensation_.has_value()) {
+        auto &comp = this->temperature_compensation_.value();
+        if (!this->write_temperature_compensation_(comp)) {
+          this->mark_failed(LOG_STR("Set Temperature Compensation failed"));
+          return;
+        }
+        ESP_LOGV(TAG,
+                 "Set Temperature Compensation: Offset: %.3f Normalized Offset Slope: %.6f "
+                 "    Time Constant: %" PRIu16,
+                 comp.offset / 200.0, comp.normalized_offset_slope / 10000.0, comp.time_constant);
+      }
       this->loop_state_ = SetupStates::SM_SETUP_GET_SN;
       break;
     case SetupStates::SM_SETUP_GET_SN:
@@ -624,22 +656,6 @@ void Sen6xComponent::loop() {
           ESP_LOGV(TAG, "VOC Algorithm State does not exist");
           this->voc_algorithm_state_status_ = Sen6xVocStatus::NO_PREF;
         }
-      }
-      this->loop_state_ = SetupStates::SM_SETUP_SET_ACCEL;
-      break;
-    }
-    case SetupStates::SM_SETUP_SET_ACCEL:
-      ESP_LOGV(TAG, "SM_SETUP_SET_ACCEL State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
-      if (this->temperature_acceleration_.has_value()) {
-        auto &accel = this->temperature_acceleration_.value();
-        if (!this->write_temperature_acceleration_()) {
-          this->mark_failed(LOG_STR("Set Temperature Acceleration failed"));
-          return;
-        }
-        ESP_LOGV(TAG, "Set Temperature Acceleration: T1: %.1f T2: %.1f K: %.1f P: %.1f", accel.t1 / 10.0,
-                 accel.t2 / 10.0, accel.k / 10.0, accel.p / 10.0);
-      }
       this->loop_state_ = SetupStates::SM_SETUP_SET_VOCT;
       break;
     case SetupStates::SM_SETUP_SET_VOCT:
@@ -674,22 +690,6 @@ void Sen6xComponent::loop() {
                  "Gating Max Duration (minutes): %" PRIu16 " Gain Factor: %" PRIu16,
                  tuning_params.index_offset, tuning_params.learning_time_offset_hours,
                  tuning_params.gating_max_duration_minutes, tuning_params.gain_factor);
-      }
-      this->loop_state_ = SetupStates::SM_SETUP_SET_TP;
-      break;
-    case SetupStates::SM_SETUP_SET_TP:
-      ESP_LOGV(TAG, "SM_SETUP_SET_TP State, requested_delay=%" PRIu32 "ms, actual=%" PRIu32 "ms", this->state_wait_time_,
-               App.get_loop_component_start_time() - this->state_time_);
-      if (this->temperature_compensation_.has_value()) {
-        auto &comp = this->temperature_compensation_.value();
-        if (!this->write_temperature_compensation_(comp)) {
-          this->mark_failed(LOG_STR("Set Temperature Compensation failed"));
-          return;
-        }
-        ESP_LOGV(TAG,
-                 "Set Temperature Compensation: Offset: %.3f Normalized Offset Slope: %.6f "
-                 "    Time Constant: %" PRIu16,
-                 comp.offset / 200.0, comp.normalized_offset_slope / 10000.0, comp.time_constant);
       }
       this->loop_state_ = SetupStates::SM_SETUP_SET_CO2ASC;
       break;
