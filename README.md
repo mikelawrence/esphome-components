@@ -81,7 +81,7 @@ sensor:
 ### Configuration Variables
 
 * **model** (**Required**, string): The model of the Range Finder Sensor. Options are `TFMINI_PLUS` , `TFMINI_S` or `TF_LUNA` .
-* **uart_id** (*Optional*, string): Manually specify the ID of the [UART Bus](https://esphome.io/components/uart) if you use multiple UART buses.
+* **uart_id** (*Optional*, [ID](https://esphome.io/guides/configuration-types/#id)): Manually specify the ID of the [UART Bus](https://esphome.io/components/uart) if you use multiple UART buses.
 * **sample_rate** (*Optional*, integer): The frame rate at which the sensor will output sensor data in samples per sec. For the TFMINI_PLUS and TFMINI_S the range is 1-1000. For the TFLuna the range is 1-500. Note when low_power mode is set to true for the TFMINI_S and the TFLuna model the is significantly lower from 1-10. Default is 100.
 * **config_pin** (*Optional*, [Pin Schema](https://esphome.io/guides/configuration-types#config-pin-schema)): This pin when connected will be set high to enable UART mode. (*TF_LUNA only*)
 * **low_power** (*Optional*, boolean): Turns on low power mode. This also requires sample_rate to be 10 or less. (*TF_LUNA, TFMini-S only*)
@@ -998,8 +998,6 @@ Both sensor families support manual running of the fan cleaning cycle by using t
 `sen5x.start_fan_autoclean` action. Only available with the SEN54, SEN55, SEN62, SEN63C, SEN65,
 SEN66, SEN68 or SEN69C.
 
-{{< anchor "start_fan_autoclean_action" >}}
-
 ##### SEN5X `sen5x.start_fan_autoclean` Action
 
 This [action](https://esphome.io/automations/actions/#actions) manually starts fan cleaning. During the fan cleaning
@@ -1206,9 +1204,7 @@ More details about the tuning of these parameters for SEN6X sensors are included
     SEN66 Environmental Sensor
 </p>
 
-This external component adds SEN60, SEN63C, SEN65, SEN66 and SEN68 support to ESPHome.
-
-Temperature compensation is not working for the SEN6x models. Still waiting on the Sensirion Application Note.
+This external component adds SEN62, SEN63C, SEN65, SEN66, SEN68 and SEN69C support to ESPHome.
 
 ```yaml
 # Example SEN66 sensor configuration entry example
@@ -1216,7 +1212,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/mikelawrence/esphome-components
-    components: [ sen5x ]
+    components: [ sen6x ]
 
 sensor:
   - platform: sen6x
@@ -1413,7 +1409,7 @@ The sensor supports a manual fan cleaning cycle by using the
 
 ##### `sen6x.start_fan_cleaning` Action
 
-This [action](/automations/actions#all-actions) manually starts fan cleaning. During the fan cleaning
+This [action](https://esphome.io/automations/actions/#actions) manually starts fan cleaning. During the fan cleaning
 process sensor measurements are paused or stopped, depending on the sensor, while the fan is running at
 the elevated rate. The entire fan cleaning sequence takes 12 seconds.
 
@@ -1444,7 +1440,7 @@ difference is no automatic mode. Instead you have to trigger `sen6x.activate_hea
 
 ##### `sen6x.activate_heater` Action
 
-This [action](/automations/actions#all-actions) manually starts the heater. First all measurements are
+This [action](https://esphome.io/automations/actions/#actions) manually starts the heater. First all measurements are
 stopped, then the heater is turned on at 200mW for 1s, finally there is a 20 second delay before
 reenabling the measurements. This is to ensure the heating effects are gone before temperature measurements
 resume. The entire activate heater sequence takes 22 seconds.
@@ -1469,7 +1465,7 @@ during the recalibration process it will be reported in the log.
 
 ##### `sen6x.perform_forced_co2_recalibration` Action
 
-This [action](/automations/actions#all-actions) forces a manual calibration on the CO₂ sensor. Measurements
+This [action](https://esphome.io/automations/actions/#actions) forces a manual calibration on the CO₂ sensor. Measurements
 are stopped before issuing the forced co2 recalibrate command to the sensor. The entire perform forced co2
 recalibration action takes 2 seconds.
 
@@ -1532,7 +1528,7 @@ sensor:
 
 ##### Dynamic example `sen6x.set_ambient_pressure_compensation` Action
 
-This [action](/automations/actions#all-actions) updates the current pressure used in CO₂ pressure compensation.
+This [action](https://esphome.io/automations/actions/#actions) updates the current pressure used in CO₂ pressure compensation.
 Must be in hPa or mBar. Note: Once `set_ambient_pressure_compensation` is called `altitude_compensation`, if
 set in the configuration, will be ignored. Only available with SEN63C, SEN66 or SEN69C.
 
@@ -1587,7 +1583,7 @@ More details about the tuning of these parameters is included in the application
 
 ##### `sen6x.set_temperature_compensation` Action
 
-This [action](/automations/actions#all-actions) give you access to temperature compensation slots 0-4.
+This [action](https://esphome.io/automations/actions/#actions) give you access to temperature compensation slots 0-4.
 This is a dynamic compensation that for example can be used when internal devices are turned on that cause additional heating.
 
 ```yaml
