@@ -13,6 +13,8 @@ from esphome.const import (
 
 from .. import CONF_DFROBOT_C4001_ID, HUB_CHILD_SCHEMA, dfrobot_c4001_ns
 
+DEPENDENCIES = ["dfrobot_c4001"]
+
 CONF_CONFIG_SAVE = "config_save"
 
 ConfigSaveButton = dfrobot_c4001_ns.class_("ConfigSaveButton", button.Button)

@@ -13,7 +13,6 @@ from .. import CONF_DFROBOT_C4001_ID, HUB_CHILD_SCHEMA, dfrobot_c4001_ns
 
 DEPENDENCIES = ["dfrobot_c4001"]
 
-
 CONF_OUT_LED_ENABLE = "out_led_enable"
 CONF_RUN_LED_ENABLE = "run_led_enable"
 CONF_MICRO_MOTION_ENABLE = "micro_motion_enable"

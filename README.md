@@ -1,5 +1,25 @@
 # ESPHome-Components
 
+The components in this repository have been separated into individual repositories. Initially I intended to keep all components in one directory to make things easier for me but it became clear to a minor change in one component should not cause a release for all components.
+
+The following separate repositories are now available.
+
+## New Component Repsitories
+
+* [TFMini](https://github.com/mikelawrence/esphome-component-tfmine)
+* [STUSB4500](https://github.com/mikelawrence/esphome-component-stusb4500)
+* [DFROBOT_C4001](https://github.com/mikelawrence/esphome-component-dfrobot-c4001)
+* [LD2410S](https://github.com/mikelawrence/esphome-component-ld2410s)
+* [SEN5X](https://github.com/mikelawrence/esphome-component-sen5x)
+* [SEN6X](https://github.com/mikelawrence/esphome-component-sen6x)
+* [ESP32 RMT PWM](https://github.com/mikelawrence/esphome-component-esp32-rmt-pwm)
+
+Original README include for completeness
+
+------------------------------------------------------------------------------------------------------------------------
+
+## Installation
+
 The preferred method to add your own components to ESPHome is to use [External Components](https://esphome.io/components/external_components.html#external-components-git).
 
 If you want to make all components available use this config.
@@ -1121,9 +1141,9 @@ sensor:
 
 ##### SEN5X Dynamic example `set_ambient_pressure_compensation` Action
 
-This [action](https://esphome.io/automations/actions/#actions) updates the current pressure used in CO₂ pressure compensation.
-Must be in hPa or mBar. Note: Once `set_ambient_pressure_compensation` is called `altitude_compensation`, if
-set in the configuration, will be ignored. Only available with SEN63C, SEN66 or SEN69C.
+This [action](https://esphome.io/automations/actions/#actions) updates the current pressure used in CO₂ pressure
+compensation. Must be in hPa or mBar. Note: Once `set_ambient_pressure_compensation` is called `altitude_compensation`,
+if set in the configuration, will be ignored. Only available with SEN63C, SEN66 or SEN69C.
 
 ```yaml
 sensor:
@@ -1276,7 +1296,7 @@ sensor:
 * **address** (*Optional*, int): Manually specify the I²C address of the sensor. Defaults to `0x6B`.
 
 * **temperature_acceleration** (*Optional*): This command allows user to set custom temperature acceleration
-  parameters.
+  parameters. Light is intended for smaller devices or devices with less thermal mass. Strong is the opposite.
 
   This is a good starting point for these values.
 
